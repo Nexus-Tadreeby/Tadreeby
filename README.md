@@ -70,7 +70,7 @@ The Tadreeby frontend provides a clean, role-based interface that allows:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/tadreeby-frontend.git
+git clone https://github.com/afnankullab-dev/Tadreeby.git
 
 # Install dependencies
 cd tadreeby-frontend
@@ -80,7 +80,7 @@ npm install
 npm run dev
 ```
 
-> Make sure the backend is running. See the [Tadreeby Backend](https://github.com/shahd-abu-sharif/Tadreeby).
+> > Make sure the frontend is running. See the [Tadreeby Frontend](https://github.com/afnankullab-dev/Tadreeby).
 
 ---
 

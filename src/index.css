@@ -1,12 +1,3 @@
-:root {
-  --spacing-scale: 0.85;  /* Change this to 0.85 to shrink everything */
-}
-
-/* Then use it in your components */
-.card {
-  padding: calc(var(--spacing-scale) * 2rem);
-  gap: calc(var(--spacing-scale) * 1rem);
-}
 * {
   font-family: 'Inter', sans-serif;
 }

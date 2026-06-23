@@ -1,7 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
-
-// 1. Create the Context object
-export const AuthContext = createContext();
+import { useState, useEffect } from 'react';
+import { AuthContext } from './AuthContextObject.js';
 
 // 2. Create the Provider component
 export const AuthProvider = ({ children }) => {

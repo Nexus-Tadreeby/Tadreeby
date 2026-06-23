@@ -1,46 +1,249 @@
+import { useState, useRef } from "react";
+import { Label } from "../common/Label";
+import { 
+  CheckIcon, 
+  InfoIcon, 
+  WarnIcon,
+  UploadIcon,
+  CameraIcon,
+  DocumentIcon,
+  CloseIcon 
+} from "../common/Icons";
+
+// Universities mapping for display
+const UNIVERSITIES = [
+  { id: 1, name: "An-Najah National University" },
+  { id: 2, name: "Birzeit University" },
+  { id: 3, name: "Bethlehem University" },
+  { id: 4, name: "Al-Quds University" },
+  { id: 5, name: "Palestine Polytechnic University" }
+];
+
 export function Step3({ data, setData }) {
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState(null); // 'uploading', 'success', 'error'
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+
+  // Get university name from ID
+  const getUniversityName = (id) => {
+    if (!id) return "Not provided";
+    const uni = UNIVERSITIES.find(u => u.id === parseInt(id));
+    return uni ? uni.name : "Not provided";
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadStatus('error');
+      setUploadedFile(null);
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setUploadStatus('error');
+      setUploadedFile(null);
+      return;
+    }
+
+    setUploadedFile(file);
+    setUploadStatus('success');
+    
+    // Update parent data with file name
+    setData(d => ({ 
+      ...d, 
+      verificationDocument: file.name,
+      verificationFile: file 
+    }));
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    setUploadStatus(null);
+    setData(d => ({ 
+      ...d, 
+      verificationDocument: "string",
+      verificationFile: null 
+    }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const triggerCameraUpload = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   const fields = [
     { label: "Full Name", value: `${data.firstName} ${data.lastName}` },
-    { label: "Email", value: data.email },
-    { label: "National ID", value: data.nationalId },
-    { label: "Student Number", value: data.studentNumber },
-    { label: "University", value: data.university },
-    { label: "Specialization", value: data.specialization },
+    { label: "University", value: getUniversityName(data.universityID) },
+    { label: "Student Number", value: data.studentNumber || "Not provided" },
+    { label: "Specialization", value: data.specialization || "Not provided" },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700 font-['Inter']">
-        <p className="font-semibold mb-1">Almost done!</p>
-        <p>Please verify your information and confirm your registration.</p>
+        <p className="font-semibold mb-1">📄 Verification Required</p>
+        <p>Upload proof of your university enrolment to complete registration.</p>
       </div>
 
-      <div className="space-y-3">
-        {fields.map(({ label, value }) => (
-          <div key={label} className="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-gray-500 font-medium font-['Inter']">{label}</span>
-            <span className="text-sm text-gray-800 font-semibold font-['Inter']">
-              {value || <span className="text-gray-400 font-normal italic">Not provided</span>}
-            </span>
+      {/* Requirements Box */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+        <p className="text-xs font-semibold text-gray-700 mb-2 font-['Inter']">Verification Requirements:</p>
+        <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 font-['Inter']">
+          <p className="flex items-center gap-1.5">
+            <CheckIcon className="w-3 h-3 text-green-500" /> Full Student Name
+          </p>
+          <p className="flex items-center gap-1.5">
+            <CheckIcon className="w-3 h-3 text-green-500" /> University Name
+          </p>
+          <p className="flex items-center gap-1.5">
+            <CheckIcon className="w-3 h-3 text-green-500" /> Student Number
+          </p>
+          <p className="flex items-center gap-1.5">
+            <CheckIcon className="w-3 h-3 text-green-500" /> Technical Specialization
+          </p>
+        </div>
+        <div className="mt-2 pt-2 border-t border-gray-200">
+          <p className="text-xs text-gray-500 font-['Inter'] flex items-center gap-1.5">
+            <InfoIcon className="w-3 h-3" /> Accepted: University Student Card, Screenshot from Student Portal
+          </p>
+        </div>
+      </div>
+
+      {/* Upload Section */}
+      <div>
+        <Label text="Upload University Card" sub="JPG, PNG or PDF (Max. 5MB)" />
+        
+        {/* Upload Area */}
+        <div className="mt-1.5">
+          {!uploadedFile ? (
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+                  <UploadIcon className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-['Inter']">
+                    Drag & drop your file here, or
+                  </p>
+                  <div className="flex gap-2 mt-2 justify-center">
+                    <button
+                      onClick={triggerFileUpload}
+                      className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition font-['Inter']"
+                    >
+                      Browse Files
+                    </button>
+                    <button
+                      onClick={triggerCameraUpload}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition font-['Inter'] flex items-center gap-1.5"
+                    >
+                      <CameraIcon className="w-4 h-4" /> Take Photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border border-green-200 bg-green-50 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <DocumentIcon className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 font-['Inter']">{uploadedFile.name}</p>
+                    <p className="text-xs text-gray-500 font-['Inter']">{formatFileSize(uploadedFile.size)}</p>
+                  </div>
+                  <span className="ml-2 px-2 py-0.5 bg-green-200 text-green-700 text-xs font-semibold rounded-full font-['Inter']">
+                    Uploaded ✓
+                  </span>
+                </div>
+                <button
+                  onClick={removeFile}
+                  className="text-gray-400 hover:text-red-500 transition"
+                >
+                  <CloseIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Hidden file inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+
+        {/* Upload Status Messages */}
+        {uploadStatus === 'error' && (
+          <div className="mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
+            <WarnIcon className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-700 font-['Inter']">
+              Invalid file. Please upload a JPG, PNG, or PDF file under 5MB.
+            </p>
           </div>
-        ))}
+        )}
+        
+        <p className="text-xs text-gray-400 mt-2 font-['Inter'] flex items-center gap-1.5">
+          <InfoIcon className="w-3 h-3" /> Make sure the document is clear and all information is visible.
+        </p>
       </div>
 
-      <div className="flex items-start gap-3 mt-2">
+      {/* Terms Agreement */}
+      <div className="flex items-start gap-3">
         <input
           type="checkbox"
           id="agree"
           checked={data.agreed}
           onChange={e => setData(d => ({ ...d, agreed: e.target.checked }))}
-          className="mt-0.5 accent-blue-600 w-4 h-4"
+          className="mt-0.5 accent-blue-600 w-4 h-4 flex-shrink-0"
         />
         <label htmlFor="agree" className="text-sm text-gray-600 font-['Inter']">
           I agree to the{" "}
-          <a href="#" className="text-blue-600 underline">Terms of Service</a>{" "}
+          <a href="#" className="text-blue-600 underline hover:text-blue-800 transition">Terms of Service</a>{" "}
           and{" "}
-          <a href="#" className="text-blue-600 underline">Privacy Policy</a>
+          <a href="#" className="text-blue-600 underline hover:text-blue-800 transition">Privacy Policy</a>
         </label>
       </div>
+
+      {/* Note about document upload */}
+      {!uploadedFile && (
+        <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3">
+          <WarnIcon className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-orange-700 font-['Inter']">
+            <span className="font-semibold">Note:</span> Your registration will not be complete without uploading a verification document.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

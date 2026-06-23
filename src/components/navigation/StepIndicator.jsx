@@ -4,13 +4,15 @@ const steps = ["Basic Info", "Academic", "Verification"];
 
 export function StepIndicator({ current }) {
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="flex items-center w-full mb-8">
       {steps.map((label, i) => {
         const idx = i + 1;
         const done = idx < current;
         const active = idx === current;
+        const isLast = i === steps.length - 1;
+        
         return (
-          <div key={idx} className="flex items-center">
+          <div key={idx} className={`flex items-center ${!isLast ? "flex-1" : ""}`}>
             <div className="flex flex-col items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all
@@ -24,8 +26,8 @@ export function StepIndicator({ current }) {
                 {label}
               </span>
             </div>
-            {i < steps.length - 1 && (
-              <div className={`h-0.5 w-16 sm:w-24 mx-1 mb-4 transition-all ${done ? "bg-green-400" : "bg-gray-200"}`} />
+            {!isLast && (
+              <div className={`h-0.5 flex-1 mx-1 transition-all ${done ? "bg-green-400" : "bg-gray-200"}`} />
             )}
           </div>
         );

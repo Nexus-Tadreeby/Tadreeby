@@ -1,3 +1,5 @@
+// RegistrationPage.jsx - Updated version
+
 import { useState } from "react";
 import { Header } from "../layout/Header";
 import { Footer } from "../layout/Footer";
@@ -21,7 +23,7 @@ const INITIAL_STATE = {
   universityID: "",
   specialization: "",
   phone: "",
-  verificationDocument: "string",
+  verificationFile: null,
   agreed: false,
 };
 
@@ -32,19 +34,46 @@ const SUBTITLES = [
   "Step 3 of 3 — Review & Submit"
 ];
 
-// Map UI fields to API fields - MATCHING BACKEND EXACTLY
-const mapFormDataToAPI = (data) => {
+// Helper function to convert File to Base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Remove the data:image/jpeg;base64, prefix if needed
+      // The backend might expect just the base64 string without the prefix
+      const base64String = reader.result;
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Map form data to API expected format
+const mapFormDataToAPI = async (data) => {
+  let verificationDocument = null;
+  
+  // Convert file to base64 if exists
+  if (data.verificationFile) {
+    try {
+      verificationDocument = await fileToBase64(data.verificationFile);
+    } catch (error) {
+      console.error("Error converting file to base64:", error);
+      throw new Error("Failed to process verification document");
+    }
+  }
+  
   return {
-    firstName: data.firstName,
-    lastName: data.lastName,
+    firstName: data.firstName.trim(),
+    lastName: data.lastName.trim(),
     personalID: parseInt(data.nationalId) || 0,
     studentNumber: parseInt(data.studentNumber) || 0,
     phone: data.phone || "",
-    email: data.email,
+    email: data.email.trim().toLowerCase(),
     password: data.password,
     universityId: parseInt(data.universityID) || 1,
-    verificationDocument: data.verificationDocument || "string",
-    major: data.specialization,
+    major: data.specialization || "",
+    verificationDocument: verificationDocument // Send as base64
   };
 };
 
@@ -109,13 +138,24 @@ export function RegistrationPage() {
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleNext = () => {
-    // Validate current step before proceeding
-    const fieldsToValidate = step === 1 
-      ? ['firstName', 'lastName', 'email', 'password', 'nationalId']
-      : ['studentNumber', 'universityID', 'specialization'];
-    
+    let fieldsToValidate = [];
     const errors = {};
     let hasError = false;
+    
+    if (step === 1) {
+      fieldsToValidate = ['firstName', 'lastName', 'email', 'password', 'nationalId'];
+    } else if (step === 2) {
+      fieldsToValidate = ['studentNumber', 'universityID', 'specialization'];
+    } else if (step === 3) {
+      if (!data.verificationFile) {
+        errors.verificationFile = "Please upload a verification document";
+        hasError = true;
+      }
+      if (!data.agreed) {
+        errors.agreed = "Please agree to the Terms of Service";
+        hasError = true;
+      }
+    }
     
     for (const field of fieldsToValidate) {
       const error = validateField(field, data[field]);
@@ -154,18 +194,24 @@ export function RegistrationPage() {
   };
 
   const handleSubmit = async () => {
-    // Validate all fields before submitting
+    // Validate all fields
     const errors = validateForm(data);
     const errorFields = Object.keys(errors);
     
-    if (errorFields.length > 0) {
-      const errorMessages = errorFields.map(field => `${field}: ${errors[field]}`).join('\n');
-      setError(`Please fix the following:\n${errorMessages}`);
-      return;
+    // Validate file upload
+    if (!data.verificationFile) {
+      errors.verificationFile = "Please upload a verification document";
+      errorFields.push('verificationFile');
     }
-
+    
     if (!data.agreed) {
-      setError("Please agree to the Terms of Service and Privacy Policy.");
+      errors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
+      errorFields.push('agreed');
+    }
+    
+    if (errorFields.length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix all validation errors before submitting.");
       return;
     }
 
@@ -173,33 +219,55 @@ export function RegistrationPage() {
     setError(null);
 
     try {
-      const payload = mapFormDataToAPI(data);
-      console.log("📤 Sending registration data:", payload);
-      console.log("📤 JSON:", JSON.stringify(payload, null, 2));
-
+      // Map form data to API format (includes file to base64 conversion)
+      const payload = await mapFormDataToAPI(data);
+      
+      console.log("📤 Sending registration data to:", "https://tadreeby-backend-production.up.railway.app/api/auth/register/student");
+      console.log("📤 Payload size:", JSON.stringify(payload).length, "bytes");
+      
+      // Send as JSON
       const response = await authAPI.registerStudent(payload);
       
-      console.log("✅ Registration successful:", response.data);
+      console.log("✅ Registration successful:", response);
+      
+      // Store tokens if present
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+        console.log("🔑 Access token stored");
+      }
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+        console.log("🔄 Refresh token stored");
+      }
+      if (response.sessionId) {
+        localStorage.setItem('sessionId', response.sessionId);
+        console.log("📋 Session ID stored");
+      }
+      
       setSubmitted(true);
     } catch (err) {
       console.error("❌ Registration error:", err);
       
       let errorMessage = "Registration failed. Please try again.";
-      if (err.response) {
-        console.error("❌ Response data:", err.response.data);
-        errorMessage = err.response.data?.message || 
-                      err.response.data?.error || 
-                      `Server error: ${err.response.status}`;
-        
-        if (err.response.status === 400) {
-          errorMessage = "Invalid input. Please check your information.";
-        } else if (err.response.status === 409) {
-          errorMessage = "An account with this email or ID already exists.";
-        } else if (err.response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
+      
+      if (err.status === 400) {
+        // Handle validation errors from backend
+        if (err.data && typeof err.data === 'object') {
+          // If backend returns field-specific errors
+          const fieldErrors = err.data.errors || err.data;
+          const errorMessages = Object.values(fieldErrors).flat().join('. ');
+          errorMessage = errorMessages || "Invalid input. Please check your information.";
+        } else {
+          errorMessage = err.data?.message || "Invalid input. Please check your information.";
         }
-      } else if (err.request) {
-        errorMessage = "Network error. Please check your connection.";
+      } else if (err.status === 409) {
+        errorMessage = err.data?.message || "An account with this email or ID already exists.";
+      } else if (err.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (err.status === 413) {
+        errorMessage = "The verification document is too large. Please upload a smaller file (max 5MB).";
+      } else if (err.message) {
+        errorMessage = err.message;
       }
       
       setError(errorMessage);
@@ -208,7 +276,6 @@ export function RegistrationPage() {
     }
   };
 
-  // Show error screen if registration failed
   if (error && !submitted) {
     return (
       <ErrorScreen 
@@ -248,7 +315,7 @@ export function RegistrationPage() {
 
           {step === 1 && <Step1 data={data} setData={setData} validationErrors={validationErrors} />}
           {step === 2 && <Step2 data={data} setData={setData} validationErrors={validationErrors} />}
-          {step === 3 && <Step3 data={data} setData={setData} />}
+          {step === 3 && <Step3 data={data} setData={setData} validationErrors={validationErrors} />}
 
           <div className={`flex mt-8 ${step > 1 ? "justify-between" : "justify-end"}`}>
             {step > 1 && (
@@ -258,7 +325,7 @@ export function RegistrationPage() {
             )}
             <Button
               onClick={handleNext}
-              disabled={isLoading || (step === 3 && !data.agreed)}
+              disabled={isLoading || (step === 3 && (!data.agreed || !data.verificationFile))}
               icon={isLoading ? <LoadingSpinner /> : (step === 3 ? null : <ArrowRight />)}
             >
               {isLoading ? "Submitting..." : (step === 3 ? "Submit Registration" : "Next Step")}
@@ -272,7 +339,6 @@ export function RegistrationPage() {
   );
 }
 
-// Loading spinner component
 function LoadingSpinner() {
   return (
     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

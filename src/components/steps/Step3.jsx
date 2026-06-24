@@ -108,7 +108,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
 
       {/* Requirements Box */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-        <p className="text-xs font-semibold text-gray-700 mb-2 font-['Inter']">Uploaded document must contain the following information:</p>
+        <p className="text-xs font-semibold text-gray-700 mb-2 font-['Inter']">The uploaded document must contain the following information:</p>
         <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 font-['Inter']">
           <p className="flex items-center gap-1.5">✓ Full Student Name</p>
           <p className="flex items-center gap-1.5">✓ University Name</p>

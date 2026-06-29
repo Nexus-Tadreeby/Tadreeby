@@ -4,7 +4,7 @@ import { Label } from "../common/Label";
 import { UserIcon, MailIcon, LockIcon, CardIcon, PhoneIcon, EyeIcon, WarnIcon, CheckIcon } from "../common/Icons";
 import { validateField } from "../../utils/validation";
 
-export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept validationErrors
+export function Step1({ data, setData, validationErrors = {} }) { // Accept validationErrors
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [errors, setErrors] = useState({});
@@ -19,27 +19,20 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
   };
 
   const handleChange = (field, value) => {
-    setData(d => ({ ...d, [field]: value }));
+    // ✅ Create updated data object
+    const updatedData = { ...data, [field]: value };
+    setData(updatedData);
     
-    // Real-time validation
-    const error = validateField(field, value);
+    // ✅ Pass the entire updated data object to validateField
+    const error = validateField(field, value, updatedData);
     setErrors(prev => ({
       ...prev,
       [field]: error
     }));
 
-    // Check if confirm password matches when password changes
+    // Re-validate confirmPassword when password changes
     if (field === 'password' && data.confirmPassword) {
-      const confirmError = value !== data.confirmPassword ? "Passwords do not match" : null;
-      setErrors(prev => ({
-        ...prev,
-        confirmPassword: confirmError
-      }));
-    }
-
-    // Check if password matches when confirm password changes
-    if (field === 'confirmPassword') {
-      const confirmError = value !== data.password ? "Passwords do not match" : null;
+      const confirmError = validateField('confirmPassword', data.confirmPassword, updatedData);
       setErrors(prev => ({
         ...prev,
         confirmPassword: confirmError
@@ -60,7 +53,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
     );
   };
 
-  // ✅ Combine local errors with validation errors from parent
+  // Combine local errors with validation errors from parent
   const getFieldError = (field) => {
     return errors[field] || validationErrors[field] || null;
   };
@@ -82,6 +75,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
             placeholder="e.g. Afnan"
             value={data.firstName}
             onChange={e => handleChange('firstName', e.target.value)}
+            maxLength={20}
           />
           {getFieldError('firstName') && (
             <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('firstName')}</p>
@@ -94,6 +88,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
             placeholder="e.g. Kullab"
             value={data.lastName}
             onChange={e => handleChange('lastName', e.target.value)}
+            maxLength={50}
           />
           {getFieldError('lastName') && (
             <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('lastName')}</p>
@@ -108,6 +103,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
           placeholder="Enter your national ID number"
           value={data.nationalId}
           onChange={e => handleChange('nationalId', e.target.value)}
+          maxLength={9}
         />
         {getFieldError('nationalId') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('nationalId')}</p>
@@ -135,6 +131,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
           placeholder="e.g. 0597377872"
           value={data.phone}
           onChange={e => handleChange('phone', e.target.value)}
+          maxLength={10}
         />
         {getFieldError('phone') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('phone')}</p>
@@ -164,7 +161,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // ✅ Accept 
             icon={<LockIcon />}
             placeholder="Re-enter your password"
             type={showConfirmPass ? "text" : "password"}
-            value={data.confirmPassword || ""}
+            value={data.confirmPassword}
             onChange={e => handleChange('confirmPassword', e.target.value)}
             rightIcon={<EyeIcon show={showConfirmPass} onClick={() => setShowConfirmPass(s => !s)} />}
           />

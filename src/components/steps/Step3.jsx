@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Label } from "../common/Label";
 import { 
   CheckIcon, 
   InfoIcon, 
   WarnIcon,
   UploadIcon,
-  CameraIcon,
   DocumentIcon,
   CloseIcon 
 } from "../common/Icons";
@@ -21,10 +20,8 @@ const UNIVERSITIES = [
 
 export function Step3({ data, setData, validationErrors = {} }) {
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [fileError, setFileError] = useState(null);
+  const [localFileError, setLocalFileError] = useState(null);
   const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
 
   const getUniversityName = (id) => {
     if (!id) return "Not provided";
@@ -32,30 +29,39 @@ export function Step3({ data, setData, validationErrors = {} }) {
     return uni ? uni.name : "Not provided";
   };
 
+  // Sync uploaded file state with data prop
+  useEffect(() => {
+    if (data.verificationFile && !uploadedFile) {
+      setUploadedFile(data.verificationFile);
+    }
+  }, [data.verificationFile]);
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Reset previous errors
+    setLocalFileError(null);
+
+    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      setFileError("File size must be under 5MB");
-      setUploadStatus('error');
-      setUploadedFile(null);
+      setLocalFileError("File size must be under 5MB");
       return;
     }
 
+    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
-      setFileError("Please upload a JPG, PNG, or PDF file");
-      setUploadStatus('error');
-      setUploadedFile(null);
+      setLocalFileError("Please upload a JPG, PNG, or PDF file");
       return;
     }
 
-    setFileError(null);
+    // Clear any parent validation errors for this field
+    if (validationErrors.verificationFile) {
+      // This won't directly clear parent errors, but will be handled by re-validation
+    }
+
     setUploadedFile(file);
-    setUploadStatus('success');
-    
-    // ✅ Only store the file
     setData(d => ({ 
       ...d, 
       verificationFile: file 
@@ -64,22 +70,16 @@ export function Step3({ data, setData, validationErrors = {} }) {
 
   const removeFile = () => {
     setUploadedFile(null);
-    setUploadStatus(null);
-    setFileError(null);
+    setLocalFileError(null);
     setData(d => ({ 
       ...d, 
       verificationFile: null 
     }));
     if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
-  };
-
-  const triggerCameraUpload = () => {
-    cameraInputRef.current?.click();
   };
 
   const formatFileSize = (bytes) => {
@@ -95,8 +95,15 @@ export function Step3({ data, setData, validationErrors = {} }) {
     { label: "Specialization", value: data.specialization || "Not provided" },
   ];
 
-  // ✅ Check file validation error
-  const hasFileError = validationErrors?.verificationFile || fileError;
+  // Combine errors: local file errors take precedence over parent errors
+  const getFileError = () => {
+    if (localFileError) return localFileError;
+    if (validationErrors?.verificationFile) return validationErrors.verificationFile;
+    return null;
+  };
+
+  const fileError = getFileError();
+  const hasFileError = !!fileError;
 
   return (
     <div className="space-y-6">
@@ -155,7 +162,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
                 </div>
               </div>
               {hasFileError && (
-                <p className="text-xs text-red-500 mt-3 font-['Inter']">{fileError || "Please upload a verification document"}</p>
+                <p className="text-xs text-red-500 mt-3 font-['Inter']">{fileError}</p>
               )}
             </div>
           ) : (
@@ -176,6 +183,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
                 <button
                   onClick={removeFile}
                   className="text-gray-400 hover:text-red-500 transition"
+                  aria-label="Remove file"
                 >
                   <CloseIcon className="w-5 h-5" />
                 </button>
@@ -191,16 +199,8 @@ export function Step3({ data, setData, validationErrors = {} }) {
           onChange={handleFileUpload}
           className="hidden"
         />
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
 
-        {uploadStatus === 'error' && fileError && (
+        {hasFileError && (
           <div className="mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
             <WarnIcon className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-red-700 font-['Inter']">{fileError}</p>
@@ -217,7 +217,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
         <input
           type="checkbox"
           id="agree"
-          checked={data.agreed}
+          checked={data.agreed || false}
           onChange={e => setData(d => ({ ...d, agreed: e.target.checked }))}
           className="mt-0.5 accent-blue-600 w-4 h-4 flex-shrink-0"
         />
@@ -229,6 +229,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
         </label>
       </div>
 
+      {/* Show warning only if no file uploaded and no error is shown */}
       {!uploadedFile && !hasFileError && (
         <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3">
           <WarnIcon className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />

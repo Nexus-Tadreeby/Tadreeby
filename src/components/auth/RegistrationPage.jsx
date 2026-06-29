@@ -23,7 +23,7 @@ const INITIAL_STATE = {
   universityID: "",
   specialization: "",
   phone: "",
-  verificationFile: null,
+  verificationDocument: "",
   agreed: false,
 };
 
@@ -51,7 +51,7 @@ const fileToBase64 = (file) => {
 
 // Map form data to API expected format
 const mapFormDataToAPI = async (data) => {
-  let verificationDocument = null;
+  let verificationDocument = "";
   
   // Convert file to base64 if exists
   if (data.verificationFile) {
@@ -71,6 +71,7 @@ const mapFormDataToAPI = async (data) => {
     phone: data.phone || "",
     email: data.email.trim().toLowerCase(),
     password: data.password,
+    confirmPassword: data.confirmPassword,
     universityId: parseInt(data.universityID) || 1,
     major: data.specialization || "",
     verificationDocument: verificationDocument // Send as base64
@@ -143,7 +144,7 @@ export function RegistrationPage() {
     let hasError = false;
     
     if (step === 1) {
-      fieldsToValidate = ['firstName', 'lastName', 'email', 'password', 'nationalId'];
+      fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword', 'nationalId'];
     } else if (step === 2) {
       fieldsToValidate = ['studentNumber', 'universityID', 'specialization'];
     } else if (step === 3) {
@@ -158,7 +159,7 @@ export function RegistrationPage() {
     }
     
     for (const field of fieldsToValidate) {
-      const error = validateField(field, data[field]);
+      const error = validateField(field, data[field], data);
       if (error) {
         errors[field] = error;
         hasError = true;
@@ -194,108 +195,112 @@ export function RegistrationPage() {
   };
 
   const handleSubmit = async () => {
-    // Validate all fields
-    const errors = validateForm(data);
-    const errorFields = Object.keys(errors);
-    
-    // Validate file upload
-    if (!data.verificationFile) {
-      errors.verificationFile = "Please upload a verification document";
-      errorFields.push('verificationFile');
-    }
-    
-    if (!data.agreed) {
-      errors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
-      errorFields.push('agreed');
-    }
-    
-    if (errorFields.length > 0) {
-      setValidationErrors(errors);
-      setError("Please fix all validation errors before submitting.");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Map form data to API format (includes file to base64 conversion)
-      const payload = await mapFormDataToAPI(data);
-      
-      console.log("📤 Sending registration data to:", "https://tadreeby-backend-production.up.railway.app/api/auth/register/student");
-      console.log("📤 Payload size:", JSON.stringify(payload).length, "bytes");
-      
-      // Send as JSON
-      const response = await authAPI.registerStudent(payload);
-      
-      console.log("✅ Registration successful:", response);
-      
-      // Store tokens if present
-      if (response.accessToken) {
-        localStorage.setItem('accessToken', response.accessToken);
-        console.log("🔑 Access token stored");
-      }
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-        console.log("🔄 Refresh token stored");
-      }
-      if (response.sessionId) {
-        localStorage.setItem('sessionId', response.sessionId);
-        console.log("📋 Session ID stored");
-      }
-      
-      setSubmitted(true);
-    } catch (err) {
-      console.error("❌ Registration error:", err);
-      
-      let errorMessage = "Registration failed. Please try again.";
-      
-      if (err.status === 400) {
-        // Handle validation errors from backend
-        if (err.data && typeof err.data === 'object') {
-          // If backend returns field-specific errors
-          const fieldErrors = err.data.errors || err.data;
-          const errorMessages = Object.values(fieldErrors).flat().join('. ');
-          errorMessage = errorMessages || "Invalid input. Please check your information.";
-        } else {
-          errorMessage = err.data?.message || "Invalid input. Please check your information.";
-        }
-      } else if (err.status === 409) {
-        errorMessage = err.data?.message || "An account with this email or ID already exists.";
-      } else if (err.status === 500) {
-        errorMessage = "Server error. Please try again later.";
-      } else if (err.status === 413) {
-        errorMessage = "The verification document is too large. Please upload a smaller file (max 5MB).";
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (error && !submitted) {
-    return (
-      <ErrorScreen 
-        error={error} 
-        onRetry={handleSubmit} 
-        onCancel={() => {
-          setError(null);
-          setStep(1);
-        }}
-      />
-    );
+  // Validate all fields
+  const errors = validateForm(data);
+  const errorFields = Object.keys(errors);
+  
+  // Validate file upload
+  if (!data.verificationFile) {
+    errors.verificationFile = "Please upload a verification document";
+    errorFields.push('verificationFile');
+  }
+  
+  if (!data.agreed) {
+    errors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
+    errorFields.push('agreed');
+  }
+  
+  if (errorFields.length > 0) {
+    setValidationErrors(errors);
+    setError("Please fix all validation errors before submitting.");
+    return;
   }
 
-  if (submitted) {
-    return <SuccessScreen data={data} onReset={handleReset} />;
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    // Map form data to API format
+    const payload = await mapFormDataToAPI(data);
+    
+    console.log("📤 Full payload:", payload);
+    
+    const response = await authAPI.registerStudent(payload);
+    
+    console.log("✅ Registration successful:", response);
+    
+    // Store tokens if present
+    if (response.accessToken) {
+      localStorage.setItem('accessToken', response.accessToken);
+    }
+    if (response.refreshToken) {
+      localStorage.setItem('refreshToken', response.refreshToken);
+    }
+    if (response.sessionId) {
+      localStorage.setItem('sessionId', response.sessionId);
+    }
+    
+    setSubmitted(true);
+  } catch (err) {
+    console.error("❌ Registration error:", err);
+    
+    let errorMessage = "Registration failed. Please try again.";
+    let fieldErrors = {};
+    
+    if (err.data) {
+      // ✅ Parse the fields array from the response
+      if (err.data.fields && Array.isArray(err.data.fields)) {
+        // Group errors by field
+        err.data.fields.forEach(({ field, message }) => {
+          if (!fieldErrors[field]) {
+            fieldErrors[field] = [];
+          }
+          fieldErrors[field].push(message);
+        });
+        
+        // Create a readable error message
+        const errorMessages = Object.entries(fieldErrors)
+          .map(([field, messages]) => `${field}: ${messages.join('; ')}`)
+          .join('. ');
+        
+        errorMessage = `Validation failed: ${errorMessages}`;
+        
+        // ✅ Map backend field names to frontend field names
+        const fieldMapping = {
+          'personalID': 'nationalId',
+          'universityId': 'universityID',
+          'confirmPassword': 'confirmPassword',
+          'studentNumber': 'studentNumber',
+        };
+        
+        // Set validation errors for the form
+        const formErrors = {};
+        Object.entries(fieldErrors).forEach(([field, messages]) => {
+          const mappedField = fieldMapping[field] || field;
+          formErrors[mappedField] = messages.join(' ');
+        });
+        
+        setValidationErrors(formErrors);
+        
+        console.log("📝 Field errors from backend:", fieldErrors);
+        console.log("📝 Mapped form errors:", formErrors);
+        
+      } else if (err.data.message) {
+        errorMessage = err.data.message;
+      } else {
+        errorMessage = JSON.stringify(err.data);
+      }
+    }
+    
+    setError(errorMessage);
+  } finally {
+    setIsLoading(false);
   }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <Header step={step} />
+      <Header/>
 
       <main className="pt-32 flex items-center justify-center px-4 py-8">
         <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-2xl p-8 sm:p-10">

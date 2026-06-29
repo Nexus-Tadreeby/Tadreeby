@@ -22,7 +22,7 @@ const SPECIALIZATIONS = [
   "Network Engineering"
 ];
 
-export function Step2({ data, setData, validationErrors = {} }) { // ✅ Accept validationErrors prop
+export function Step2({ data, setData, validationErrors = {} }) { //Accept validationErrors prop
   const [errors, setErrors] = useState({});
 
   const handleChange = (field, value) => {
@@ -49,6 +49,7 @@ export function Step2({ data, setData, validationErrors = {} }) { // ✅ Accept 
           placeholder="Your official student number"
           value={data.studentNumber}
           onChange={e => handleChange('studentNumber', e.target.value)}
+          maxLength={15}
         />
         {getFieldError('studentNumber') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('studentNumber')}</p>

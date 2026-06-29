@@ -1,21 +1,30 @@
 // src/utils/validation.js
 
-export const validateField = (field, value) => {
+export const validateField = (field, value, allValues = {}) => {
   switch (field) {
     case 'firstName':
     case 'lastName':
       if (!value || value.trim().length < 2) {
         return `${field === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters`;
       }
-      if (!/^[a-zA-Z\s\-']+$/.test(value)) {
-        return 'Name contains invalid characters';
+      if (!/^[a-zA-Z\s]+$/.test(value)) {
+        return 'Only English letters (A-Z) and spaces, are allowed';
       }
       return null;
-      
+     
     case 'email':
       if (!value) return 'Email is required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         return 'Please enter a valid email address';
+      }
+      return null;
+
+    // Add phone validation
+    case 'phone':
+      if (!value || value.trim() === '') return 'Phone number is required';
+      const phoneClean = value.replace(/\s/g, ''); // Remove spaces
+      if (!/^\d{10}$/.test(phoneClean)) {
+        return 'Phone number must be exactly 10 digits';
       }
       return null;
       
@@ -30,17 +39,22 @@ export const validateField = (field, value) => {
       }
       return null;
       
-    case 'confirmPassword':
-      // This is handled separately
+    case "confirmPassword":
+      if (!value) return 'Please confirm your password';
+      // Check if it matches password (from allValues)
+      if (allValues.password && value !== allValues.password) {
+        return "Passwords do not match";
+      }
       return null;
       
     case 'nationalId':
       if (!value) return 'National ID is required';
-      if (!/^\d{9,}$/.test(value)) return 'National ID must be at least 9 digits';
+      if (!/^\d{9}$/.test(value)) return 'National ID must be exactly 9 digits';
       return null;
       
     case 'studentNumber':
       if (!value) return 'Student number is required';
+      if (value.trim().length < 7 || value.trim().length > 15) return 'Student number must be between 7 and 15 digits';
       if (!/^\d+$/.test(value)) return 'Student number must contain only digits';
       return null;
       

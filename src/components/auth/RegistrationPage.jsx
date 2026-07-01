@@ -300,9 +300,9 @@ export function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <Header/>
+      <Header className=".glass-header"/>
 
-      <main className="pt-32 flex items-center justify-center px-4 py-8">
+      <main className="flex items-center justify-center px-4 py-8">
         <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-2xl p-8 sm:p-10">
           <p className="font-['Inter'] font-bold text-[11px] leading-4 tracking-[1.5px] uppercase text-blue-600 mb-2">
             Student Registration

@@ -2,3 +2,55 @@
   font-family: 'Inter', sans-serif;
 }
 @import "tailwindcss";
+
+/* Custom reusable glass header class */
+
+    .header-transparent {
+  background: transparent;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-header {
+    /* Stick to top with spacing */
+    position: sticky;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 50;           /* mb-10 */
+    
+    /* Layout & typography */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;font-size: 1rem;
+    line-height: 1.5;
+    
+    /* Spacing */
+    padding: 0.75rem 1.5rem;          /* py-3 px-6 */
+    }
+  .glassi{
+    /* Glass‑morphism effect */
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);       /* backdrop-blur-md */
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4); /* border-white/40 */
+    border-radius: 1rem;              /* rounded-2xl */
+  }
+  .shadowi {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  }
+
+/* Responsive padding: sm:px-10 (min-width: 640px) */
+@media (max-width: 1090px){
+  .glass-header {
+    /* Glass‑morphism effect */
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);       /* backdrop-blur-md */
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4); /* border-white/40 */
+    border-radius: 1rem;         /* py-3 px-4 */
+
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+  }
+}

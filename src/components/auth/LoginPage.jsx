@@ -11,6 +11,7 @@ import { authAPI } from "../../services/api";
 import logo from "../../assets/logo.svg";
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,7 +70,7 @@ export function LoginPage() {
       }
 
       // Redirect to dashboard or home page
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } catch (err) {
       console.error("❌ Login error:", err);
 

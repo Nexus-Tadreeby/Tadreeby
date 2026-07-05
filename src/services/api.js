@@ -8,6 +8,7 @@ const apiRequest = async (endpoint, options = {}) => {
   // For FormData, do NOT set Content-Type – browser will set it with boundary
   const headers = {
     'Accept': 'application/json',
+    'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers,
   };

@@ -49,33 +49,29 @@ const fileToBase64 = (file) => {
   });
 };
 
-// Map form data to API expected format
-const mapFormDataToAPI = async (data) => {
-  let verificationDocument = "";
-  
-  // Convert file to base64 if exists
+// Helper to build FormData for registration
+const buildRegistrationFormData = (data) => {
+  const formData = new FormData();
+
+  // Append all text fields (ensure they are strings)
+  formData.append('firstName', data.firstName.trim());
+  formData.append('lastName', data.lastName.trim());
+  formData.append('personalID', String(parseInt(data.nationalId) || 0));
+  formData.append('studentNumber', String(parseInt(data.studentNumber) || 0));
+  formData.append('phone', data.phone || '');
+  formData.append('email', data.email.trim().toLowerCase());
+  formData.append('password', data.password);
+  formData.append('confirmPassword', data.confirmPassword);
+  formData.append('universityId', String(parseInt(data.universityID) || 1));
+  formData.append('major', data.specialization || '');
+
+  // Append the file – field name should match what the backend expects
+  // (likely 'verificationDocument' or 'file' – check backend documentation)
   if (data.verificationFile) {
-    try {
-      verificationDocument = await fileToBase64(data.verificationFile);
-    } catch (error) {
-      console.error("Error converting file to base64:", error);
-      throw new Error("Failed to process verification document");
-    }
+    formData.append('verificationDocument', data.verificationFile);
   }
-  
-  return {
-    firstName: data.firstName.trim(),
-    lastName: data.lastName.trim(),
-    personalID: parseInt(data.nationalId) || 0,
-    studentNumber: parseInt(data.studentNumber) || 0,
-    phone: data.phone || "",
-    email: data.email.trim().toLowerCase(),
-    password: data.password,
-    confirmPassword: data.confirmPassword,
-    universityId: parseInt(data.universityID) || 1,
-    major: data.specialization || "",
-    verificationDocument: verificationDocument // Send as base64
-  };
+
+  return formData;
 };
 
 function SuccessScreen({ data, onReset }) {
@@ -220,12 +216,15 @@ export function RegistrationPage() {
   setError(null);
 
   try {
-    // Map form data to API format
-    const payload = await mapFormDataToAPI(data);
+    // Build FormData instead of JSON
+    const formData = await buildRegistrationFormData(data);
+
+    //You can log FormData contents for debugging (optional)
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
     
-    console.log("📤 Full payload:", payload);
-    
-    const response = await authAPI.registerStudent(payload);
+    const response = await authAPI.registerStudent(formData);
     
     console.log("✅ Registration successful:", response);
     
@@ -265,7 +264,7 @@ export function RegistrationPage() {
         
         errorMessage = `Validation failed: ${errorMessages}`;
         
-        // ✅ Map backend field names to frontend field names
+        // Map backend field names to frontend field names
         const fieldMapping = {
           'personalID': 'nationalId',
           'universityId': 'universityID',

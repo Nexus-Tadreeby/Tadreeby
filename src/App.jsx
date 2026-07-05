@@ -7,7 +7,7 @@ import { CheckEmailPage } from "./components/auth/CheckEmailPage";
 import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import Dashboard from "./components/pages/dashboard";
 // import { SuccessPasswordReset } from "./components/auth/SuccessPasswordReset";
-import {LandingPage} from "./components/pages/LandingPage";
+import LandingPage from "./components/pages/LandingPage";
 
 
 function App() {

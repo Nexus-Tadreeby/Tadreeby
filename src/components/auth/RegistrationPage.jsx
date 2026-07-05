@@ -300,7 +300,9 @@ export function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <Header className=".glass-header"/>
+      <Header className=".glass-header">
+        <div className="w-180"></div>
+      </Header>
 
       <main className="flex items-center justify-center px-4 py-8">
         <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-2xl p-8 sm:p-10">

@@ -3,6 +3,68 @@
 }
 @import "tailwindcss";
 
+/* ============================================================ */
+/* 10. src/index.css — add these Tailwind utilities             */
+/* ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+        @apply bg-[#F9FAFB] text-[#1E2939] antialiased;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-gray-300;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-400;
+    }
+}
+
+@layer utilities {
+    .font-inter {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Animation for notifications */
+    @keyframes pulse-dot {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.15);
+        }
+    }
+
+    .animate-pulse-dot {
+        animation: pulse-dot 2s ease-in-out infinite;
+    }
+}
+
+/* Your custom glass‑header classes can stay as they are */
+/* ... (rest of your CSS) ... */
+
 /* Custom reusable glass header class */
 
     .header-transparent {

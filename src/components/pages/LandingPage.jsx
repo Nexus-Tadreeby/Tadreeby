@@ -487,12 +487,12 @@ const LandingPage = () => {
           <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
             <Link to="/register">
               <button className="px-7 py-3.5 bg-[#F97316] text-white text-[15px] font-semibold rounded-full hover:bg-orange-600 transition">
-                Get Started as Student
+                Student Registeration
               </button>
             </Link>
             <Link to="/partner">
               <button className="px-7 py-3.5 bg-[#DCE8FD] border border-[#4D49FC] text-[#374151] text-[15px] font-semibold rounded-full hover:bg-blue-50 transition">
-                Partner with Us
+                For Universities and Companies..
               </button>
             </Link>
           </div>

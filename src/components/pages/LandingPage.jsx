@@ -492,7 +492,7 @@ const LandingPage = () => {
             </Link>
             <Link to="/partner">
               <button className="px-7 py-3.5 bg-[#DCE8FD] border border-[#4D49FC] text-[#374151] text-[15px] font-semibold rounded-full hover:bg-blue-50 transition">
-                For Universities and Companies..
+                For Universities and Companies
               </button>
             </Link>
           </div>

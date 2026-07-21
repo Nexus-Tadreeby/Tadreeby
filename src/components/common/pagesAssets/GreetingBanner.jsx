@@ -1,16 +1,21 @@
 import React from "react";
-import sunIcon from "./sun.png";   // adjust path to your assets
-import moonIcon from "./moon.png"; // adjust path
-
+import sunIcon from "./sun.png";   // adjust path as needed
+import moonIcon from "./moon.png"; // adjust path as needed
 
 function GreetingBanner({ name = "User", subtitle = "Here's what's happening across your platform today." }) {
   const hour = new Date().getHours();
+  const isEvening = hour >= 18;
   const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
   const iconSrc = (hour >= 6 && hour < 18) ? sunIcon : moonIcon;
   const iconAlt = (hour >= 6 && hour < 18) ? "Sun" : "Moon";
 
+  // Choose gradient and shadow based on time
+  const gradientClasses = isEvening
+    ? "bg-gradient-to-r from-[#112B50] to-[#1158BE] shadow-[0_3px_27px_10px_#83A1E3]"
+    : "bg-gradient-to-r from-[#023e95] to-[#0368fb] shadow-[0_3px_27px_10px_rgba(198,216,255,0.6)]";
+
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-[#023e95] to-[#0368fb] px-8 py-7 shadow-[0_3px_27px_10px_rgba(198,216,255,0.6)]">
+    <div className={`flex items-center justify-between rounded-2xl px-8 py-7 ${gradientClasses}`}>
       <div>
         <h1 className="text-[19px] font-bold text-white">{greeting}, {name}</h1>
         <p className="mt-1 text-[15px] text-blue-100">{subtitle}</p>

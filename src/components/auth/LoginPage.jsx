@@ -1,18 +1,20 @@
 // LoginPage.jsx
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Footer } from "../layout/Footer";
 import { Button } from "../common/Button";
 import { InputField } from "../common/InputField";
 import { Label } from "../common/Label";
 import { MailIcon, LockIcon, EyeIcon } from "../common/Icons";
 import { authAPI } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import { ROLE_HOME_ROUTES } from "../../constants/roles";
 import logo from "../../assets/logo.svg";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,60 +25,46 @@ export function LoginPage() {
 
   const validateForm = () => {
     const errors = {};
-
     if (!email.trim()) {
       errors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       errors.email = "Please enter a valid email address";
     }
-
     if (!password) {
       errors.password = "Password is required";
     } else if (password.length < 8) {
       errors.password = "Password must be at least 8 characters";
     }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Call your login API
       const response = await authAPI.login({
         email: email.trim().toLowerCase(),
-        password: password,
+        password,
       });
 
       console.log("✅ Login successful:", response);
 
-      // Store tokens
-      if (response.accessToken) {
-        localStorage.setItem("accessToken", response.accessToken);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem("refreshToken", response.refreshToken);
-      }
-      if (response.user) {
-        localStorage.setItem("user", JSON.stringify(response.user));
-      }
+      // Update AuthContext (this also persists to localStorage internally)
+      login(response.user, response.accessToken, response.refreshToken);
 
-      // Redirect to dashboard or home page
-      navigate("/dashboard");
+      const homeRoute = ROLE_HOME_ROUTES[response.user.role];
+      if (!homeRoute) {
+        console.error("⚠️ No home route mapped for role:", response.user.role);
+      }
+      navigate(homeRoute ?? "/login", { replace: true });
     } catch (err) {
       console.error("❌ Login error:", err);
-
       let errorMessage = "Login failed. Please try again.";
-
       if (err.status === 401) {
         errorMessage = "Invalid email or password. Please try again.";
       } else if (err.status === 404) {
@@ -86,7 +74,6 @@ export function LoginPage() {
       } else if (err.data?.message) {
         errorMessage = err.data.message;
       }
-
       setError(errorMessage);
     } finally {
       setIsLoading(false);

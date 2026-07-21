@@ -8,7 +8,7 @@ function TopIconCluster({
   userName = "User",
 }) {
   return (
-    <div className="flex items-center justify-end gap-3 pb-4">
+    <div className="flex items-center justify-end gap-3">
       {/* Chat button */}
       <button className="relative flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-800">
         <MessageCircle className="h-4 w-4" strokeWidth={2} />

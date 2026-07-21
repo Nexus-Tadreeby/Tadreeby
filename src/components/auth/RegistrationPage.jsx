@@ -1,6 +1,7 @@
 // RegistrationPage.jsx - Updated version
 
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Header } from "../layout/Header";
 import { Footer } from "../layout/Footer";
 import { StepIndicator } from "../navigation/StepIndicator";
@@ -11,6 +12,7 @@ import { Button } from "../common/Button";
 import { ArrowLeft, ArrowRight, SuccessIcon, ErrorIcon } from "../common/Icons";
 import { authAPI } from "../../services/api";
 import { validateForm, validateField } from "../../utils/validation";
+import { useAuth } from "../../context/AuthContext";
 
 const INITIAL_STATE = {
   firstName: "",
@@ -127,12 +129,15 @@ function ErrorScreen({ error, onRetry, onCancel }) {
 }
 
 export function RegistrationPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [step, setStep] = useState(1);
   const [data, setData] = useState(INITIAL_STATE);
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+
 
   const handleNext = () => {
     let fieldsToValidate = [];
@@ -227,19 +232,28 @@ export function RegistrationPage() {
     const response = await authAPI.registerStudent(formData);
     
     console.log("✅ Registration successful:", response);
-    
-    // Store tokens if present
-    if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
-    }
-    if (response.refreshToken) {
-      localStorage.setItem('refreshToken', response.refreshToken);
-    }
+
+    const userData = response.user ?? {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      role: "STUDENT",
+    };
+
+    login(userData, response.accessToken, response.refreshToken);
+
     if (response.sessionId) {
       localStorage.setItem('sessionId', response.sessionId);
     }
-    
+
     setSubmitted(true);
+    navigate('/student/profile', {
+      replace: true,
+      state: {
+        registrationSuccess: true,
+        message: 'Your account is pending.',
+      },
+    });
   } catch (err) {
     console.error("❌ Registration error:", err);
     

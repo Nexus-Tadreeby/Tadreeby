@@ -35,16 +35,15 @@ import {
 /* ------------------------------------------------------------------ */
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Universities", icon: Landmark },
-  { label: "Companies", icon: Building2 },
-  { label: "Users", icon: Users },
-  { label: "System Logs", icon: ScanEye },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/superAdmin/dashboard" },
+  { label: "Universities", icon: Landmark, path: "/superAdmin/universities" },
+  { label: "Companies", icon: Building2, path: "/superAdmin/companies" },
+  { label: "Users", icon: Users, path: "/users" },
+  { label: "System Logs", icon: ScanEye, path: "/logs" },
 ];
 
 const NAV_FOOTER_ITEMS = [
-  { label: "Chat", icon: MessageCircle, badge: 9 },
-  { label: "Settings", icon: Settings },
+  { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 const UNIVERSITIES_CARD = {
@@ -207,10 +206,10 @@ const INTERNSHIP_TAGS = [
   },
 ];
 
-const user = {
+const superAdminUser = {
   name: "Deema Abd Alhady",
   role: "Super Admin",
-  avatar: "", // optional – can be a URL if you have one
+  avatar: "", // or a URL if available
 };
 
 /* ------------------------------------------------------------------ */
@@ -418,10 +417,11 @@ function PlaceholderPieCard() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 rounded-2xl bg-white p-6 text-center shadow-[0_4px_8px_1px_rgba(219,234,254,0.7)]">
       <p className="text-[14px] text-gray-700" dir="rtl">
-       here is a pie
+        here is a pie
       </p>
       <p className="text-[14px] text-gray-700" dir="rtl">
-       ************************** <br/> ************************ <br/> ************************
+        ************************** <br /> ************************ <br />{" "}
+        ************************
       </p>
     </div>
   );
@@ -431,18 +431,23 @@ function PlaceholderPieCard() {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function Dashboard() {
+export default function SuperAdminDashboard() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#eef1f8] font-sans">
-      <Sidebar />
+      <Sidebar
+        navItems={NAV_ITEMS}
+        footerItems={NAV_FOOTER_ITEMS}
+        user={superAdminUser}
+        profilePath="/profile"
+      />
 
       <main className="flex-1 overflow-y-auto p-8">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
           <TopIconCluster
             chatBadge={9}
             notificationBadge={5}
-            avatarUrl={user.avatar}
-            userName={user.name}
+            avatarUrl={superAdminUser.avatar}
+            userName={superAdminUser.name}
           />
           <GreetingBanner name="Deema" />
           <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap">

@@ -1,37 +1,37 @@
-import { useState, useEffect } from 'react';
-import { AuthContext } from './AuthContextObject.js';
+// src/contexts/AuthContext.jsx
+import { createContext, useContext, useState } from "react";
 
-// 2. Create the Provider component
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  
-  // Strategy: Pull the token from localStorage immediately when the app loads
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+const AuthContext = createContext(null);
 
-  // This hook watches our token state. If it changes, update localStorage!
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-  }, [token]);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
 
-  // Mock login function
-  const login = (userData, userToken) => {
+  const login = (userData, accessToken, refreshToken) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
     setUser(userData);
-    setToken(userToken);
   };
 
-  // Mock logout function
   const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setUser(null);
-    setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}

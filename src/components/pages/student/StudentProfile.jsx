@@ -879,21 +879,50 @@ const ProgressTracker = ({ status }) => {
 
   const statusIndex = steps.findIndex((s) => s.key === actualStatus);
   const fillWidth = statusIndex <= 0 ? "0%" : statusIndex === 1 ? "50%" : "100%";
+  const isApproved = status?.toLowerCase() === "approved";
+  const isRejected = status?.toLowerCase() === "rejected";
+  const isPending = status?.toLowerCase() === "pending";
+
+  // تحديد لون الخط حسب الحالة
+  let lineColor = "bg-gray-200"; // افتراضي
+  if (isApproved) lineColor = "bg-green-500";
+  else if (isRejected) lineColor = "bg-red-500";
+  else if (isPending) lineColor = "bg-gradient-to-r from-blue-500 to-yellow-400";
 
   return (
     <div className="relative flex w-full items-start justify-between" role="list" aria-label="Verification progress">
+      {/* الخط الخلفي (التراك) */}
       <div className="absolute left-[7%] right-[7%] top-5 h-0.5 bg-gray-200" />
-      <div className="absolute left-[7%] top-5 h-0.5 bg-[#1677FF] transition-all duration-500" style={{ width: `calc(${fillWidth} * 86%)` }} />
+      
+      {/* الخط الأمامي (المتقدم) – مع الألوان */}
+      <div
+        className={`absolute left-[7%] top-5 h-0.5 transition-all duration-500 ${lineColor}`}
+        style={{ width: `calc(${fillWidth} * 86%)` }}
+      />
+
       {steps.map((step, idx) => {
         const completed = idx < statusIndex;
         const active = idx === statusIndex;
 
+        // تحديد لون الدائرة
+        let circleColor = "bg-gray-100 text-gray-400 ring-gray-200";
+        if (completed) {
+          circleColor = "bg-emerald-500 text-white ring-4 ring-emerald-200"; // ✅ أخضر للمكتمل
+        } else if (active) {
+          if (isPending) {
+            circleColor = "bg-blue-500 text-white ring-4 ring-blue-200"; // ✅ أزرق للنشط في حالة pending
+          } else if (isRejected) {
+            circleColor = "bg-red-500 text-white ring-4 ring-red-200";
+          } else {
+            circleColor = "bg-blue-500 text-white ring-4 ring-blue-200";
+          }
+        }
         return (
           <div key={step.key} className="relative z-10 flex w-1/3 flex-col items-center" role="listitem">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-xs font-extrabold shadow-sm ${completed ? "bg-[#1677FF] text-white" : active ? "bg-[#1677FF] text-white ring-4 ring-[#EAF3FF]" : "bg-gray-100 text-gray-400"}`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-xs font-extrabold shadow-sm transition-all duration-500 ${circleColor}`}>
               {completed ? <Check className="h-4 w-4" strokeWidth={2.5} /> : idx + 1}
             </div>
-            <p className={`mt-2 text-[11px] font-extrabold ${active || completed ? "text-[#1677FF]" : "text-gray-400"}`}>
+            <p className={`mt-2 text-[11px] font-extrabold ${active || completed ? "text-blue-600" : "text-gray-400"}`}>
               {step.label}
             </p>
             <p className="mt-0.5 text-[10px] font-medium text-gray-400">{step.date}</p>
@@ -903,26 +932,41 @@ const ProgressTracker = ({ status }) => {
     </div>
   );
 };
-
-const ApplicationStatusTracker = ({ status }) => {
+const ApplicationStatusTracker = ({ status, onDismiss }) => {
   const isPending = status?.toLowerCase() === "pending";
   const isApproved = status?.toLowerCase() === "approved";
   const isRejected = status?.toLowerCase() === "rejected";
 
+  // عنوان الكارد
+  const title = isApproved ? "Account Verified" : "Pending Verification";
+  const description = isApproved
+    ? "Your account has been approved."
+    : isPending
+      ? "Your profile is under review by university administration"
+      : "Please contact support for assistance.";
+
   return (
-    <SectionCard className="overflow-hidden">
+    <SectionCard className="overflow-hidden relative">
+      {/* زر الإغلاق – يظهر فقط عند approved */}
+      {isApproved && (
+        <button
+          onClick={onDismiss}
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100"
+          aria-label="Dismiss verification card"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+
       <div className="border-b border-gray-100 bg-gray-50/60 px-6 py-4">
         <div className="flex items-start gap-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isApproved ? "bg-green-100 text-green-700" : isRejected ? "bg-red-100 text-red-700" : "bg-[#FFF4E6] text-[#C76A0B]"}`}>
-            <InfoIcon />
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isApproved ? "bg-green-100 text-green-700" : isRejected ? "bg-red-100 text-red-700" : "bg-[#FFF4E6] text-[#C76A0B]"
+            }`}>
+            {isApproved ? <CheckCircle className="h-5 w-5" /> : <InfoIcon />}
           </div>
           <div>
-            <h2 className="text-sm font-extrabold text-gray-900">
-              {isApproved ? "Account Verified" : isRejected ? "Verification Failed" : "Account Verification"}
-            </h2>
-            <p className="mt-0.5 text-xs font-medium text-gray-500">
-              {isApproved ? "Your account has been approved." : isRejected ? "Please contact support for assistance." : "Your profile is under review by university administration"}
-            </p>
+            <h2 className="text-sm font-extrabold text-gray-900">{title}</h2>
+            <p className="mt-0.5 text-xs font-medium text-gray-500">{description}</p>
           </div>
         </div>
       </div>
@@ -941,6 +985,7 @@ const ApplicationStatusTracker = ({ status }) => {
             </div>
           </div>
         )}
+
         <div className="mt-7">
           <ProgressTracker status={status} />
         </div>

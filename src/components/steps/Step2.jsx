@@ -44,6 +44,9 @@ export function Step2({ data, setData, validationErrors = {} }) { //Accept valid
     <div className="space-y-5">
       <div>
         <Label icon={<CalendarIcon />} text="Student Number" />
+        <p className="flex items-center gap-1.5 text-xs text-orange-400 mt-1.5 ml-1 font-['Inter']">
+          <InfoIcon /> Your official student ID issued by your university
+        </p>
         <InputField
           icon={<CalendarIcon />}
           placeholder="Your official student number"
@@ -54,9 +57,6 @@ export function Step2({ data, setData, validationErrors = {} }) { //Accept valid
         {getFieldError('studentNumber') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('studentNumber')}</p>
         )}
-        <p className="flex items-center gap-1.5 text-xs text-gray-400 mt-1.5 ml-1 font-['Inter']">
-          <InfoIcon /> Your official student ID issued by your university
-        </p>
       </div>
 
       <div>

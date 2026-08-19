@@ -23,6 +23,9 @@ import {
 import {
   LineChart,
   Line,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -406,23 +409,72 @@ function QuickActions() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Placeholder card (left exactly as the designer left it)           */
+/*  Application Status Breakdown Card (Replaces Placeholder)           */
 /* ------------------------------------------------------------------ */
-/* The original Figma file has this card unfinished — the designer's  */
-/* own placeholder note (in Arabic) roughly reads: "here's a pie      */
-/* chart but I don't know what to put in it :) ok bye, finish it up"  */
-/* Reproduced verbatim below rather than inventing content for it.     */
 
-function PlaceholderPieCard() {
+function ApplicationStatusBreakdownCard() {
+  const pieData = [
+    { name: "Approved", value: 589, color: "#1677FF" },
+    { name: "Pending", value: 184, color: "#FD761A" },
+    { name: "Rejected", value: 42, color: "#EF4444" },
+  ];
+
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-6 rounded-2xl bg-white p-6 text-center shadow-[0_4px_8px_1px_rgba(219,234,254,0.7)]">
-      <p className="text-[14px] text-gray-700" dir="rtl">
-        here is a pie
-      </p>
-      <p className="text-[14px] text-gray-700" dir="rtl">
-        ************************** <br /> ************************ <br />{" "}
-        ************************
-      </p>
+    <div className="flex h-full flex-col justify-between rounded-2xl bg-white/90 backdrop-blur-md p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-blue-600/5 hover-lift transition-all duration-300">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[16px] font-extrabold text-gray-800 font-['Inter']">
+          Application Breakdown
+        </h3>
+        <span className="text-[11px] font-bold text-[#1677ff] bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+          Live Status
+        </span>
+      </div>
+
+      <div className="my-2 h-[150px] w-full flex items-center justify-center">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={40}
+              outerRadius={60}
+              paddingAngle={4}
+              dataKey="value"
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                borderRadius: 12,
+                border: "none",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="flex justify-around pt-3 border-t border-gray-100">
+        {pieData.map((item) => (
+          <div key={item.name} className="flex flex-col items-center">
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold font-['Inter']">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.name}
+            </div>
+            <span className="text-sm font-extrabold text-gray-800 mt-0.5">
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -441,7 +493,7 @@ export default function SuperAdminDashboard() {
         profilePath="/profile"
       />
 
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-6 sm:p-8 animate-fade-in">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-5">
           <TopIconCluster
             chatBadge={9}
@@ -465,7 +517,7 @@ export default function SuperAdminDashboard() {
 
               <div className="flex flex-col gap-5 sm:flex-row">
                 <div className="flex-1">
-                  <PlaceholderPieCard />
+                  <ApplicationStatusBreakdownCard />
                 </div>
                 <div className="flex-1">
                   <QuickActions />

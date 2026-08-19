@@ -179,46 +179,51 @@ export function CheckEmailPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 flex flex-col overflow-hidden">
-      <main className="flex-1 flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-md p-8 sm:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50/60 flex flex-col justify-between relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-orange-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-8 z-10">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06),0_12px_48px_rgba(37,99,235,0.12)] border border-blue-600/10 w-full max-w-md p-8 sm:p-10 animate-fade-in-up hover:shadow-[0_8px_32px_rgba(37,99,235,0.16)] transition-all duration-300">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <img src={logo} alt="Tadreeby Logo" className="h-8" />
+          <div className="flex justify-center mb-4 transition-transform hover:scale-105 duration-300">
+            <img src={logo} alt="Tadreeby Logo" className="h-8 w-auto" />
           </div>
           {/* Check Email Icon - Fixed size */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-4 animate-float-slow">
             <img
               src={checkEmailImage}
               alt="Check Email"
-              className="w-[200px] h-[133px] object-contain"
+              className="w-[180px] h-[120px] object-contain drop-shadow-md"
             />
           </div>
-          <h1 className="font-['Inter'] font-bold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
+          <h1 className="font-['Inter'] font-extrabold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
             Check Your Email
           </h1>
 
-          <p className="font-['Inter'] font-normal text-[15px] leading-[18px] text-center text-[#6B7280] mb-8">
-            We've sent a 6-digit reset code to
-            <span className="font-['Inter'] font-normal text-[15px] leading-[18px] text-center text-[#6B7280] mb-8"> {email}. </span>
-            <span className="text-sm text-[#6B7280]">
-              The code expires in{" "}
-              <span className={`font-semibold ${isExpired ? 'text-red-500' : 'text-[#2563EB]'}`}>
+          <p className="font-['Inter'] font-normal text-[15px] leading-[22px] text-center text-[#6B7280] mb-6">
+            We've sent a 6-digit reset code to{" "}
+            <span className="font-semibold text-[#111827] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{email}</span>.
+            <span className="block mt-2 text-sm text-[#6B7280]">
+              Code expires in{" "}
+              <span className={`font-semibold px-2 py-0.5 rounded-md ${isExpired ? 'text-red-600 bg-red-50' : 'text-[#2563EB] bg-blue-50/60 animate-pulse'}`}>
                 {isExpired ? 'Expired' : formatTime(timer)}
               </span>
             </span>
           </p>
 
           {error && (
-            <div className={`mb-6 p-3 ${isExpired ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'} border rounded-xl`}>
-              <p className={`${isExpired ? 'text-yellow-700' : 'text-red-600'} text-sm font-['Inter']`}>
+            <div className={`mb-6 p-3.5 ${isExpired ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-600'} border rounded-2xl animate-scale-up`}>
+              <p className="text-sm font-medium font-['Inter'] flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-amber-500' : 'bg-red-500'} shrink-0`} />
                 {error}
               </p>
             </div>
           )}
 
           {/* OTP Input Fields */}
-          <div className="flex justify-center gap-3 mb-6">
+          <div className="flex justify-center gap-2.5 sm:gap-3 mb-6">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -231,18 +236,18 @@ export function CheckEmailPage() {
                 onPaste={handlePaste}
                 disabled={isExpired}
                 className={`
-                  w-14 h-16 text-center font-['Inter'] font-semibold text-2xl text-[#111827]
-                  bg-white border-[1.5px] rounded-xl outline-none transition-all
-                  ${isExpired ? 'opacity-50 cursor-not-allowed' : ''}
-                  ${digit ? "border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" : "border-[#D1D5DB]"}
-                  focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.15)]
+                  w-12 h-14 sm:w-14 sm:h-16 text-center font-['Inter'] font-bold text-2xl text-[#111827]
+                  bg-white border-2 rounded-2xl outline-none transition-all duration-200
+                  ${isExpired ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200' : ''}
+                  ${digit ? "border-[#2563EB] bg-blue-50/40 shadow-[0_0_0_4px_rgba(37,99,235,0.12)] scale-[1.03]" : "border-[#E5E7EB] hover:border-gray-300"}
+                  focus:border-[#2563EB] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.15)] focus:scale-[1.05]
                 `}
               />
             ))}
           </div>
 
           {/* Resend Code */}
-          <div className="flex items-center justify-center gap-1 mb-6">
+          <div className="flex items-center justify-center gap-1.5 mb-6">
             <span className="font-['Inter'] font-normal text-[14px] leading-[17px] text-[#6B7280]">
               {isExpired ? "Code expired!" : "Didn't receive the code?"}
             </span>
@@ -250,8 +255,8 @@ export function CheckEmailPage() {
               onClick={handleResend}
               disabled={!canResend || isLoading}
               className={`
-                font-['Inter'] font-semibold text-[14px] leading-[17px] 
-                ${canResend ? "text-[#2563EB] hover:underline cursor-pointer" : "text-[#9CA3AF] cursor-not-allowed"}
+                font-['Inter'] font-semibold text-[14px] leading-[17px] transition-colors
+                ${canResend ? "text-[#2563EB] hover:underline cursor-pointer hover:text-blue-700" : "text-[#9CA3AF] cursor-not-allowed"}
               `}
             >
               {isLoading ? "Sending..." : "Resend Code"}
@@ -263,7 +268,7 @@ export function CheckEmailPage() {
             onClick={handleVerify}
             variant="primary"
             disabled={isLoading || otp.some((d) => !d) || isExpired}
-            className="w-full justify-center"
+            className="w-full justify-center py-3.5 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200 hover:-translate-y-0.5"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -276,14 +281,14 @@ export function CheckEmailPage() {
           </Button>
 
           {/* Back to Login Link */}
-          <div className="mt-6 flex items-center justify-center gap-1.5">
-            <ArrowLeft className="w-4 h-4 text-[#2563EB]" />
-            <a
-              href="/login"
+          <div className="mt-6 flex items-center justify-center gap-1.5 group">
+            <ArrowLeft className="w-4 h-4 text-[#2563EB] transition-transform duration-200 group-hover:-translate-x-1" />
+            <Link
+              to="/login"
               className="font-['Inter'] font-semibold text-[14.5px] leading-[18px] text-[#2563EB] hover:underline"
             >
               Back to Login
-            </a>
+            </Link>
           </div>
         </div>
       </main>

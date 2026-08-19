@@ -121,34 +121,41 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 flex flex-col">
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-md p-8 sm:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50/60 flex flex-col justify-between relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-orange-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-8 z-10">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06),0_12px_48px_rgba(37,99,235,0.12)] border border-blue-600/10 w-full max-w-md p-8 sm:p-10 animate-fade-in-up hover:shadow-[0_8px_32px_rgba(37,99,235,0.16)] transition-all duration-300">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <img src={logo} alt="Tadreeby Logo" className="h-8" />
+          <div className="flex justify-center mb-4 transition-transform hover:scale-105 duration-300">
+            <img src={logo} alt="Tadreeby Logo" className="h-8 w-auto" />
           </div>
 
           {/* Lock Icon */}
-                    <div className="flex justify-center mb-6">
-                      <img 
-                          src={resetPasswordImage} 
-                          alt="Reset Password" 
-                          className="w-[200px] h-[133px] object-contain" // Changed from h-8 to w-8 h-8
-                        />
-                    </div>
+          <div className="flex justify-center mb-4 animate-float-slow">
+            <img 
+              src={resetPasswordImage} 
+              alt="Reset Password" 
+              className="w-[180px] h-[120px] object-contain drop-shadow-md"
+            />
+          </div>
 
-          <h1 className="font-['Inter'] font-bold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
+          <h1 className="font-['Inter'] font-extrabold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
             Create New Password
           </h1>
 
-          <p className="font-['Inter'] font-normal text-[15px] leading-[18px] text-center text-[#6B7280] mb-8">
+          <p className="font-['Inter'] font-normal text-[15px] leading-[18px] text-center text-[#6B7280] mb-6">
             Choose a strong password you haven't used before.
           </p>
 
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-red-600 text-sm font-['Inter']">{error}</p>
+            <div className="mb-6 p-3.5 bg-red-50 border border-red-200/80 rounded-2xl animate-scale-up">
+              <p className="text-red-600 text-sm font-medium font-['Inter'] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                {error}
+              </p>
             </div>
           )}
 
@@ -156,26 +163,28 @@ export function ResetPasswordPage() {
             {/* New Password Field */}
             <div className="mb-4">
               <Label icon={<LockIcon />} text="New Password" />
-              <InputField
-                icon={<LockIcon />}
-                placeholder="••••••••••"
-                type={showNewPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  if (error) setError(null);
-                }}
-                rightIcon={
-                  <EyeIcon
-                    show={showNewPassword}
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  />
-                }
-              />
+              <div className="mt-1 transition-all duration-200 focus-within:scale-[1.01]">
+                <InputField
+                  icon={<LockIcon />}
+                  placeholder="••••••••••"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  rightIcon={
+                    <EyeIcon
+                      show={showNewPassword}
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    />
+                  }
+                />
+              </div>
             </div>
 
             {/* Password Strength Panel */}
-            <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-4 mb-4">
+            <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-2xl p-4 mb-5 transition-all">
               <p className="font-['Inter'] font-semibold text-[13px] leading-4 text-[#374151] mb-2.5">
                 Password must contain:
               </p>
@@ -191,22 +200,24 @@ export function ResetPasswordPage() {
             {/* Confirm Password Field */}
             <div className="mb-6">
               <Label icon={<LockIcon />} text="Confirm New Password" />
-              <InputField
-                icon={<LockIcon />}
-                placeholder="••••••••••"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  if (error) setError(null);
-                }}
-                rightIcon={
-                  <EyeIcon
-                    show={showConfirmPassword}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  />
-                }
-              />
+              <div className="mt-1 transition-all duration-200 focus-within:scale-[1.01]">
+                <InputField
+                  icon={<LockIcon />}
+                  placeholder="••••••••••"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  rightIcon={
+                    <EyeIcon
+                      show={showConfirmPassword}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    />
+                  }
+                />
+              </div>
             </div>
 
             {/* Reset Password Button */}
@@ -214,7 +225,7 @@ export function ResetPasswordPage() {
               type="submit"
               variant="primary"
               disabled={isLoading || !allRequirementsMet || !confirmPassword}
-              className="w-full justify-center"
+              className="w-full justify-center py-3.5 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200 hover:-translate-y-0.5"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -228,22 +239,22 @@ export function ResetPasswordPage() {
           </form>
 
           {/* Back to Login Link */}
-          <div className="mt-6 flex items-center justify-center gap-1.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <div className="mt-6 flex items-center justify-center gap-1.5 group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="transition-transform duration-200 group-hover:-translate-x-1">
               <path 
                 d="M19 12H5M12 19L5 12L12 5" 
                 stroke="#2563EB" 
-                strokeWidth="1.33333" 
+                strokeWidth="1.5" 
                 strokeLinecap="round" 
                 strokeLinejoin="round"
               />
             </svg>
-            <a 
-              href="/login" 
+            <Link 
+              to="/login" 
               className="font-['Inter'] font-semibold text-[14.5px] leading-[18px] text-[#2563EB] hover:underline"
             >
               Back to Login
-            </a>
+            </Link>
           </div>
         </div>
       </main>

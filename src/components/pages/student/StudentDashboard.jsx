@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   Briefcase,
@@ -48,23 +48,21 @@ const studentUser = {
 // 3. Smart Action Center
 // ------------------------------------------------------------
 const SmartActionCenter = () => (
-  <div className="flex w-full items-center justify-between rounded-xl border border-[rgba(0,63,177,0.2)] bg-[linear-gradient(90deg,rgba(195,200,213,0.35)_0%,rgba(218,226,255,0.35)_100%)] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+  <div className="flex w-full items-center justify-between rounded-2xl border border-blue-600/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-orange-50/60 backdrop-blur-md p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300">
     <div className="flex items-center gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1A56DB] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1677FF] shadow-[0_4px_14px_rgba(22,119,255,0.3)] animate-pulse-subtle">
         <RocketIcon className="h-5 w-5 text-white" />
       </div>
-      <div className="flex flex-col gap-1">
-      </div>
       <div>
-        <p className="font-jakarta text-base text-[#1A56DB]">
+        <p className="font-['Inter'] text-base font-extrabold text-[#1677FF]">
           3 action items need your attention
         </p>
-        <p className="font-jakarta text-base text-[#434654]">
-          Complete these to stay on track
+        <p className="font-['Inter'] text-sm font-medium text-gray-500">
+          Complete these to stay on track for your internship
         </p>
       </div>
     </div>
-    <button className="rounded-[50px] bg-[#1A56DB] px-8 py-4 font-jakarta text-base text-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] transition hover:bg-[#1646b0]">
+    <button className="rounded-full bg-[#1677FF] px-6 py-3 font-['Inter'] text-sm font-bold text-white shadow-[0_4px_14px_rgba(22,119,255,0.3)] hover:bg-blue-600 hover:shadow-[0_6px_20px_rgba(22,119,255,0.4)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
       Take Action
     </button>
   </div>
@@ -85,34 +83,34 @@ const MetricCard = ({
   subtext,
   progress,
 }) => (
-  <div className="flex flex-1 flex-col rounded-xl border border-[rgba(195,197,215,0.3)] bg-white p-4 pb-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]">
+  <div className="flex flex-1 min-w-[200px] flex-col rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.12)]">
     <div className="flex items-center justify-between">
       <div
-        className="flex h-10 w-10 items-center justify-center rounded-lg"
+        className="flex h-11 w-11 items-center justify-center rounded-xl shadow-sm transition-transform duration-300 hover:scale-110"
         style={{ backgroundColor: iconBg }}
       >
-        <Icon className="h-4 w-4" style={{ color: iconColor }} strokeWidth={2} />
+        <Icon className="h-5 w-5" style={{ color: iconColor }} strokeWidth={2} />
       </div>
       <span
-        className="rounded-full px-2 py-0.5 font-jakarta text-[12px] font-bold leading-4"
+        className="rounded-full px-2.5 py-1 font-['Inter'] text-[11px] font-bold"
         style={{ backgroundColor: badgeBg, color: badgeColor }}
       >
         {badgeText}
       </span>
     </div>
 
-    <p className="mt-3 font-jakarta text-base text-[#434654]">{label}</p>
-    <p className="font-jakarta text-base text-[#151C27]">{value}</p>
+    <p className="mt-4 font-['Inter'] text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
+    <p className="font-['Inter'] text-[22px] font-extrabold text-gray-900 leading-tight mt-0.5">{value}</p>
 
     {progress != null ? (
-      <div className="mt-5 h-2 w-full rounded-full bg-[#E2E8F8]">
+      <div className="mt-4 h-2.5 w-full rounded-full bg-blue-50 overflow-hidden">
         <div
-          className="h-2 rounded-full bg-[#1A56DB]"
+          className="h-2.5 rounded-full bg-[#1677FF] transition-all duration-1000 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
     ) : (
-      <p className="mt-5 font-jakarta text-[12px] font-medium text-[#434654]">
+      <p className="mt-4 font-['Inter'] text-[12px] font-semibold text-gray-500">
         {subtext}
       </p>
     )}
@@ -130,31 +128,31 @@ const RecommendationCard = ({
   badgeBg,
   image,
 }) => (
-  <div className="min-w-[160px] flex-1 basis-[200px] rounded-xl border border-[rgba(195,197,215,0.3)] bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]">
-    <div className="relative m-[17px] mb-0 h-32 overflow-hidden rounded-lg bg-[#E7EEFE]">
+  <div className="min-w-[200px] flex-1 basis-[220px] rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.12)]">
+    <div className="relative m-4 mb-0 h-32 overflow-hidden rounded-xl bg-blue-50">
       <img
         src={image}
         alt={title}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
       />
       <span
-        className="absolute right-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 font-jakarta text-[10px] font-bold leading-[15px] text-white"
+        className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full px-2.5 py-1 font-['Inter'] text-[10px] font-bold text-white shadow-sm"
         style={{ backgroundColor: badgeBg }}
       >
         <Sparkles className="h-[11px] w-[11px]" />
         {badgeText}
       </span>
     </div>
-    <div className="px-[17px] pb-4 pt-4">
-      <h4 className="font-jakarta text-base text-[#151C27]">{title}</h4>
-      <p className="mt-1 font-jakarta text-[12px] font-medium text-[#434654]">
+    <div className="p-4 pt-3">
+      <h4 className="font-['Inter'] text-[15px] font-extrabold text-gray-900">{title}</h4>
+      <p className="mt-0.5 font-['Inter'] text-[12px] font-medium text-gray-500">
         {meta}
       </p>
-      <div className="mt-4 flex flex-wrap gap-1">
+      <div className="mt-3 flex flex-wrap gap-1.5">
         {tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-[#E2E8F8] px-2 py-0.5 font-jakarta text-[10px] text-[#434654]"
+            className="rounded-md bg-blue-50 px-2 py-0.5 font-['Inter'] text-[10px] font-bold text-[#1677FF] border border-blue-100"
           >
             {tag}
           </span>
@@ -164,27 +162,86 @@ const RecommendationCard = ({
   </div>
 );
 
+const RecommendationsSection = ({ recommendations }) => {
+  const [view, setView] = useState("cards");
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setView("cards")}
+            className={`rounded-md px-2 py-1 text-xs font-bold ${view === "cards" ? "bg-blue-50 text-[#1677FF]" : "text-gray-500 hover:bg-gray-50"}`}
+          >
+            Cards
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("list")}
+            className={`rounded-md px-2 py-1 text-xs font-bold ${view === "list" ? "bg-blue-50 text-[#1677FF]" : "text-gray-500 hover:bg-gray-50"}`}
+          >
+            Compact List
+          </button>
+        </div>
+      </div>
+
+      {view === "cards" ? (
+        <div className="flex flex-wrap gap-4">
+          {recommendations.map((rec) => (
+            <RecommendationCard key={rec.title} {...rec} />
+          ))}
+        </div>
+      ) : (
+        <div className="divide-y rounded-2xl border border-blue-600/5 bg-white/90 p-2 shadow-sm">
+          {recommendations.map((rec) => (
+            <div key={rec.title} className="flex items-center gap-3 px-3 py-3">
+              <img src={rec.image} alt={rec.title} className="h-12 w-12 rounded-md object-cover" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-gray-900">{rec.title}</h4>
+                  <span className="text-xs font-bold text-[#1677FF]">{rec.badgeText}</span>
+                </div>
+                <p className="text-xs font-medium text-gray-500">{rec.meta}</p>
+                <div className="mt-2 flex gap-2">
+                  {rec.tags.map((t) => (
+                    <span key={t} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#1677FF] border border-blue-100">{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-[#1677FF]">Details</button>
+                <button className="rounded-full bg-[#1677FF] px-3 py-1 text-xs font-bold text-white">Apply</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ------------------------------------------------------------
 // 6. AI Profile Strength Card
 // ------------------------------------------------------------
 const AIProfileCard = () => (
-  <div className="relative w-full overflow-hidden rounded-xl bg-[linear-gradient(180deg,#1A56DB_0%,#1CACFF_100%)] p-6 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
-    <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
+  <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-[#1677FF] via-blue-600 to-indigo-700 p-6 shadow-[0_8px_25px_rgba(22,119,255,0.3)] hover-lift transition-all duration-300">
+    <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-xl pointer-events-none" />
     <div className="relative flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <div className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-white/30">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
           <InsightsIcon className="h-5 w-5 text-white" />
         </div>
-        <h3 className="font-jakarta text-base text-[#FFFEED]">AI Insight</h3>
+        <h3 className="font-['Inter'] text-base font-extrabold text-white">AI Insight</h3>
       </div>
-      <p className="font-jakarta text-base leading-6 text-white/80">
+      <p className="font-['Inter'] text-xs font-medium leading-5 text-white/90">
         Great job! Your profile is at 88% complete. Finish your &quot;Skills&quot;
         section to unlock premium recommendations!
       </p>
-      <div className="h-2 w-full rounded-full bg-white/20">
-        <div className="h-2 w-[88%] rounded-full bg-white" />
+      <div className="h-2 w-full rounded-full bg-white/25 overflow-hidden">
+        <div className="h-2 w-[88%] rounded-full bg-white transition-all duration-1000" />
       </div>
-      <button className="w-full rounded-[60px] bg-white py-4 font-jakarta text-base text-[#1A56DB] backdrop-blur-[10px] transition hover:bg-blue-50">
+      <button className="w-full rounded-full bg-white py-3 font-['Inter'] text-xs font-bold text-[#1677FF] shadow-sm transition-all hover:bg-blue-50 cursor-pointer">
         Complete Your Profile
       </button>
     </div>
@@ -205,8 +262,8 @@ const ACTIVITIES = [
   },
   {
     icon: ClipboardList,
-    iconColor: "#1A56DB",
-    iconBg: "rgba(0,63,177,0.1)",
+    iconColor: "#1677FF",
+    iconBg: "rgba(22,119,255,0.1)",
     title: "New Task Assigned",
     description:
       '"Project Planning Phase 1" assigned by TAQAT Supervisor.',
@@ -222,8 +279,8 @@ const ACTIVITIES = [
   },
   {
     icon: MessageSquare,
-    iconColor: "#434654",
-    iconBg: "#E2E8F8",
+    iconColor: "#6B7280",
+    iconBg: "rgba(107,114,128,0.1)",
     title: "New Message",
     description:
       "Sarah from Designly sent you a message about your application.",
@@ -234,30 +291,30 @@ const ACTIVITIES = [
 const ActivityItem = ({ activity, isLast }) => {
   const Icon = activity.icon;
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-3.5">
       <div className="relative flex shrink-0 flex-col items-center">
         {!isLast && (
-          <span className="absolute top-10 h-[calc(100%+24px-40px)] w-0.5 bg-[#C3C5D7]" />
+          <span className="absolute top-10 h-[calc(100%+16px-40px)] w-0.5 bg-gray-200" />
         )}
         <div
-          className="z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white"
+          className="z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white shadow-sm"
           style={{ backgroundColor: activity.iconBg }}
         >
           <Icon
-            className="h-[17px] w-[17px]"
+            className="h-4 w-4"
             style={{ color: activity.iconColor }}
             strokeWidth={2}
           />
         </div>
       </div>
-      <div className={`flex-1 ${isLast ? "" : "pb-6"}`}>
-        <p className="font-jakarta text-base text-[#151C27]">
+      <div className={`flex-1 ${isLast ? "" : "pb-5"}`}>
+        <p className="font-['Inter'] text-xs font-bold text-gray-900">
           {activity.title}
         </p>
-        <p className="mt-1 font-jakarta text-[12px] font-medium leading-4 text-[#434654]">
+        <p className="mt-0.5 font-['Inter'] text-[12px] font-medium leading-4 text-gray-500">
           {activity.description}
         </p>
-        <p className="mt-1 font-jakarta text-[10px] text-[#737686]">
+        <p className="mt-1 font-['Inter'] text-[10px] font-medium text-gray-400">
           {activity.time}
         </p>
       </div>
@@ -266,20 +323,20 @@ const ActivityItem = ({ activity, isLast }) => {
 };
 
 const ActivityFeed = () => (
-  <div className="flex max-h-[600px] w-full flex-col rounded-xl border border-[rgba(195,197,215,0.3)] bg-white p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]">
-    <div className="flex items-center justify-between pb-6">
-      <h3 className="font-jakarta text-base text-[#151C27]">
+  <div className="flex max-h-[600px] w-full flex-col rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300">
+    <div className="flex items-center justify-between pb-5">
+      <h3 className="font-['Inter'] text-[16px] font-extrabold text-gray-800">
         Recent Activity
       </h3>
       <button
         aria-label="More options"
-        className="flex h-[30px] w-3 items-center justify-center rounded-full text-[#1A56DB] hover:bg-gray-50"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
     </div>
 
-    <div className="flex-1 space-y-0 overflow-y-auto pr-2">
+    <div className="flex-1 space-y-0 overflow-y-auto pr-1">
       {ACTIVITIES.map((activity, idx) => (
         <ActivityItem
           key={activity.title}
@@ -289,7 +346,7 @@ const ActivityFeed = () => (
       ))}
     </div>
 
-    <button className="mt-6 w-full rounded-[60px] border border-[rgba(0,63,177,0.2)] bg-[#0368FA] py-4 font-jakarta text-base text-white transition hover:bg-[#0257d1]">
+    <button className="mt-5 w-full rounded-full border border-blue-200 bg-blue-50 py-3 font-['Inter'] text-xs font-bold text-[#1677FF] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 cursor-pointer">
       View All Activity
     </button>
   </div>
@@ -302,11 +359,11 @@ const StudentDashboard = () => {
   const metrics = [
     {
       icon: TrendingUp,
-      iconColor: "#1A56DB",
-      iconBg: "rgba(0,63,177,0.1)",
+      iconColor: "#1677FF",
+      iconBg: "rgba(22,119,255,0.1)",
       badgeText: "In progress",
-      badgeColor: "#1A56DB",
-      badgeBg: "#E2E8F8",
+      badgeColor: "#1677FF",
+      badgeBg: "rgba(22,119,255,0.1)",
       label: "Internship Progress",
       value: "8 of 12 weeks",
       progress: 65,
@@ -324,11 +381,11 @@ const StudentDashboard = () => {
     },
     {
       icon: Briefcase,
-      iconColor: "#AD3B00",
-      iconBg: "rgba(173,59,0,0.1)",
+      iconColor: "#8B5CF6",
+      iconBg: "rgba(139,92,246,0.1)",
       badgeText: "Active",
-      badgeColor: "#AD3B00",
-      badgeBg: "rgba(173,59,0,0.1)",
+      badgeColor: "#8B5CF6",
+      badgeBg: "rgba(139,92,246,0.1)",
       label: "Active Applications",
       value: "3 Positions",
       subtext: "2 in interview stage",
@@ -352,7 +409,7 @@ const StudentDashboard = () => {
       meta: "TechCorp • Gaza City",
       tags: ["Remote", "Full-Time"],
       badgeText: "Matched",
-      badgeBg: "#1A56DB",
+      badgeBg: "#1677FF",
       image: TechCorp,
     },
     {
@@ -360,21 +417,21 @@ const StudentDashboard = () => {
       meta: "Designly • Gaza City",
       tags: ["Design", "Part-Time"],
       badgeText: "Great Match",
-      badgeBg: "#1A56DB",
-        image: UXResearch,
+      badgeBg: "#1677FF",
+      image: UXResearch,
     },
     {
       title: "Data Engineering Intern",
       meta: "DataFlow • Gaza City",
       tags: ["Hybrid", "Paid"],
       badgeText: "Popular",
-      badgeBg: "#FB8A04",
+      badgeBg: "#FD761A",
       image: dataScienceIntern,
     },
   ];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F9F9FF] font-sans">
+    <div className="flex h-screen w-full overflow-hidden bg-[#eef1f8] font-sans">
       <Sidebar
         navItems={studentNavItems}
         footerItems={studentFooterItems}
@@ -382,16 +439,16 @@ const StudentDashboard = () => {
         profilePath="/student/profile"
       />
 
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-6 sm:p-8 animate-fade-in">
         <div className="mx-auto max-w-[1186px]">
           {/* Header with search and icons */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between gap-4">
             <div className="relative w-full max-w-[576px]">
-              <Search className="absolute left-[19px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#0365FA]" />
+              <Search className="absolute left-[19px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#1677FF]" />
               <input
                 type="text"
                 placeholder="Search internships or tasks..."
-                className="font-jakarta w-full rounded-full border border-[#C3C5D7] bg-[#F9F9F9] py-[9px] pl-[48px] pr-4 text-[16px] text-[#6B7280] shadow-[0_1px_2px_rgba(0,0,0,0.05)] focus:border-[#1677FF] focus:outline-none"
+                className="w-full rounded-full border border-blue-600/10 bg-white/80 backdrop-blur-md py-[11px] pl-[48px] pr-4 text-[15px] text-[#374151] shadow-[0_2px_12px_rgba(0,0,0,0.04)] focus:border-[#1677FF] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-['Inter']"
               />
             </div>
             <TopIconCluster
@@ -403,7 +460,7 @@ const StudentDashboard = () => {
           </div>
 
           {/* Welcome banner */}
-          <GreetingBanner name={studentUser.name} />  
+          <GreetingBanner name={studentUser.name} />
 
           {/* Smart action center */}
           <div className="mt-6">
@@ -424,18 +481,18 @@ const StudentDashboard = () => {
               {/* Recommendations */}
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-jakarta text-base text-[#151C27]">
-                    Recommended for You
-                  </h2>
-                  <button className="font-jakarta text-base text-[#1A56DB] hover:underline">
-                    View All Recommendations
-                  </button>
+                  <h2 className="font-['Inter'] text-[18px] font-extrabold text-gray-900">Recommended for You</h2>
+
+                  {/* view toggle */}
+                  <div className="flex items-center gap-2">
+                    <button className="font-['Inter'] text-xs font-bold text-[#1677FF] hover:underline cursor-pointer">
+                      View All Recommendations
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-4">
-                  {recommendations.map((rec) => (
-                    <RecommendationCard key={rec.title} {...rec} />
-                  ))}
-                </div>
+
+                {/* Use a compact list view by default on smaller widths; allow cards for richer view */}
+                <RecommendationsSection recommendations={recommendations} />
               </div>
             </div>
 

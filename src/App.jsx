@@ -19,9 +19,8 @@ import Companies from "./components/pages/superAdmin/Companies";
 
 import StudentDashboard from './components/pages/student/StudentDashboard';
 import StudentProfile from "./components/pages/student/StudentProfile";
-// import InternshipsPage from "./components/pages/student/InternshipsPage";
-// import MyInternshipPage from "./components/pages/student/MyInternshipPage";
-// import AttendancePage from "./components/pages/student/AttendancePage";
+import NotFoundPage from "./components/pages/NotFoundPage";
+import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 
 function App() {
   return (
@@ -32,6 +31,9 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/check-email" element={<CheckEmailPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/terms-privacy" element={<TermsAndPrivacyPage />} />
+      <Route path="/terms" element={<TermsAndPrivacyPage />} />
+      <Route path="/privacy" element={<TermsAndPrivacyPage />} />
       {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
 
       <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
@@ -50,6 +52,9 @@ function App() {
         {/* <Route path="/attendance" element={<AttendancePage />} /> */}
         <Route path="/student/profile" element={<StudentProfile />} />
       </Route>
+
+      {/* Catch-all 404 Route */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

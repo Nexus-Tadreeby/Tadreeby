@@ -71,50 +71,54 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 flex flex-col overflow-hidden">
-      <main className="flex-1 flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_40px_rgba(37,99,235,0.13)] border border-blue-600/7 w-full max-w-md p-8 sm:p-10">
-          <div className="flex justify-center mb-6">
-            <img src={logo} alt="Tadreeby Logo" className="h-8" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50/60 flex flex-col justify-between relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-orange-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-8 z-10">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06),0_12px_48px_rgba(37,99,235,0.12)] border border-blue-600/10 w-full max-w-md p-8 sm:p-10 animate-fade-in-up hover:shadow-[0_8px_32px_rgba(37,99,235,0.16)] transition-all duration-300">
+          <div className="flex justify-center mb-6 transition-transform hover:scale-105 duration-300">
+            <img src={logo} alt="Tadreeby Logo" className="h-8 w-auto" />
           </div>
           {/* Forgot Password Icon - Fixed size */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-6 animate-float-slow">
             <img 
-                src={forgotPasswordImage} 
-                alt="Forgot Password" 
-                className="w-[200px] h-[133px] object-contain" // Changed from h-8 to w-8 h-8
-              />
+              src={forgotPasswordImage} 
+              alt="Forgot Password" 
+              className="w-[200px] h-[133px] object-contain drop-shadow-md"
+            />
           </div>
 
           {success ? (
             // Success State
-            <div className="text-center">
-              <h2 className="font-['Inter'] font-bold text-[22px] text-[#111827] mb-2">
+            <div className="text-center animate-scale-up">
+              <h2 className="font-['Inter'] font-extrabold text-[22px] text-[#111827] mb-2">
                 Check Your Email
               </h2>
-              <p className="font-['Inter'] font-normal text-[15px] text-[#6B7280] mb-6">
+              <p className="font-['Inter'] font-normal text-[15px] text-[#6B7280] mb-6 leading-relaxed">
                 We've sent a password reset code to <br />
-                <span className="font-semibold text-[#111827]">{email}</span>
+                <span className="font-semibold text-[#111827] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{email}</span>
               </p>
               <p className="font-['Inter'] font-normal text-[13px] text-[#6B7280] mb-6">
                 Didn't receive the email? Check your spam folder or{' '}
                 <button
                   onClick={handleSubmit}
-                  className="text-[#2563EB] font-semibold hover:underline"
+                  className="text-[#2563EB] font-semibold hover:underline cursor-pointer"
                 >
                   try again
                 </button>
               </p>
               <Link to="/login">
-                <Button variant="secondary" className="w-full justify-center">
+                <Button variant="secondary" className="w-full justify-center shadow-sm hover:shadow transition-all">
                   Back to Login
                 </Button>
               </Link>
             </div>
           ) : (
             // Form State
-            <>
-              <h1 className="font-['Inter'] font-bold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
+            <div className="animate-fade-in">
+              <h1 className="font-['Inter'] font-extrabold text-[26px] leading-[31px] text-center text-[#111827] mb-1">
                 Forgot Your Password?
               </h1>
 
@@ -123,8 +127,11 @@ export function ForgotPasswordPage() {
               </p>
 
               {error && (
-                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm font-['Inter']">{error}</p>
+                <div className="mb-6 p-3.5 bg-red-50 border border-red-200/80 rounded-2xl animate-scale-up">
+                  <p className="text-red-600 text-sm font-medium font-['Inter'] flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    {error}
+                  </p>
                 </div>
               )}
 
@@ -135,23 +142,25 @@ export function ForgotPasswordPage() {
                     icon={<MailIcon />} 
                     text="Email Address" 
                   />
-                  <InputField
-                    icon={<MailIcon />}
-                    placeholder="name@example.com"
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (validationErrors.email) {
-                        setValidationErrors({ ...validationErrors, email: null });
-                      }
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                  />
+                  <div className="mt-1 transition-all duration-200 focus-within:scale-[1.01]">
+                    <InputField
+                      icon={<MailIcon />}
+                      placeholder="name@example.com"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (validationErrors.email) {
+                          setValidationErrors({ ...validationErrors, email: null });
+                        }
+                        if (error) {
+                          setError(null);
+                        }
+                      }}
+                    />
+                  </div>
                   {validationErrors.email && (
-                    <p className="text-red-500 text-xs mt-1 font-['Inter']">{validationErrors.email}</p>
+                    <p className="text-red-500 text-xs mt-1 font-['Inter'] animate-fade-in">{validationErrors.email}</p>
                   )}
                 </div>
 
@@ -160,7 +169,7 @@ export function ForgotPasswordPage() {
                   type="submit"
                   variant="primary"
                   disabled={isLoading}
-                  className="w-full justify-center"
+                  className="w-full justify-center py-3.5 shadow-[0_4px_14px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-200 hover:-translate-y-0.5"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -172,26 +181,26 @@ export function ForgotPasswordPage() {
                   )}
                 </Button>
               </form>
-            </>
+            </div>
           )}
 
           {/* Back to Login Link */}
-          <div className="mt-6 flex items-center justify-center gap-1.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <div className="mt-6 flex items-center justify-center gap-1.5 group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="transition-transform duration-200 group-hover:-translate-x-1">
               <path 
                 d="M19 12H5M12 19L5 12L12 5" 
                 stroke="#2563EB" 
-                strokeWidth="1.33333" 
+                strokeWidth="1.5" 
                 strokeLinecap="round" 
                 strokeLinejoin="round"
               />
             </svg>
-            <a 
-              href="/login" 
+            <Link 
+              to="/login" 
               className="font-['Inter'] font-semibold text-[14.5px] leading-[18px] text-[#2563EB] hover:underline"
             >
               Back to Login
-            </a>
+            </Link>
           </div>
         </div>
       </main>

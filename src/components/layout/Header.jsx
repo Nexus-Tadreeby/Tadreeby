@@ -131,7 +131,7 @@ export function Header({
     <header className={className}>
       {/* Inner container – constrained, centered, and with the glass effect */}
       {/* <div className="relative max-w-7xl mx-auto w-full glass-header glassi shadowi rounded-2xl border border-gray-200/50 px-4 sm:px-6 py-3 sm:py-4"> */}
-      <div className="relative max-w-7xl mx-auto w-full bg-white/80 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[40px] border border-white/30 px-4 sm:px-6 py-3 sm:py-4">
+      <div className="relative max-w-7xl mx-auto w-full bg-white/80 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[35px] border border-white/30 px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-center justify-between w-full">
           {/* Logo – stays left */}
           <div

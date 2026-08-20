@@ -424,7 +424,7 @@ export function LoginPage() {
                     Welcome Back!
                   </h1>
                   <p className="mt-2 font-['Inter'] font-medium text-[13px] leading-[18px] text-[#6B7280]">
-                    Enter your details below
+                    Your Training Journey Starts Here
                   </p>
                 </div>
 

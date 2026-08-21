@@ -26,8 +26,11 @@ const apiRequest = async (endpoint, options = {}) => {
 
     const response = await fetch(url, config);
 
+    const isLoginRequest = endpoint.startsWith('/auth/login');
+
     // ✅ Handle 401 Unauthorized – token expired/invalid
-    if (response.status === 401) {
+    // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
+    if (response.status === 401 && !isLoginRequest) {
       // Clear authentication data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

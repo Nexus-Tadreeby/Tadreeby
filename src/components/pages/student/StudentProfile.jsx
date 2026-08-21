@@ -16,7 +16,6 @@ import {
   XCircle,
   Upload,
   FileText,
-  Download,
   Lock,
   Plus,
   X,
@@ -71,6 +70,7 @@ import { profileAPI } from "../../../services/api";
 function normalizeProfileResponse(response, previousProfile = {}) {
   const data = response?.data ?? response;
   const user = data?.user ?? {};
+  const hasCvUrl = Object.prototype.hasOwnProperty.call(data || {}, 'cvUrl');
 
   // معالجة المهارات: قد تكون array أو string (JSON) أو null
   let skills = previousProfile.skills || [];
@@ -96,16 +96,17 @@ function normalizeProfileResponse(response, previousProfile = {}) {
     major: data?.major ?? previousProfile.major,
     academicYear: data?.academicYear ?? previousProfile.academicYear,
     gpa: data?.gpa ?? previousProfile.gpa,
-    cvUrl: data?.cvUrl ?? previousProfile.cvUrl,
+    cvUrl: hasCvUrl ? data.cvUrl : previousProfile.cvUrl,
     verificationDocument: data?.verificationDocument ?? previousProfile.verificationDocument,
     hasVerificationDoc: !!data?.verificationDocument || previousProfile.hasVerificationDoc,
-    hasCv: !!data?.cvUrl || previousProfile.hasCv,
+    hasCv: hasCvUrl ? !!data.cvUrl : previousProfile.hasCv,
     verificationStatus: data?.approvalStatus?.toLowerCase() ?? previousProfile.verificationStatus,
     firstName: user?.firstName ?? previousProfile.firstName,
     lastName: user?.lastName ?? previousProfile.lastName,
     email: user?.email ?? previousProfile.email,
     phone: user?.phone ?? previousProfile.phone,
     avatar: user?.profileImage ?? previousProfile.avatar,
+    recoveryEmail: user?.recoveryEmail ?? previousProfile.recoveryEmail,
     skills: skills,
     university: data?.university ?? previousProfile.university,
   };
@@ -556,7 +557,7 @@ const CircleProgress = ({ percentage, size = 40 }) => {
 
 
 
-            
+
 
 //             <div className="min-w-0 pb-1">
 //               <div className="flex flex-wrap items-center gap-2">
@@ -761,7 +762,7 @@ const ProfileHeader = ({
                           className="flex w-full items-center gap-2 rounded-b-xl px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition border-t border-gray-100"
                         >
                           <Trash2 className="h-4 w-4" />
-                         Delete image
+                          Delete image
                         </button>
                       )}
                     </div>
@@ -893,7 +894,7 @@ const ProgressTracker = ({ status }) => {
     <div className="relative flex w-full items-start justify-between" role="list" aria-label="Verification progress">
       {/* الخط الخلفي (التراك) */}
       <div className="absolute left-[7%] right-[7%] top-5 h-0.5 bg-gray-200" />
-      
+
       {/* الخط الأمامي (المتقدم) – مع الألوان */}
       <div
         className={`absolute left-[7%] top-5 h-0.5 transition-all duration-500 ${lineColor}`}
@@ -938,12 +939,12 @@ const ApplicationStatusTracker = ({ status, onDismiss }) => {
   const isRejected = status?.toLowerCase() === "rejected";
 
   // عنوان الكارد
-  const title = isApproved ? "Account Verified" : "Pending Verification";
+  const title = isApproved ? "Account Verified" : isRejected ? "Verification Document Rejected" : "Pending Verification";
   const description = isApproved
     ? "Your account has been approved."
     : isPending
       ? "Your profile is under review by university administration"
-      : "Please contact support for assistance.";
+      : "Upload a new verification document from Documents & Skills to submit your account for review again.";
 
   return (
     <SectionCard className="overflow-hidden relative">
@@ -1341,8 +1342,187 @@ const PersonalInfoCard = ({
 
 
 // ─── Documents ───────────────────────────────────────────────────────
-const DocumentsCard = ({ profile, onCvUpload, isCvUploading, cvProgress }) => {
+// const DocumentsCard = ({
+//   profile,
+//   onCvUpload,
+//   isCvUploading,
+//   cvProgress,
+//   onRemoveCv,
+//   isCvRemoving,
+//   onVerificationDocumentUpload,
+//   isVerificationDocumentUploading,
+//   onViewDocument,
+// }) => {
+//   const cvInputRef = useRef(null);
+//   const verificationDocumentInputRef = useRef(null);
+//   const isRejected = profile.verificationStatus?.toLowerCase() === "rejected";
+
+//   return (
+//     <SectionCard className="h-full">
+//       <SectionHeading
+//         eyebrow="Files"
+//         title="Documents"
+//         description="Files shared with internship supervisors upon application."
+//       />
+
+//       <div className="space-y-3 p-6">
+//         <div
+//           role="button"
+//           tabIndex={0}
+//           onClick={() => !isCvUploading && cvInputRef.current?.click()}
+//           onKeyDown={(e) => e.key === "Enter" && !isCvUploading && cvInputRef.current?.click()}
+//           className={`group flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${isCvUploading
+//             ? "border-[#1677FF] bg-[#EAF3FF]/80"
+//             : profile.hasCv
+//               ? "border-[#1677FF]/20 bg-[#EAF3FF]/60"
+//               : "border-dashed border-gray-200 bg-gray-50/50 hover:border-[#1677FF]/40 hover:bg-[#EAF3FF]/40"
+//             }`}
+//         >
+//           <div className="flex min-w-0 items-center gap-3">
+//             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCvUploading ? "bg-[#1677FF] text-white" : profile.hasCv ? "bg-[#1677FF]/10" : "bg-gray-100"}`}>
+//               {isCvUploading ? (
+//                 <CircleProgress percentage={cvProgress} size={36} />
+//               ) : (
+//                 <FileText className={`h-5 w-5 ${profile.hasCv ? "text-[#1677FF]" : "text-gray-400"}`} />
+//               )}
+//             </div>
+//             <div className="min-w-0">
+//               <div className="flex items-center gap-1">
+//                 <span className="text-xs font-bold text-gray-800">
+//                   {isCvUploading ? "Uploading CV..." : "CV / Resume"}
+//                 </span>
+//                 {profile.hasCv && !isCvUploading && (
+//                   <button
+//                     type="button"
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onViewDocument(profile.cvUrl, "CV");
+//                     }}
+//                     className="rounded p-1 text-[#1677FF] transition hover:bg-white"
+//                     aria-label="View CV"
+//                     title="View CV"
+//                   >
+//                     <Eye className="h-3.5 w-3.5" />
+//                   </button>
+//                 )}
+//                 {profile.hasCv && !isCvUploading && (
+//                   <button
+//                     type="button"
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       onRemoveCv();
+//                     }}
+//                     disabled={isCvRemoving}
+//                     className="rounded p-1 text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+//                     aria-label="Remove CV"
+//                     title="Remove CV"
+//                   >
+//                     <Trash2 className="h-3.5 w-3.5" />
+//                   </button>
+//                 )}
+//               </div>
+//               <p className="truncate text-[10px] font-medium text-gray-500">
+//                 {isCvUploading
+//                   ? `${Math.round(cvProgress)}% uploaded`
+//                   : profile.hasCv
+//                     ? `${profile.cvUrl || "resume.pdf"} · Uploaded`
+//                     : "PDF or DOC · Drag or click to upload"}
+//               </p>
+//             </div>
+//           </div>
+//           {!isCvUploading && !profile.hasCv && <Upload className="h-4 w-4 text-gray-400" />}
+//           <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={onCvUpload} />
+//         </div>
+
+//         <div className={`rounded-xl border p-4 ${isRejected ? "border-red-200 bg-red-50/50" : "border-gray-100 bg-gray-50"}`}>
+//           <div className="flex min-w-0 items-center gap-3">
+//             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isRejected ? "bg-red-100" : "bg-[#FFF4E6]"}`}>
+//               <FileText className={`h-5 w-5 ${isRejected ? "text-red-600" : "text-[#C76A0B]"}`} />
+//             </div>
+//             <div className="min-w-0">
+//               <div className="flex flex-wrap items-center gap-1.5">
+//                 <span className="text-xs font-medium text-gray-700">Verification Document</span>
+//                 {profile.hasVerificationDoc && !isVerificationDocumentUploading && (
+//                   <button
+//                     type="button"
+//                     onClick={() => onViewDocument(profile.verificationDocument, "verification document")}
+//                     className="rounded p-1 text-[#C76A0B] transition hover:bg-white"
+//                     aria-label="View verification document"
+//                     title="View verification document"
+//                   >
+//                     <Eye className="h-3.5 w-3.5" />
+//                   </button>
+//                 )}
+//                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${profile.verificationStatus?.toLowerCase() === "approved"
+//                   ? "bg-green-100 text-green-700"
+//                   : isRejected
+//                     ? "bg-red-100 text-red-700"
+//                     : "border border-[#FFAD4E]/30 bg-[#FFF4E6] text-[#C76A0B]"
+//                   }`}>
+//                   {profile.verificationStatus?.toLowerCase() === "approved"
+//                     ? "Approved"
+//                     : isRejected
+//                       ? "Rejected"
+//                       : "Under Review"}
+//                 </span>
+//               </div>
+//               <p className="truncate text-[10px] font-medium text-gray-500">
+//                 {isVerificationDocumentUploading
+//                   ? "Uploading replacement document..."
+//                   : isRejected
+//                     ? "Your document was rejected. Upload a new one to resubmit it for review."
+//                     : profile.hasVerificationDoc
+//                       ? "Submitted"
+//                       : "Not submitted"}
+//               </p>
+//             </div>
+//           </div>
+//           <div className="mt-3 flex items-center justify-between gap-3">
+//             <div className="flex items-center gap-2">
+//               {isRejected && (
+//                 <>
+//                 <button
+//                   type="button"
+//                   onClick={() => verificationDocumentInputRef.current?.click()}
+//                   disabled={isVerificationDocumentUploading}
+//                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#086BEA] disabled:cursor-not-allowed disabled:opacity-60"
+//                 >
+//                   <Upload className="h-3.5 w-3.5" />
+//                   {isVerificationDocumentUploading ? "Uploading..." : "Upload new document"}
+//                 </button>
+//                 <input
+//                   ref={verificationDocumentInputRef}
+//                   type="file"
+//                   accept=".jpg,.jpeg,.png,.pdf"
+//                   className="hidden"
+//                   onChange={onVerificationDocumentUpload}
+//                 />
+//                 </>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </SectionCard>
+//   );
+// };
+
+
+const DocumentsCard = ({
+  profile,
+  onCvUpload,
+  isCvUploading,
+  cvProgress,
+  onRemoveCv,
+  isCvRemoving,
+  onVerificationDocumentUpload,
+  isVerificationDocumentUploading,
+  onViewDocument,
+  onRemoveVerificationDocument, // اختياري – للحذف
+}) => {
   const cvInputRef = useRef(null);
+  const verificationDocumentInputRef = useRef(null);
+  const isRejected = profile.verificationStatus?.toLowerCase() === "rejected";
 
   return (
     <SectionCard className="h-full">
@@ -1353,6 +1533,7 @@ const DocumentsCard = ({ profile, onCvUpload, isCvUploading, cvProgress }) => {
       />
 
       <div className="space-y-3 p-6">
+        {/* ─── CV / Resume ─── */}
         <div
           role="button"
           tabIndex={0}
@@ -1365,12 +1546,23 @@ const DocumentsCard = ({ profile, onCvUpload, isCvUploading, cvProgress }) => {
               : "border-dashed border-gray-200 bg-gray-50/50 hover:border-[#1677FF]/40 hover:bg-[#EAF3FF]/40"
             }`}
         >
+          {/* الجهة اليسرى: الأيقونة + النص */}
           <div className="flex min-w-0 items-center gap-3">
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCvUploading ? "bg-[#1677FF] text-white" : profile.hasCv ? "bg-[#1677FF]/10" : "bg-gray-100"}`}>
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCvUploading
+                ? "bg-[#1677FF] text-white"
+                : profile.hasCv
+                  ? "bg-[#1677FF]/10"
+                  : "bg-gray-100"
+                }`}
+            >
               {isCvUploading ? (
                 <CircleProgress percentage={cvProgress} size={36} />
               ) : (
-                <FileText className={`h-5 w-5 ${profile.hasCv ? "text-[#1677FF]" : "text-gray-400"}`} />
+                <FileText
+                  className={`h-5 w-5 ${profile.hasCv ? "text-[#1677FF]" : "text-gray-400"
+                    }`}
+                />
               )}
             </div>
             <div className="min-w-0">
@@ -1386,42 +1578,154 @@ const DocumentsCard = ({ profile, onCvUpload, isCvUploading, cvProgress }) => {
               </p>
             </div>
           </div>
-          {!isCvUploading && (
-            profile.hasCv ? <Download className="h-4 w-4 text-[#1677FF]" /> : <Upload className="h-4 w-4 text-gray-400" />
-          )}
-          <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={onCvUpload} />
+
+          {/* الجهة اليمنى: أيقونات الإجراءات */}
+          <div className="flex items-center gap-1">
+            {profile.hasCv && !isCvUploading && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDocument(profile.cvUrl, "CV");
+                  }}
+                  className="rounded p-1.5 text-[#1677FF] transition hover:bg-white/80"
+                  aria-label="View CV"
+                  title="View CV"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveCv();
+                  }}
+                  disabled={isCvRemoving}
+                  className="rounded p-1.5 text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Remove CV"
+                  title="Remove CV"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            )}
+            {!isCvUploading && !profile.hasCv && (
+              <Upload className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+
+          <input
+            ref={cvInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
+            onChange={onCvUpload}
+          />
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF4E6]">
-              <FileText className="h-5 w-5 text-[#C76A0B]" />
+        {/* ─── Verification Document ─── */}
+        <div
+          className={`rounded-xl border p-4 ${isRejected ? "border-red-200 bg-red-50/50" : "border-gray-100 bg-gray-50"
+            }`}
+        >
+          <div className="flex items-center justify-between">
+            {/* الجهة اليسرى: الأيقونة + النص */}
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isRejected ? "bg-red-100" : "bg-[#FFF4E6]"
+                  }`}
+              >
+                <FileText
+                  className={`h-5 w-5 ${isRejected ? "text-red-600" : "text-[#C76A0B]"
+                    }`}
+                />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-medium text-gray-700">
+                  Verification Document
+                </span>
+                <p className="truncate text-[10px] font-medium text-gray-500">
+                  {isVerificationDocumentUploading
+                    ? "Uploading replacement document..."
+                    : isRejected
+                      ? "Your document was rejected. Upload a new one to resubmit it for review."
+                      : profile.hasVerificationDoc
+                        ? "Submitted"
+                        : "Not submitted"}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <span className="text-xs font-medium text-gray-700">Verification Document</span>
-              <p className="truncate text-[10px] font-medium text-gray-500">
-                {profile.hasVerificationDoc ? "Submitted" : "Not submitted"}
-              </p>
+
+            {/* الجهة اليمنى: أيقونة العين + حالة التوثيق */}
+            <div className="flex items-center gap-2 shrink-0">
+              {profile.hasVerificationDoc && !isVerificationDocumentUploading && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onViewDocument(profile.verificationDocument, "verification document")
+                  }
+                  className="rounded p-1.5 text-[#C76A0B] transition hover:bg-white/80"
+                  aria-label="View verification document"
+                  title="View verification document"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+              )}
+              {onRemoveVerificationDocument && profile.hasVerificationDoc && (
+                <button
+                  type="button"
+                  onClick={onRemoveVerificationDocument}
+                  className="rounded p-1.5 text-red-500 transition hover:bg-red-50"
+                  aria-label="Remove verification document"
+                  title="Remove verification document"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+              <span
+                className={`rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${profile.verificationStatus?.toLowerCase() === "approved"
+                  ? "bg-green-100 text-green-700"
+                  : isRejected
+                    ? "bg-red-100 text-red-700"
+                    : "border border-[#FFAD4E]/30 bg-[#FFF4E6] text-[#C76A0B]"
+                  }`}
+              >
+                {profile.verificationStatus?.toLowerCase() === "approved"
+                  ? "Approved"
+                  : isRejected
+                    ? "Rejected"
+                    : "Under Review"}
+              </span>
             </div>
           </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${profile.verificationStatus?.toLowerCase() === "approved"
-            ? "bg-green-100 text-green-700"
-            : profile.verificationStatus?.toLowerCase() === "rejected"
-              ? "bg-red-100 text-red-700"
-              : "border border-[#FFAD4E]/30 bg-[#FFF4E6] text-[#C76A0B]"
-            }`}>
-            {profile.verificationStatus?.toLowerCase() === "approved"
-              ? "Approved"
-              : profile.verificationStatus?.toLowerCase() === "rejected"
-                ? "Rejected"
-                : "Under Review"}
-          </span>
+
+          {/* زر رفع مستند جديد (يظهر فقط في حالة الرفض) */}
+          {isRejected && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => verificationDocumentInputRef.current?.click()}
+                disabled={isVerificationDocumentUploading}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#086BEA] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {isVerificationDocumentUploading ? "Uploading..." : "Upload new document"}
+              </button>
+              <input
+                ref={verificationDocumentInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
+                className="hidden"
+                onChange={onVerificationDocumentUpload}
+              />
+            </div>
+          )}
         </div>
       </div>
     </SectionCard>
   );
 };
-
 // ─── Skills ──────────────────────────────────────────────────────────
 // const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSkill }) => (
 //   <SectionCard className="h-full">
@@ -1707,7 +2011,7 @@ const CompletionChecklist = ({ completion, onItemClick }) => {
           </p>
         </div>
       </div>
-      
+
     </SectionCard>
   );
 };
@@ -1772,6 +2076,8 @@ const StudentProfile = () => {
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [cvProgress, setCvProgress] = useState(0);
   const [isCvUploading, setIsCvUploading] = useState(false);
+  const [isCvRemoving, setIsCvRemoving] = useState(false);
+  const [isVerificationDocumentUploading, setIsVerificationDocumentUploading] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1920,32 +2226,22 @@ const StudentProfile = () => {
       return;
     }
 
+    const validTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!validTypes.includes(file.type)) {
+      showToast("Please upload a PDF, DOC, or DOCX CV.", "error");
+      e.target.value = "";
+      return;
+    }
+
     setIsCvUploading(true);
     setCvProgress(0);
 
     try {
-      await new Promise((resolve) => {
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += Math.random() * 15 + 5;
-          if (progress >= 100) {
-            progress = 100;
-            clearInterval(interval);
-            resolve();
-          }
-          setCvProgress(Math.min(progress, 100));
-        }, 200);
-      });
-
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
-
-      const response = await profileAPI.updateProfile({ cvFile: base64 });
-      setCvProgress(100);
+      const response = await profileAPI.uploadCV(file, setCvProgress);
 
       const normalized = normalizeProfileResponse(response, profile);
       if (normalized.university && typeof normalized.university === 'object') {
@@ -1965,7 +2261,91 @@ const StudentProfile = () => {
     }
   };
 
-  
+  const handleRemoveCv = async () => {
+    setIsCvRemoving(true);
+
+    try {
+      const response = await profileAPI.removeCV();
+      const normalized = normalizeProfileResponse(response, profile);
+      setProfile(normalized);
+      setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
+      showToast("CV removed.", "success");
+    } catch (error) {
+      console.error("CV removal error:", error);
+      showToast(error?.message || "Failed to remove CV.", "error");
+    } finally {
+      setIsCvRemoving(false);
+    }
+  };
+
+  // ─── Verification Document Re-upload ────────────────────────────────
+  const handleVerificationDocumentUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Verification document must be under 5MB.", "error");
+      e.target.value = "";
+      return;
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      showToast("Please upload a JPG, PNG, or PDF verification document.", "error");
+      e.target.value = "";
+      return;
+    }
+
+    setIsVerificationDocumentUploading(true);
+
+    try {
+      const response = await profileAPI.reuploadVerificationDocument(file);
+      const normalized = normalizeProfileResponse(response, profile);
+      if (normalized.university && typeof normalized.university === "object") {
+        normalized.university = normalized.university.name || "";
+      }
+      setProfile(normalized);
+      setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
+      showToast("Verification document submitted. Your account is now pending review.", "success");
+    } catch (error) {
+      console.error("Verification document re-upload error:", error);
+      showToast(error?.message || "Failed to submit verification document.", "error");
+    } finally {
+      setIsVerificationDocumentUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleViewDocument = async (document, label) => {
+    const documentUrl = profileAPI.getDocumentUrl(document);
+    if (!documentUrl) {
+      showToast(`No ${label} is available to view.`, "error");
+      return;
+    }
+
+    // Open the tab synchronously so it is not blocked as a pop-up, then load
+    // a Blob URL. Browsers block direct navigation to many data: URLs.
+    const viewer = window.open("", "_blank");
+    if (!viewer) {
+      showToast("Please allow pop-ups to view this document.", "error");
+      return;
+    }
+    viewer.opener = null;
+
+    try {
+      const response = await fetch(documentUrl);
+      if (!response.ok) throw new Error("Document could not be loaded.");
+
+      const documentBlobUrl = URL.createObjectURL(await response.blob());
+      viewer.location.replace(documentBlobUrl);
+    } catch (error) {
+      viewer.close();
+      console.error(`Failed to open ${label}:`, error);
+      showToast(`Unable to open this ${label}. Please try again later.`, "error");
+    }
+  };
+
+
   // ─── Edit / Save ────────────────────────────────────────────────────
   const handleEdit = () => {
     setDraft({ ...profile });
@@ -2147,7 +2527,7 @@ const StudentProfile = () => {
             onTabChange={setActiveTab}
             isAvatarUploading={isAvatarUploading}
             avatarProgress={avatarProgress}
-            onDeleteAvatar={handleDeleteAvatar} 
+            onDeleteAvatar={handleDeleteAvatar}
           />
 
           <TabNav activeTab={activeTab} onChange={setActiveTab} />
@@ -2181,6 +2561,11 @@ const StudentProfile = () => {
                       onCvUpload={handleCvUpload}
                       isCvUploading={isCvUploading}
                       cvProgress={cvProgress}
+                      onRemoveCv={handleRemoveCv}
+                      isCvRemoving={isCvRemoving}
+                      onVerificationDocumentUpload={handleVerificationDocumentUpload}
+                      isVerificationDocumentUploading={isVerificationDocumentUploading}
+                      onViewDocument={handleViewDocument}
                     />
                   </div>
                   <div ref={skillsRef}>

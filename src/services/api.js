@@ -92,6 +92,15 @@ const fileToBase64 = (file) => {
 
 // ─── Profile API ──────────────────────────────────────────────────────
 export const profileAPI = {
+  getDocumentUrl: (document) => {
+    if (!document) return null;
+
+    // Newly uploaded files are stored as data URLs. Existing registrations
+    // store a filename in the pending uploads directory.
+    if (/^(data:|blob:|https?:\/\/)/i.test(document)) return document;
+    return `${API_BASE_URL}/uploads/pending/${encodeURIComponent(document)}`;
+  },
+
   // Get profile – convert university object to string
   getProfile: async () => {
     const response = await apiRequest('/student/profile', { method: 'GET' });
@@ -122,14 +131,34 @@ export const profileAPI = {
     return result;
   },
 
-  // Upload CV – simulate progress
+  // Upload CV as multipart form data to avoid JSON/base64 request-size limits.
   uploadCV: async (file, onProgress) => {
     if (onProgress) onProgress(0);
-    const base64 = await fileToBase64(file);
+    const formData = new FormData();
+    formData.append('cvFile', file);
     if (onProgress) onProgress(50);
-    const result = await profileAPI.updateProfile({ cvFile: base64 });
+    const response = await apiRequest('/student/profile/cv', {
+      method: 'PATCH',
+      body: formData,
+    });
     if (onProgress) onProgress(100);
-    return result;
+    return response.data;
+  },
+
+  removeCV: async () => {
+    const response = await apiRequest('/student/profile/cv', {
+      method: 'DELETE',
+    });
+    return response.data;
+  },
+
+  // Replacing a rejected document makes the verification pending again.
+  reuploadVerificationDocument: async (file) => {
+    const verificationDocument = await fileToBase64(file);
+    return apiRequest('/student/profile/reupload-document', {
+      method: 'PATCH',
+      body: JSON.stringify({ verificationDocument }),
+    });
   },
 
   // Skills

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Briefcase,
@@ -23,13 +24,14 @@ import { RocketIcon, InsightsIcon } from "../../common/Icons";
 import Sidebar from "../../layout/Sidebar";
 import TopIconCluster from "../../common/pagesAssets/TopIconCluster";
 import GreetingBanner from "../../common/pagesAssets/GreetingBanner";
+import { useAuth } from "../../../context/AuthContext";
 
 // ------------------------------------------------------------
 // 1. Student navigation & user data
 // ------------------------------------------------------------
 const studentNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { label: "Internships", icon: Briefcase, path: "/student/internships" },
+  { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
   { label: "My Internship", icon: GraduationCap, path: "/my/internship" },
   { label: "Attendance", icon: Clock, path: "/attendance" },
 ];
@@ -356,6 +358,14 @@ const ActivityFeed = () => (
 // 8. Main StudentDashboard Component
 // ------------------------------------------------------------
 const StudentDashboard = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   const metrics = [
     {
       icon: TrendingUp,
@@ -437,6 +447,7 @@ const StudentDashboard = () => {
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"
+        onSignOut={handleSignOut}
       />
 
       <main className="flex-1 overflow-y-auto p-6 sm:p-8 animate-fade-in">

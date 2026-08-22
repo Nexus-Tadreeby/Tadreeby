@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Briefcase,
@@ -114,7 +114,7 @@ function normalizeProfileResponse(response, previousProfile = {}) {
 // ─── Navigation ──────────────────────────────────────────────────────
 const studentNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { label: "Internships", icon: Briefcase, path: "/student/internships" },
+  { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
   { label: "My Internship", icon: GraduationCap, path: "/my/internship" },
   { label: "Attendance", icon: Clock, path: "/attendance" },
 ];
@@ -2062,7 +2062,8 @@ const StudentProfile = () => {
     return 'error';
   };
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { showToast } = useToast();
 
   const [profile, setProfile] = useState(() => buildInitialProfile(user));
@@ -2096,6 +2097,11 @@ const StudentProfile = () => {
     }),
     [profile]
   );
+
+  const handleSignOut = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   // ─── Load profile ──────────────────────────────────────────────────
   useEffect(() => {
@@ -2498,6 +2504,7 @@ const StudentProfile = () => {
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"
+        onSignOut={handleSignOut}
       />
 
       <main className="flex-1 overflow-y-auto">

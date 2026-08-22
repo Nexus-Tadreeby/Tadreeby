@@ -19,6 +19,8 @@ import Companies from "./components/pages/superAdmin/Companies";
 
 import StudentDashboard from './components/pages/student/StudentDashboard';
 import StudentProfile from "./components/pages/student/StudentProfile";
+import Internships from "./components/pages/opportunities/opportunities";
+import InternshipDetails from "./components/pages/opportunities/OpportunityDetails";
 import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 
@@ -47,7 +49,15 @@ function App() {
 
       <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
         <Route path="/student/dashboard" element={<StudentDashboard />} />
-        {/* <Route path="/student-internships" element={<InternshipsPage />} /> */}
+
+        <Route path="/student/opportunities" element={<Internships />} />
+        <Route path="/student/opportunities/:id" element={<InternshipDetails />} />
+        <Route path="/student/opportunity/:id" element={<InternshipDetails />} />
+
+        <Route path="/student/internships" element={<Internships />} />
+        <Route path="/student/internships/:id" element={<InternshipDetails />} />
+        <Route path="/student/internship/:id" element={<InternshipDetails />} />
+
         {/* <Route path="/my-internship" element={<MyInternshipPage />} /> */}
         {/* <Route path="/attendance" element={<AttendancePage />} /> */}
         <Route path="/student/profile" element={<StudentProfile />} />

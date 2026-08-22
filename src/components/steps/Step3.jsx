@@ -133,7 +133,7 @@
 //       <div>
 //         <Label text="Upload University Card" sub="JPG, PNG or PDF (Max. 5MB)" />
 //         <span className="text-red-500 text-xs ml-1 font-['Inter']">*</span>
-        
+
 //         <div className="mt-1.5">
 //           {!uploadedFile ? (
 //             <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
@@ -206,7 +206,7 @@
 //             <p className="text-xs text-red-700 font-['Inter']">{fileError}</p>
 //           </div>
 //         )}
-        
+
 //         <p className="text-xs text-gray-400 mt-2 font-['Inter'] flex items-center gap-1.5">
 //           <InfoIcon className="w-3 h-3" /> Make sure the document is clear and all information is visible.
 //         </p>
@@ -258,11 +258,14 @@ import {
 } from "../common/Icons";
 
 const UNIVERSITIES = [
-  { id: 1, name: "An-Najah National University" },
-  { id: 2, name: "Birzeit University" },
-  { id: 3, name: "Bethlehem University" },
-  { id: 4, name: "Al-Quds University" },
-  { id: 5, name: "Palestine Polytechnic University" }
+  { id: 1, name: "Al Azhar University - Gaza" },
+  { id: 2, name: "Islamic University of Gaza" },
+  { id: 3, name: "Al-Aqsa University" },
+  { id: 4, name: "University of Palestine" },
+  { id: 5, name: "Gaza University" },
+  { id: 6, name: "Israa University" },
+  { id: 7, name: "Al-Quds Open University" },
+  { id: 8, name: "University College of Applied Sciences (UCAS)" }
 ];
 
 export function Step3({ data, setData, validationErrors = {} }) {
@@ -486,6 +489,7 @@ export function Step3({ data, setData, validationErrors = {} }) {
         </div>
 
         <input
+          id="verification-file-input"
           ref={fileInputRef}
           type="file"
           accept=".jpg,.jpeg,.png,.pdf"

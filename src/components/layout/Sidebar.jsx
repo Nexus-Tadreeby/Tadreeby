@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 const DEFAULT_DISCOVERY = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Opportunities", icon: Search, path: "/opportunities" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+  { label: "Opportunities", icon: Search, path: "/student/opportunities" },
 ];
 
 const DEFAULT_MANAGEMENT = [

@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { InputField } from "../common/InputField";
 import { Label } from "../common/Label";
 import { UserIcon, MailIcon, LockIcon, CardIcon, PhoneIcon, EyeIcon, WarnIcon, CheckIcon } from "../common/Icons";
 import { validateField } from "../../utils/validation";
+import { authAPI } from "../../services/api";
 
 export function Step1({ data, setData, validationErrors = {} }) { // Accept validationErrors
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [errors, setErrors] = useState({});
+  const [liveCheckErrors, setLiveCheckErrors] = useState({});
+  const [emailAvailability, setEmailAvailability] = useState(null);
+  const [nationalIdAvailability, setNationalIdAvailability] = useState(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isCheckingNationalId, setIsCheckingNationalId] = useState(false);
 
   // Password validation checks
   const passwordChecks = {
@@ -22,7 +28,7 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
     // ✅ Create updated data object
     const updatedData = { ...data, [field]: value };
     setData(updatedData);
-    
+
     // ✅ Pass the entire updated data object to validateField
     const error = validateField(field, value, updatedData);
     setErrors(prev => ({
@@ -53,9 +59,101 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
     );
   };
 
-  // Combine local errors with validation errors from parent
+  useEffect(() => {
+    const email = data.email?.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailAvailability(null);
+      setLiveCheckErrors(prev => ({ ...prev, email: null }));
+      setIsCheckingEmail(false);
+      return;
+    }
+
+    let active = true;
+    setIsCheckingEmail(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await authAPI.checkEmailAvailability(email);
+        if (!active) return;
+        const isAvailable = result?.available === true;
+        setEmailAvailability(isAvailable ? true : false);
+        setLiveCheckErrors(prev => ({
+          ...prev,
+          email: isAvailable ? null : result.message || 'This email is already in use.',
+        }));
+      } catch (error) {
+        if (!active) return;
+        setEmailAvailability(null);
+        setLiveCheckErrors(prev => ({ ...prev, email: null }));
+      } finally {
+        if (active) setIsCheckingEmail(false);
+      }
+    }, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
+  }, [data.email]);
+
+  useEffect(() => {
+    const nationalId = data.nationalId?.trim();
+    if (!nationalId || !/^\d{9}$/.test(nationalId)) {
+      setNationalIdAvailability(null);
+      setLiveCheckErrors(prev => ({ ...prev, nationalId: null }));
+      setIsCheckingNationalId(false);
+      return;
+    }
+
+    let active = true;
+    setIsCheckingNationalId(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await authAPI.checkNationalIdAvailability(Number(nationalId));
+        if (!active) return;
+        const isAvailable = result?.available === true;
+        setNationalIdAvailability(isAvailable ? true : false);
+        setLiveCheckErrors(prev => ({
+          ...prev,
+          nationalId: isAvailable ? null : result.message || 'This National ID is already in use.',
+        }));
+      } catch (error) {
+        if (!active) return;
+        setNationalIdAvailability(null);
+        setLiveCheckErrors(prev => ({ ...prev, nationalId: null }));
+      } finally {
+        if (active) setIsCheckingNationalId(false);
+      }
+    }, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
+  }, [data.nationalId]);
+
+  const getFieldStatus = (field) => {
+    if (field === 'email') {
+      if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return 'idle';
+      if (isCheckingEmail) return 'checking';
+      if (emailAvailability === true) return 'success';
+      if (liveCheckErrors.email) return 'error';
+      return 'idle';
+    }
+
+    if (field === 'nationalId') {
+      if (!data.nationalId || !/^\d{9}$/.test(data.nationalId)) return 'idle';
+      if (isCheckingNationalId) return 'checking';
+      if (nationalIdAvailability === true) return 'success';
+      if (liveCheckErrors.nationalId) return 'error';
+      return 'idle';
+    }
+
+    return 'idle';
+  };
+
+  // Combine local errors with live checks and validation errors from parent
   const getFieldError = (field) => {
-    return errors[field] || validationErrors[field] || null;
+    return errors[field] || validationErrors[field] || liveCheckErrors[field] || null;
   };
 
   return (
@@ -71,6 +169,8 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
         <div>
           <Label icon={<UserIcon />} text="First Name" />
           <InputField
+            id="firstName"
+            name="firstName"
             icon={<UserIcon />}
             placeholder="e.g. Afnan"
             value={data.firstName}
@@ -84,6 +184,8 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
         <div>
           <Label icon={<UserIcon />} text="Last Name" />
           <InputField
+            id="lastName"
+            name="lastName"
             icon={<UserIcon />}
             placeholder="e.g. Kullab"
             value={data.lastName}
@@ -99,12 +201,18 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
       <div>
         <Label icon={<CardIcon />} text="ID Number" sub="(National ID)" />
         <InputField
+          id="nationalId"
+          name="nationalId"
           icon={<CardIcon />}
           placeholder="Enter your national ID number"
           value={data.nationalId}
           onChange={e => handleChange('nationalId', e.target.value)}
           maxLength={9}
+          status={getFieldStatus('nationalId')}
         />
+        {isCheckingNationalId && (
+          <p className="text-xs text-blue-500 mt-1 font-['Inter']">Checking National ID...</p>
+        )}
         {getFieldError('nationalId') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('nationalId')}</p>
         )}
@@ -113,12 +221,18 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
       <div>
         <Label icon={<MailIcon />} text="Email Address" />
         <InputField
+          id="email"
+          name="email"
           icon={<MailIcon />}
           placeholder="name@example.com"
           type="email"
           value={data.email}
           onChange={e => handleChange('email', e.target.value)}
+          status={getFieldStatus('email')}
         />
+        {isCheckingEmail && (
+          <p className="text-xs text-blue-500 mt-1 font-['Inter']">Checking email availability...</p>
+        )}
         {getFieldError('email') && (
           <p className="text-xs text-red-500 mt-1 font-['Inter']">{getFieldError('email')}</p>
         )}
@@ -127,6 +241,8 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
       <div>
         <Label icon={<PhoneIcon />} text="Phone Number" />
         <InputField
+          id="phone"
+          name="phone"
           icon={<PhoneIcon />}
           placeholder="e.g. 0597377872"
           value={data.phone}
@@ -143,6 +259,8 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
         <div>
           <Label icon={<LockIcon />} text="Password" />
           <InputField
+            id="password"
+            name="password"
             icon={<LockIcon />}
             placeholder="Minimum 8 characters"
             type={showPass ? "text" : "password"}
@@ -158,6 +276,8 @@ export function Step1({ data, setData, validationErrors = {} }) { // Accept vali
         <div>
           <Label icon={<LockIcon />} text="Confirm Password" />
           <InputField
+            id="confirmPassword"
+            name="confirmPassword"
             icon={<LockIcon />}
             placeholder="Re-enter your password"
             type={showConfirmPass ? "text" : "password"}

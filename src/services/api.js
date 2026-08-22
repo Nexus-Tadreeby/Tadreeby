@@ -1,5 +1,6 @@
 // src/services/api.js
-const API_BASE_URL = 'https://tadreeby-api.onrender.com';
+// const API_BASE_URL = 'https://tadreeby-api.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
 
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
@@ -26,11 +27,13 @@ const apiRequest = async (endpoint, options = {}) => {
 
     const response = await fetch(url, config);
 
+
     const isLoginRequest = endpoint.startsWith('/auth/login');
 
     // ✅ Handle 401 Unauthorized – token expired/invalid
     // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
     if (response.status === 401 && !isLoginRequest) {
+
       // Clear authentication data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -81,6 +84,59 @@ export const authAPI = {
       body: JSON.stringify(credentials),
     });
   },
+
+  checkEmailAvailability: async (email) => {
+    return apiRequest('/auth/check-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  checkNationalIdAvailability: async (personalID) => {
+    return apiRequest('/auth/check-national-id', {
+      method: 'POST',
+      body: JSON.stringify({ personalID }),
+    });
+  },
+
+  checkStudentNumberAvailability: async (studentNumber, universityId) => {
+    return apiRequest('/auth/check-student-number', {
+      method: 'POST',
+      body: JSON.stringify({ studentNumber, universityId }),
+    });
+  },
+};
+
+export const opportunitiesAPI = {
+  getAvailableOpportunities: async () => {
+    return apiRequest('/student/opportunities', {
+      method: 'GET',
+    });
+  },
+
+  getOpportunityDetails: async (opportunityId) => {
+    return apiRequest(`/student/opportunities/${opportunityId}`, {
+      method: 'GET',
+    });
+  },
+
+  applyForOpportunity: async (opportunityId) => {
+    return apiRequest(`/student/opportunities/${opportunityId}/apply`, {
+      method: 'POST',
+    });
+  },
+
+  getInternshipDetails: async (internshipId) => {
+    return apiRequest(`/student/internships/${internshipId}`, {
+      method: 'GET',
+    });
+  },
+
+  getMyInternships: async () => {
+    return apiRequest('/student/internships', {
+      method: 'GET',
+    });
+  },
 };
 
 // ─── Helper: convert File to base64 ──────────────────────────────────
@@ -108,7 +164,7 @@ export const profileAPI = {
   getProfile: async () => {
     const response = await apiRequest('/student/profile', { method: 'GET' });
     const data = response.data;
-    // ✅ Convert university from { id, name, shortCode } to just the name
+    // Convert university from { id, name, shortCode } to just the name
     if (data.university && typeof data.university === 'object') {
       data.university = data.university.name || 'Not provided';
     }

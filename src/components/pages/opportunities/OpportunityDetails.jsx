@@ -1,3 +1,433 @@
+// // InternshipDetails.jsx
+// import React, { useEffect, useMemo, useState } from "react";
+// import { useNavigate, useParams } from "react-router-dom";
+// import {
+//     ArrowLeft,
+//     BriefcaseBusiness,
+//     CalendarDays,
+//     CheckCircle2,
+//     Clock3,
+//     MapPin,
+//     Users,
+//     UserRound,
+//     FileText,
+//     Briefcase,
+//     GraduationCap,
+//     Settings,
+//     LayoutDashboard,
+//     Sparkles,
+// } from "lucide-react";
+// import Sidebar from "../../layout/Sidebar";
+// import TopIconCluster from "../../common/pagesAssets/TopIconCluster";
+// import { useAuth } from "../../../context/AuthContext";
+// import { opportunitiesAPI } from "../../../services/api";
+// import { Button } from "../../common/Button";
+// import InfoBox from "../../common/InfoBox";
+
+// const studentNavItems = [
+//     { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+//     { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
+//     { label: "My Internship", icon: GraduationCap, path: "/my/internship" },
+//     { label: "Attendance", icon: Clock3, path: "/attendance" },
+// ];
+
+// const studentFooterItems = [
+//     { label: "Settings", icon: Settings, path: "/settings" },
+// ];
+
+// const typeColors = {
+//     Remote: { bg: "#EAF3FF", text: "#1677FF" },
+//     Hybrid: { bg: "#F3F0FF", text: "#7C3AED" },
+//     "On-site": { bg: "#FFE8E8", text: "#EF4444" },
+// };
+
+// const skillColorPalette = [
+//     { bg: "#EAF3FF", text: "#1677FF" },
+//     { bg: "#F0F0FF", text: "#6C5CE7" },
+//     { bg: "#FFF4E5", text: "#E67E22" },
+//     { bg: "#E8F8F5", text: "#1ABC9C" },
+//     { bg: "#FEF3E2", text: "#D97706" },
+//     { bg: "#ECFDF5", text: "#059669" },
+//     { bg: "#F3E8FF", text: "#7C3AED" },
+//     { bg: "#FEF2F2", text: "#DC2626" },
+//     { bg: "#F0FDF4", text: "#16A34A" },
+//     { bg: "#FFF7ED", text: "#EA580C" },
+// ];
+
+// function getSkillColor(skill, index) {
+//     return skillColorPalette[index % skillColorPalette.length];
+// }
+
+// // دوال localStorage للحفاظ على حالة التقديم (نفسها المستخدمة في Internships)
+// const getAppliedIds = () => {
+//     try {
+//         const stored = localStorage.getItem('appliedInternships');
+//         return stored ? JSON.parse(stored) : [];
+//     } catch {
+//         return [];
+//     }
+// };
+
+// const addAppliedId = (id) => {
+//     const ids = getAppliedIds();
+//     if (!ids.includes(id)) {
+//         ids.push(id);
+//         localStorage.setItem('appliedInternships', JSON.stringify(ids));
+//     }
+// };
+
+// const isAppliedId = (id) => getAppliedIds().includes(id);
+
+// export default function InternshipDetails() {
+//     const navigate = useNavigate();
+//     const { id } = useParams();
+//     const { logout, user } = useAuth();
+//     const [internship, setInternship] = useState(null);
+//     const [loading, setLoading] = useState(true);
+//     const [error, setError] = useState("");
+//     const [applying, setApplying] = useState(false);
+
+//     useEffect(() => {
+//         const fetchDetails = async () => {
+//             if (!id) {
+//                 setError("Internship not found.");
+//                 setLoading(false);
+//                 return;
+//             }
+
+//             try {
+//                 setLoading(true);
+//                 setError("");
+
+//                 // استخدام الدالة الصحيحة من الـ API
+//                 const response = await opportunitiesAPI.getInternshipDetails(id);
+//                 const detail = response?.data || response;
+
+//                 if (!detail) {
+//                     throw new Error("Internship details are not available.");
+//                 }
+
+//                 // التحقق من حالة التقديم من localStorage
+//                 const applied = isAppliedId(Number(id));
+
+//                 // تطبيع البيانات
+//                 const normalized = {
+//                     id: detail.id ?? Number(id),
+//                     internship: detail.internship || detail.title || "Internship",
+//                     company: detail.company?.name || detail.company || "Company",
+//                     companyName: detail.company?.name || detail.company || "Company",
+//                     field: detail.field || detail.title || "General",
+//                     type: detail.type === "REMOTE" ? "Remote" : detail.type === "HYBRID" ? "Hybrid" : detail.type === "ONSITE" ? "On-site" : detail.type || "Remote",
+//                     trainer: detail.trainer?.firstName || detail.trainer?.name || detail.trainer || "Company Team",
+//                     location: detail.location || "Remote",
+//                     seats: detail.seats ?? detail.totalSeats ?? 0,
+//                     requiredSkills: detail.requiredSkills || detail.skills || [],
+//                     startDate: detail.startDate || "Open now",
+//                     endDate: detail.endDate || detail.duration || "Flexible",
+//                     description: detail.description || "No description provided yet.",
+//                     image: detail.image || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
+//                     stats: detail.stats || {},
+//                     tasks: detail.tasks || [],
+//                     attendance: detail.attendance || [],
+//                     evaluations: detail.evaluations || [],
+//                     applied: applied || detail.applied || false,
+//                 };
+
+//                 setInternship(normalized);
+//             } catch (err) {
+//                 console.error("Failed to load internship details:", err);
+//                 setError(err?.message || "Unable to load internship details.");
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+
+//         fetchDetails();
+//     }, [id]);
+
+//     const handleApply = async () => {
+//         if (!internship) return;
+
+//         // تحقق من localStorage أولاً
+//         if (isAppliedId(internship.id)) {
+//             alert("You have already applied for this internship.");
+//             return;
+//         }
+
+//         try {
+//             setApplying(true);
+//             await opportunitiesAPI.applyForOpportunity(internship.id);
+//             // حفظ في localStorage
+//             addAppliedId(internship.id);
+//             // تحديث الحالة المحلية
+//             setInternship((current) => ({ ...current, applied: true }));
+//         } catch (err) {
+//             console.error("Failed to apply:", err);
+//             setError(err?.message || "Unable to apply for this internship.");
+//         } finally {
+//             setApplying(false);
+//         }
+//     };
+
+//     const studentUser = {
+//         name: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student",
+//         role: "Student",
+//         avatar: user?.profileImage || "",
+//     };
+
+//     const progressPercent = useMemo(() => {
+//         if (!internship?.stats) return 0;
+//         return Math.round(internship.stats.progress || internship.stats.completedTasks && internship.stats.totalTasks
+//             ? (internship.stats.completedTasks / internship.stats.totalTasks) * 100
+//             : 0);
+//     }, [internship]);
+
+//     const typeColor = typeColors[internship?.type] || { bg: "#E5E7EB", text: "#374151" };
+
+//     const handleSignOut = () => {
+//         logout();
+//         navigate("/login");
+//     };
+
+//     return (
+//         <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-white to-orange-50/60 bg-fixed font-sans text-gray-900">
+//             <Sidebar
+//                 navItems={studentNavItems}
+//                 footerItems={studentFooterItems}
+//                 user={studentUser}
+//                 profilePath="/student/profile"
+//                 onSignOut={handleSignOut}
+//             />
+
+//             <main className="flex-1 overflow-y-auto scroll-smooth">
+//                 <div className="mx-auto w-full max-w-[1200px] px-5 py-5 sm:px-8 sm:py-7">
+//                     <header className="mb-6 flex items-center justify-between gap-4">
+//                         <Button
+//                             variant="secondary"
+//                             className="px-4 py-2.5 text-sm"
+//                             onClick={() => navigate("/student/opportunities")}
+//                             icon={<ArrowLeft size={16} />}
+//                         >
+//                             Back to opportunities
+//                         </Button>
+
+//                         <TopIconCluster
+//                             chatBadge={3}
+//                             notificationBadge={2}
+//                             avatarUrl={studentUser.avatar}
+//                             userName={studentUser.name}
+//                         />
+//                     </header>
+
+//                     {error && (
+//                         <InfoBox variant="orange" className="mb-5">
+//                             {error}
+//                         </InfoBox>
+//                     )}
+
+//                     {loading ? (
+//                         <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-500">
+//                             Loading internship details...
+//                         </div>
+//                     ) : internship ? (
+//                         <div className="space-y-6">
+//                             <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+//                                 <div className="relative h-72 w-full overflow-hidden">
+//                                     <img
+//                                         src={internship.image}
+//                                         alt={internship.internship}
+//                                         className="h-full w-full object-cover"
+//                                     />
+//                                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
+
+//                                     <div className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm">
+//                                         {internship.field}
+//                                     </div>
+
+//                                     <div
+//                                         className="absolute right-5 top-5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm"
+//                                         style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
+//                                     >
+//                                         {internship.type}
+//                                     </div>
+
+//                                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+//                                         <p className="mb-2 text-sm font-medium text-blue-100">{internship.companyName}</p>
+//                                         <h1 className="text-3xl font-extrabold tracking-tight">{internship.internship}</h1>
+//                                     </div>
+//                                 </div>
+
+//                                 <div className="p-6">
+//                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+//                                         <div className="flex items-start gap-3">
+//                                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF3FF] text-[#1677FF]">
+//                                                 <UserRound size={22} />
+//                                             </div>
+//                                             <div>
+//                                                 <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Trainer</p>
+//                                                 <p className="text-lg font-semibold text-gray-900">{internship.trainer}</p>
+//                                             </div>
+//                                         </div>
+
+//                                         <div className="flex flex-wrap items-center gap-3">
+//                                             <Button
+//                                                 variant={internship.applied ? "gold" : "blue"}
+//                                                 disabled={applying || internship.applied}
+//                                                 onClick={handleApply}
+//                                                 className="px-6 py-3 text-sm"
+//                                             >
+//                                                 {internship.applied ? "✓ Applied" : applying ? "Applying..." : "Apply now"}
+//                                             </Button>
+//                                         </div>
+//                                     </div>
+//                                 </div>
+//                             </div>
+
+//                             <div className="grid gap-6 lg:grid-cols-[1.5fr_0.9fr]">
+//                                 <div className="space-y-6">
+//                                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+//                                         <div className="mb-4 flex items-center gap-2">
+//                                             <Sparkles className="h-5 w-5 text-[#1677FF]" />
+//                                             <h2 className="text-xl font-bold text-gray-900">Overview</h2>
+//                                         </div>
+//                                         <p className="leading-7 text-gray-600">{internship.description}</p>
+//                                     </div>
+
+//                                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+//                                         <div className="mb-4 flex items-center gap-2">
+//                                             <FileText className="h-5 w-5 text-[#1677FF]" />
+//                                             <h2 className="text-xl font-bold text-gray-900">Required Skills</h2>
+//                                         </div>
+
+//                                         <div className="flex flex-wrap gap-2">
+//                                             {(internship.requiredSkills || []).map((skill, idx) => {
+//                                                 const color = getSkillColor(skill, idx);
+//                                                 return (
+//                                                     <span
+//                                                         key={skill}
+//                                                         className="rounded-lg px-2.5 py-1.5 text-xs font-semibold"
+//                                                         style={{ backgroundColor: color.bg, color: color.text }}
+//                                                     >
+//                                                         {skill}
+//                                                     </span>
+//                                                 );
+//                                             })}
+//                                         </div>
+//                                     </div>
+
+//                                     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+//                                         <div className="mb-4 flex items-center gap-2">
+//                                             <Briefcase className="h-5 w-5 text-[#1677FF]" />
+//                                             <h2 className="text-xl font-bold text-gray-900">Tasks</h2>
+//                                         </div>
+
+//                                         {Array.isArray(internship.tasks) && internship.tasks.length > 0 ? (
+//                                             <div className="space-y-3">
+//                                                 {internship.tasks.map((task) => (
+//                                                     <div key={task.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+//                                                         <div className="flex items-center justify-between gap-3">
+//                                                             <p className="font-semibold text-gray-900">{task.title || task.name || "Task"}</p>
+//                                                             <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-[#1677FF]">
+//                                                                 {task.status || "Open"}
+//                                                             </span>
+//                                                         </div>
+//                                                         {task.description && (
+//                                                             <p className="mt-2 text-sm text-gray-600">{task.description}</p>
+//                                                         )}
+//                                                         {task.deadline && (
+//                                                             <p className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+//                                                                 <CalendarDays size={14} />
+//                                                                 {new Date(task.deadline).toLocaleDateString()}
+//                                                             </p>
+//                                                         )}
+//                                                     </div>
+//                                                 ))}
+//                                             </div>
+//                                         ) : (
+//                                             <p className="text-sm text-gray-500">No tasks have been assigned yet.</p>
+//                                         )}
+//                                     </div>
+//                                 </div>
+
+//                                 <div className="space-y-6">
+//                                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+//                                         <h3 className="mb-4 text-lg font-bold text-gray-900">Opportunity details</h3>
+
+//                                         <div className="space-y-4">
+//                                             <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+//                                                 <BriefcaseBusiness className="h-4 w-4 text-[#1677FF]" />
+//                                                 <div>
+//                                                     <p className="text-[10px] uppercase tracking-wide text-gray-400">Company</p>
+//                                                     <p className="font-medium text-gray-800">{internship.companyName}</p>
+//                                                 </div>
+//                                             </div>
+
+//                                             <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+//                                                 <MapPin className="h-4 w-4 text-[#1677FF]" />
+//                                                 <div>
+//                                                     <p className="text-[10px] uppercase tracking-wide text-gray-400">Location</p>
+//                                                     <p className="font-medium text-gray-800">{internship.location}</p>
+//                                                 </div>
+//                                             </div>
+
+//                                             <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+//                                                 <Users className="h-4 w-4 text-[#1677FF]" />
+//                                                 <div>
+//                                                     <p className="text-[10px] uppercase tracking-wide text-gray-400">Available seats</p>
+//                                                     <p className="font-medium text-gray-800">{internship.seats} seats</p>
+//                                                 </div>
+//                                             </div>
+
+//                                             <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+//                                                 <CalendarDays className="h-4 w-4 text-[#1677FF]" />
+//                                                 <div>
+//                                                     <p className="text-[10px] uppercase tracking-wide text-gray-400">Duration</p>
+//                                                     <p className="font-medium text-gray-800">{internship.startDate} to {internship.endDate}</p>
+//                                                 </div>
+//                                             </div>
+//                                         </div>
+//                                     </div>
+
+//                                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+//                                         <div className="mb-4 flex items-center gap-2">
+//                                             <CheckCircle2 className="h-5 w-5 text-[#1677FF]" />
+//                                             <h3 className="text-lg font-bold text-gray-900">Progress</h3>
+//                                         </div>
+
+//                                         <div className="mb-3 flex items-center justify-between text-sm text-gray-600">
+//                                             <span>Completion</span>
+//                                             <span className="font-semibold text-gray-900">{progressPercent}%</span>
+//                                         </div>
+//                                         <div className="h-2.5 w-full overflow-hidden rounded-full bg-blue-50">
+//                                             <div
+//                                                 className="h-full rounded-full bg-[#1677FF] transition-all duration-500"
+//                                                 style={{ width: `${progressPercent}%` }}
+//                                             />
+//                                         </div>
+
+//                                         <div className="mt-5 grid grid-cols-2 gap-3">
+//                                             <InfoBox variant="blue">
+//                                                 <p className="text-xs uppercase tracking-wide text-blue-600">Tasks</p>
+//                                                 <p className="mt-2 text-2xl font-bold text-blue-800">{internship.stats?.totalTasks ?? 0}</p>
+//                                             </InfoBox>
+//                                             <InfoBox variant="green">
+//                                                 <p className="text-xs uppercase tracking-wide text-green-600">Completed</p>
+//                                                 <p className="mt-2 text-2xl font-bold text-green-800">{internship.stats?.completedTasks ?? 0}</p>
+//                                             </InfoBox>
+//                                         </div>
+//                                     </div>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     ) : null}
+//                 </div>
+//             </main>
+//         </div>
+//     );
+// }
+
+
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 

@@ -146,7 +146,7 @@
 //     let fieldsToValidate = [];
 //     const errors = {};
 //     let hasError = false;
-    
+
 //     if (step === 1) {
 //       fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'password', 'confirmPassword', 'nationalId'];
 //     } else if (step === 2) {
@@ -161,7 +161,7 @@
 //         hasError = true;
 //       }
 //     }
-    
+
 //     for (const field of fieldsToValidate) {
 //       const error = validateField(field, data[field], data);
 //       if (error) {
@@ -169,15 +169,15 @@
 //         hasError = true;
 //       }
 //     }
-    
+
 //     setValidationErrors(errors);
-    
+
 //     if (hasError) {
 //       return;
 //     }
-    
+
 //     setValidationErrors({});
-    
+
 //     if (step < 3) {
 //       setStep(s => s + 1);
 //     } else {
@@ -202,18 +202,18 @@
 //   // Validate all fields
 //   const errors = validateForm(data);
 //   const errorFields = Object.keys(errors);
-  
+
 //   // Validate file upload
 //   if (!data.verificationFile) {
 //     errors.verificationFile = "Please upload a verification document";
 //     errorFields.push('verificationFile');
 //   }
-  
+
 //   if (!data.agreed) {
 //     errors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
 //     errorFields.push('agreed');
 //   }
-  
+
 //   if (errorFields.length > 0) {
 //     setValidationErrors(errors);
 //     setError("Please fix all validation errors before submitting.");
@@ -231,9 +231,9 @@
 //     for (let [key, value] of formData.entries()) {
 //       console.log(key, value);
 //     }
-    
+
 //     const response = await authAPI.registerStudent(formData);
-    
+
 //     console.log("✅ Registration successful:", response);
 
 //     const userData = response.user ?? {
@@ -260,10 +260,10 @@
 //     });
 //   } catch (err) {
 //     console.error("❌ Registration error:", err);
-    
+
 //     let errorMessage = "Registration failed. Please try again.";
 //     let fieldErrors = {};
-    
+
 //     if (err.data) {
 //       // ✅ Parse the fields array from the response
 //       if (err.data.fields && Array.isArray(err.data.fields)) {
@@ -274,14 +274,14 @@
 //           }
 //           fieldErrors[field].push(message);
 //         });
-        
+
 //         // Create a readable error message
 //         const errorMessages = Object.entries(fieldErrors)
 //           .map(([field, messages]) => `${field}: ${messages.join('; ')}`)
 //           .join('. ');
-        
+
 //         errorMessage = `Validation failed: ${errorMessages}`;
-        
+
 //         // Map backend field names to frontend field names
 //         const fieldMapping = {
 //           'personalID': 'nationalId',
@@ -289,26 +289,26 @@
 //           'confirmPassword': 'confirmPassword',
 //           'studentNumber': 'studentNumber',
 //         };
-        
+
 //         // Set validation errors for the form
 //         const formErrors = {};
 //         Object.entries(fieldErrors).forEach(([field, messages]) => {
 //           const mappedField = fieldMapping[field] || field;
 //           formErrors[mappedField] = messages.join(' ');
 //         });
-        
+
 //         setValidationErrors(formErrors);
-        
+
 //         console.log("📝 Field errors from backend:", fieldErrors);
 //         console.log("📝 Mapped form errors:", formErrors);
-        
+
 //       } else if (err.data.message) {
 //         errorMessage = err.data.message;
 //       } else {
 //         errorMessage = JSON.stringify(err.data);
 //       }
 //     }
-    
+
 //     setError(errorMessage);
 //   } finally {
 //     setIsLoading(false);
@@ -327,7 +327,7 @@
 
 
 //       <main className="flex-1 flex items-center justify-center px-4 py-8 z-10">
-      
+
 //         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06),0_12px_48px_rgba(37,99,235,0.12)] border border-blue-600/10 w-full max-w-2xl p-8 sm:p-10 animate-fade-in-up hover:shadow-[0_8px_32px_rgba(37,99,235,0.16)] transition-all duration-300">
 //          <div className="flex justify-center mb-6 transition-transform hover:scale-105 duration-300" onClick={() => navigate("/") }>
 //                      <img src={logo} alt="Tadreeby Logo" className="h-9 w-auto" />
@@ -343,8 +343,8 @@
 //           <p className="font-['Inter'] font-medium text-[13.5px]  text-center leading-5 text-gray-400 mb-7">
 //             {SUBTITLES[step - 1]}
 //           </p>
-         
-         
+
+
 
 //           <StepIndicator current={step} />
 
@@ -356,14 +356,14 @@
 //               </p>
 //             </div>
 //           )}
-          
+
 
 //           <div className="key-step-container animate-fade-in">
 //             {step === 1 && <Step1 data={data} setData={setData} validationErrors={validationErrors} />}
 //             {step === 2 && <Step2 data={data} setData={setData} validationErrors={validationErrors} />}
 //             {step === 3 && <Step3 data={data} setData={setData} validationErrors={validationErrors} />}
 //           </div>
-          
+
 //           <div className="flex items-center justify-between mb-6">
 //           <div className={`flex mt-8 ${step == 1 ? "justify-between" : "justify-end"}`}>
 //             {step == 1 && (
@@ -410,9 +410,9 @@
 //               {isLoading ? "Submitting..." : (step === 3 ? "Submit Registration" : "Next Step")}
 //             </Button> */}
 
-            
+
 //           </div>
-         
+
 //         </div>
 //       </main>
 
@@ -449,6 +449,7 @@ import { StepIndicator } from "../navigation/StepIndicator";
 import { Step1 } from "../steps/Step1";
 import { Step2 } from "../steps/Step2";
 import { Step3 } from "../steps/Step3";
+import Loader from "../pages/Loader";
 import { Button } from "../common/Button";
 import { ArrowLeft, ArrowRight, SuccessIcon, ErrorIcon } from "../common/Icons";
 import { authAPI } from "../../services/api";
@@ -643,6 +644,17 @@ export function RegistrationPage() {
     setData(INITIAL_STATE);
   };
 
+  const waitForMinimumLoaderDuration = (startedAt) => {
+    const elapsed = Date.now() - startedAt;
+    const remaining = 9000 - elapsed;
+
+    if (remaining > 0) {
+      return new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+
+    return Promise.resolve();
+  };
+
   const handleSubmit = async () => {
     const errors = validateForm(data);
     const errorFields = Object.keys(errors);
@@ -663,8 +675,9 @@ export function RegistrationPage() {
       return;
     }
 
-    setIsLoading(true);
+    const startedAt = Date.now();
     setError(null);
+    setIsLoading(true);
 
     try {
       const formData = await buildRegistrationFormData(data);
@@ -676,6 +689,8 @@ export function RegistrationPage() {
       const response = await authAPI.registerStudent(formData);
 
       console.log("✅ Registration successful:", response);
+
+      await waitForMinimumLoaderDuration(startedAt);
 
       const userData = response.user ?? {
         firstName: data.firstName,
@@ -701,6 +716,7 @@ export function RegistrationPage() {
       });
     } catch (err) {
       console.error("❌ Registration error:", err);
+      setIsLoading(false);
 
       let errorMessage = "Registration failed. Please try again.";
       let fieldErrors = {};
@@ -750,6 +766,18 @@ export function RegistrationPage() {
       setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50/60 flex items-center justify-center px-4 py-8 relative overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-orange-400/10 blur-[100px] pointer-events-none animate-pulse-subtle" />
+        <div className="relative z-10 w-full">
+          <Loader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50/60 flex flex-col justify-between relative overflow-hidden">

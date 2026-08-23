@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -6,29 +7,62 @@ import {
   GraduationCap,
   Clock,
   Settings,
-  MessageCircle,
   Search,
-  Cloud,
-  Sparkles,
-  TrendingUp,
-  ClipboardList,
+  Bell,
+  CalendarDays,
   CheckCircle2,
-  MoreVertical,
-  MessageSquare,
+  Circle,
+  ClipboardList,
   MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ArrowUpRight,
+  Sparkles,
+  Brain,
+  TrendingUp,
+  Target,
+  Timer,
+  AlertCircle,
+  MoreHorizontal,
+  Check,
+  Coffee,
+  Building2,
+  UserRound,
+  MessageCircle,
 } from "lucide-react";
-import TechCorp from "../../../assets/Temp/TechCorp.jpg";
-import UXResearch from "../../../assets/Temp/UXResearch.jpg";
-import dataScienceIntern from "../../../assets/Temp/dataScienceIntern.jpg";
-import { RocketIcon, InsightsIcon } from "../../common/Icons";
+
 import Sidebar from "../../layout/Sidebar";
 import TopIconCluster from "../../common/pagesAssets/TopIconCluster";
-import GreetingBanner from "../../common/pagesAssets/GreetingBanner";
 import { useAuth } from "../../../context/AuthContext";
+import { profileAPI, opportunitiesAPI } from "../../../services/api";
 
-// ------------------------------------------------------------
-// 1. Student navigation & user data
-// ------------------------------------------------------------
+// ============================================================
+// Tadreeby Design System
+// ============================================================
+
+const COLORS = {
+  primary: "#0475FB",
+  primaryDark: "#035CC9",
+  primarySoft: "#EAF3FF",
+  accent: "#FFAD4E",
+  accentSoft: "#FFF4E5",
+  green: "#22C55E",
+  greenSoft: "#EAF9EF",
+  purple: "#8B5CF6",
+  purpleSoft: "#F2EDFF",
+  red: "#EF4444",
+  redSoft: "#FEF0F0",
+  text: "#172033",
+  muted: "#7B8497",
+  border: "#E9EDF4",
+  background: "#F5F7FB",
+};
+
+// ============================================================
+// Navigation
+// ============================================================
+
 const studentNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
   { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
@@ -36,412 +70,987 @@ const studentNavItems = [
   { label: "Attendance", icon: Clock, path: "/attendance" },
 ];
 
-const studentFooterItems = [
-  { label: "Settings", icon: Settings, path: "/settings" },
-];
+const studentFooterItems = [{ label: "Settings", icon: Settings, path: "/settings" }];
 
-const studentUser = {
-  name: "Afnan Kullab",
-  role: "Student",
-  avatar: "",
+// ============================================================
+// Normalize profile response (same as in StudentProfile)
+// ============================================================
+
+function normalizeProfileResponse(response, previousProfile = {}) {
+  const data = response?.data ?? response;
+  const user = data?.user ?? {};
+
+  let skills = previousProfile.skills || [];
+  if (data?.skills) {
+    if (Array.isArray(data.skills)) {
+      skills = data.skills;
+    } else if (typeof data.skills === 'string') {
+      try {
+        const parsed = JSON.parse(data.skills);
+        if (Array.isArray(parsed)) skills = parsed;
+      } catch {
+        skills = data.skills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+  }
+
+  return {
+    ...previousProfile,
+    userId: data?.userId ?? previousProfile.userId,
+    universityId: data?.universityId ?? previousProfile.universityId,
+    studentNumber: data?.studentNumber ?? previousProfile.studentNumber,
+    major: data?.major ?? previousProfile.major,
+    academicYear: data?.academicYear ?? previousProfile.academicYear,
+    gpa: data?.gpa ?? previousProfile.gpa,
+    cvUrl: data?.cvUrl ?? previousProfile.cvUrl,
+    verificationDocument: data?.verificationDocument ?? previousProfile.verificationDocument,
+    hasVerificationDoc: !!data?.verificationDocument || previousProfile.hasVerificationDoc,
+    hasCv: !!data?.cvUrl || previousProfile.hasCv,
+    verificationStatus: data?.approvalStatus?.toLowerCase() ?? previousProfile.verificationStatus,
+    firstName: user?.firstName ?? previousProfile.firstName,
+    lastName: user?.lastName ?? previousProfile.lastName,
+    email: user?.email ?? previousProfile.email,
+    phone: user?.phone ?? previousProfile.phone,
+    avatar: user?.profileImage ?? previousProfile.avatar,
+    recoveryEmail: user?.recoveryEmail ?? previousProfile.recoveryEmail,
+    skills: skills,
+    university: data?.university ?? previousProfile.university,
+  };
+}
+
+// ============================================================
+// Utility
+// ============================================================
+
+const getInitials = (name) => {
+  if (!name) return "S";
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 };
 
-// ------------------------------------------------------------
-// 3. Smart Action Center
-// ------------------------------------------------------------
-const SmartActionCenter = () => (
-  <div className="flex w-full items-center justify-between rounded-2xl border border-blue-600/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-orange-50/60 backdrop-blur-md p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300">
-    <div className="flex items-center gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1677FF] shadow-[0_4px_14px_rgba(22,119,255,0.3)] animate-pulse-subtle">
-        <RocketIcon className="h-5 w-5 text-white" />
-      </div>
+// ============================================================
+// Welcome Header – uses real data from profile
+// ============================================================
+
+const WelcomeHeader = ({ profile }) => {
+  const fullName = `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() || "Student";
+  const firstName = fullName.split(" ")[0];
+  const universityName = typeof profile?.university === 'string'
+    ? profile.university
+    : (profile?.university?.name || '');
+
+  return (
+    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
       <div>
-        <p className="font-['Inter'] text-base font-extrabold text-[#1677FF]">
-          3 action items need your attention
+        <p
+          className="mb-1 text-[12px] font-semibold uppercase tracking-[0.12em]"
+          style={{ color: COLORS.muted }}
+        >
+          Student Dashboard
         </p>
-        <p className="font-['Inter'] text-sm font-medium text-gray-500">
-          Complete these to stay on track for your internship
+
+        <h1
+          className="text-[25px] font-extrabold tracking-[-0.6px]"
+          style={{ color: COLORS.text }}
+        >
+          Welcome back, {firstName}{" "}
+          <span className="inline-block">👋</span>
+        </h1>
+
+        <p
+          className="mt-1.5 text-[13px] font-medium"
+          style={{ color: COLORS.muted }}
+        >
+          {profile?.major || "No major"} · {universityName || "No university"}
         </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full border bg-white transition hover:-translate-y-0.5 hover:shadow-md"
+          style={{ borderColor: COLORS.border }}
+        >
+          <Bell size={18} color={COLORS.text} />
+          <span
+            className="absolute right-[8px] top-[7px] h-2 w-2 rounded-full border-2 border-white"
+            style={{ backgroundColor: COLORS.accent }}
+          />
+        </button>
+
+        <div
+          className="flex items-center gap-2 rounded-full border bg-white py-1.5 pl-1.5 pr-3"
+          style={{ borderColor: COLORS.border }}
+        >
+          {profile?.avatar ? (
+            <img
+              src={profile.avatar}
+              alt={fullName}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
+              style={{ backgroundColor: COLORS.primary }}
+            >
+              {getInitials(fullName)}
+            </div>
+          )}
+
+          <span
+            className="hidden text-[12px] font-bold sm:block"
+            style={{ color: COLORS.text }}
+          >
+            {fullName}
+          </span>
+
+          <ChevronDown size={14} color={COLORS.muted} />
+        </div>
       </div>
     </div>
-    <button className="rounded-full bg-[#1677FF] px-6 py-3 font-['Inter'] text-sm font-bold text-white shadow-[0_4px_14px_rgba(22,119,255,0.3)] hover:bg-blue-600 hover:shadow-[0_6px_20px_rgba(22,119,255,0.4)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
-      Take Action
-    </button>
+  );
+};
+
+// ============================================================
+// Search Bar
+// ============================================================
+
+const SearchBar = () => (
+  <div className="relative w-full">
+    <Search
+      size={17}
+      className="absolute left-4 top-1/2 -translate-y-1/2"
+      color={COLORS.muted}
+    />
+    <input
+      type="text"
+      placeholder="Search tasks, internship activities..."
+      className="h-11 w-full rounded-full border bg-white pl-11 pr-5 text-[13px] font-medium outline-none transition placeholder:text-gray-400 focus:ring-4"
+      style={{ borderColor: COLORS.border }}
+    />
   </div>
 );
 
-// ------------------------------------------------------------
-// 4. Metric Card (reusable)
-// ------------------------------------------------------------
-const MetricCard = ({
-  icon: Icon,
-  iconColor,
-  iconBg,
-  badgeText,
-  badgeColor,
-  badgeBg,
-  label,
-  value,
-  subtext,
-  progress,
-}) => (
-  <div className="flex flex-1 min-w-[200px] flex-col rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.12)]">
-    <div className="flex items-center justify-between">
+// ============================================================
+// Internship Banner – uses real data
+// ============================================================
+
+const InternshipBanner = ({ checkedIn, onCheckIn, profile }) => {
+  const major = profile?.major || "Field Training";
+  const universityName = typeof profile?.university === 'string'
+    ? profile.university
+    : (profile?.university?.name || 'Your University');
+  const fullName = `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() || "Student";
+
+  const internshipTitle = major ? `${major} Intern` : "Field Training Intern";
+  const companyName = universityName ? `${universityName} Partner` : "Your University";
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-[22px] p-5 sm:p-6"
+      style={{
+        background:
+          "linear-gradient(110deg, #0475FB 0%, #176FE0 55%, #0B61C9 100%)",
+        boxShadow: "0 12px 30px rgba(4,117,251,0.18)",
+      }}
+    >
+      <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/10" />
+      <div className="pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-white/5" />
+
+      <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
+            <Building2 size={22} color="white" />
+          </div>
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-white/65">
+              Current Internship
+            </p>
+
+            <h2 className="mt-0.5 text-[17px] font-extrabold text-white">
+              {internshipTitle}
+            </h2>
+
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-white/75">
+              <span>{companyName}</span>
+              <span className="h-1 w-1 rounded-full bg-white/40" />
+              <span>Field Training</span>
+              <span className="h-1 w-1 rounded-full bg-white/40" />
+              <span>Week 8 of 12</span> {/* Placeholder – needs real data */}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden text-right sm:block">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+              Today
+            </p>
+            <p className="text-[13px] font-bold text-white">
+              {checkedIn ? "Checked in" : "Not checked in"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onCheckIn}
+            disabled={checkedIn}
+            className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[12px] font-extrabold transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-default disabled:opacity-90"
+            style={{ color: COLORS.primary }}
+          >
+            {checkedIn ? (
+              <>
+                <CheckCircle2 size={15} />
+                Checked In
+              </>
+            ) : (
+              <>
+                <Clock size={15} />
+                Check In
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// Small Stat Card (static for now – will use real data later)
+// ============================================================
+
+const StatCard = ({ icon: Icon, label, value, description, iconColor, iconBg, progress }) => (
+  <div
+    className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+    style={{ borderColor: COLORS.border }}
+  >
+    <div className="flex items-start justify-between">
       <div
-        className="flex h-11 w-11 items-center justify-center rounded-xl shadow-sm transition-transform duration-300 hover:scale-110"
+        className="flex h-9 w-9 items-center justify-center rounded-xl"
         style={{ backgroundColor: iconBg }}
       >
-        <Icon className="h-5 w-5" style={{ color: iconColor }} strokeWidth={2} />
+        <Icon size={17} color={iconColor} />
       </div>
-      <span
-        className="rounded-full px-2.5 py-1 font-['Inter'] text-[11px] font-bold"
-        style={{ backgroundColor: badgeBg, color: badgeColor }}
-      >
-        {badgeText}
-      </span>
+      <ArrowUpRight size={14} color="#B0B7C5" />
     </div>
 
-    <p className="mt-4 font-['Inter'] text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
-    <p className="font-['Inter'] text-[22px] font-extrabold text-gray-900 leading-tight mt-0.5">{value}</p>
+    <p
+      className="mt-3 text-[10px] font-bold uppercase tracking-wider"
+      style={{ color: COLORS.muted }}
+    >
+      {label}
+    </p>
 
-    {progress != null ? (
-      <div className="mt-4 h-2.5 w-full rounded-full bg-blue-50 overflow-hidden">
-        <div
-          className="h-2.5 rounded-full bg-[#1677FF] transition-all duration-1000 ease-out"
-          style={{ width: `${progress}%` }}
-        />
+    <p
+      className="mt-0.5 text-[19px] font-extrabold"
+      style={{ color: COLORS.text }}
+    >
+      {value}
+    </p>
+
+    {progress !== undefined ? (
+      <div className="mt-3">
+        <div className="mb-1.5 flex justify-between">
+          <span className="text-[9px] font-semibold text-gray-400">Progress</span>
+          <span className="text-[9px] font-extrabold" style={{ color: iconColor }}>
+            {progress}%
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${progress}%`, backgroundColor: iconColor }}
+          />
+        </div>
       </div>
     ) : (
-      <p className="mt-4 font-['Inter'] text-[12px] font-semibold text-gray-500">
-        {subtext}
-      </p>
+      <p className="mt-1 text-[10px] font-medium text-gray-400">{description}</p>
     )}
   </div>
 );
 
-// ------------------------------------------------------------
-// 5. Recommendation Card (reusable)
-// ------------------------------------------------------------
-const RecommendationCard = ({
-  title,
-  meta,
-  tags,
-  badgeText,
-  badgeBg,
-  image,
-}) => (
-  <div className="min-w-[200px] flex-1 basis-[220px] rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 hover:shadow-[0_8px_30px_rgba(37,99,235,0.12)]">
-    <div className="relative m-4 mb-0 h-32 overflow-hidden rounded-xl bg-blue-50">
-      <img
-        src={image}
-        alt={title}
-        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-      />
-      <span
-        className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full px-2.5 py-1 font-['Inter'] text-[10px] font-bold text-white shadow-sm"
-        style={{ backgroundColor: badgeBg }}
-      >
-        <Sparkles className="h-[11px] w-[11px]" />
-        {badgeText}
-      </span>
-    </div>
-    <div className="p-4 pt-3">
-      <h4 className="font-['Inter'] text-[15px] font-extrabold text-gray-900">{title}</h4>
-      <p className="mt-0.5 font-['Inter'] text-[12px] font-medium text-gray-500">
-        {meta}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-md bg-blue-50 px-2 py-0.5 font-['Inter'] text-[10px] font-bold text-[#1677FF] border border-blue-100"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+// ============================================================
+// Attendance Calendar (static – needs API)
+// ============================================================
 
-const RecommendationsSection = ({ recommendations }) => {
-  const [view, setView] = useState("cards");
+const AttendanceCalendar = () => {
+  const [selectedDate, setSelectedDate] = useState(17);
+
+  const days = [
+    { day: 26, status: "present" },
+    { day: 27, status: "present" },
+    { day: 28, status: "late" },
+    { day: 29, status: "present" },
+    { day: 30, status: "present" },
+    { day: 31, status: "weekend" },
+    { day: 1, status: "weekend" },
+    { day: 2, status: "present" },
+    { day: 3, status: "present" },
+    { day: 4, status: "present" },
+    { day: 5, status: "late" },
+    { day: 6, status: "present" },
+    { day: 7, status: "weekend" },
+    { day: 8, status: "weekend" },
+    { day: 9, status: "present" },
+    { day: 10, status: "present" },
+    { day: 11, status: "absent" },
+    { day: 12, status: "present" },
+    { day: 13, status: "present" },
+    { day: 14, status: "weekend" },
+    { day: 15, status: "weekend" },
+    { day: 16, status: "present" },
+    { day: 17, status: "today" },
+    { day: 18, status: "upcoming" },
+    { day: 19, status: "upcoming" },
+    { day: 20, status: "upcoming" },
+    { day: 21, status: "weekend" },
+    { day: 22, status: "weekend" },
+  ];
+
+  const getStatusStyle = (status, day) => {
+    if (day === selectedDate) {
+      return { backgroundColor: COLORS.primary, color: "white" };
+    }
+    if (status === "present") return { backgroundColor: COLORS.greenSoft, color: "#16A34A" };
+    if (status === "late") return { backgroundColor: COLORS.accentSoft, color: "#D97706" };
+    if (status === "absent") return { backgroundColor: COLORS.redSoft, color: COLORS.red };
+    return { backgroundColor: "#F7F8FA", color: "#A8AFBC" };
+  };
 
   return (
-    <div className="space-y-3">
+    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setView("cards")}
-            className={`rounded-md px-2 py-1 text-xs font-bold ${view === "cards" ? "bg-blue-50 text-[#1677FF]" : "text-gray-500 hover:bg-gray-50"}`}
-          >
-            Cards
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("list")}
-            className={`rounded-md px-2 py-1 text-xs font-bold ${view === "list" ? "bg-blue-50 text-[#1677FF]" : "text-gray-500 hover:bg-gray-50"}`}
-          >
-            Compact List
-          </button>
+        <div>
+          <div className="flex items-center gap-2">
+            <CalendarDays size={17} color={COLORS.primary} />
+            <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
+              Attendance
+            </h3>
+          </div>
+          <p className="mt-1 text-[10px] font-medium text-gray-400">
+            Track your internship attendance
+          </p>
         </div>
+        <button className="flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1.5 text-[10px] font-bold text-gray-600">
+          August 2026
+          <ChevronDown size={12} />
+        </button>
       </div>
 
-      {view === "cards" ? (
-        <div className="flex flex-wrap gap-4">
-          {recommendations.map((rec) => (
-            <RecommendationCard key={rec.title} {...rec} />
-          ))}
+      <div className="mt-5 grid grid-cols-7 gap-1.5">
+        {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+          <div key={`${day}-${index}`} className="pb-1 text-center text-[9px] font-bold text-gray-400">
+            {day}
+          </div>
+        ))}
+        {days.map((item, index) => (
+          <button
+            key={`${item.day}-${index}`}
+            type="button"
+            onClick={() => setSelectedDate(item.day)}
+            className="flex aspect-square items-center justify-center rounded-lg text-[10px] font-bold transition hover:scale-105"
+            style={getStatusStyle(item.status, item.day)}
+          >
+            {item.day}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t pt-4">
+        <Legend color={COLORS.green} label="Present" />
+        <Legend color={COLORS.accent} label="Late" />
+        <Legend color={COLORS.red} label="Absent" />
+        <Legend color={COLORS.primary} label="Today" />
+      </div>
+
+      <div
+        className="mt-4 flex items-center justify-between rounded-xl p-3"
+        style={{ backgroundColor: COLORS.primarySoft }}
+      >
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+            Attendance rate
+          </p>
+          <p className="mt-0.5 text-[16px] font-extrabold" style={{ color: COLORS.text }}>
+            92%
+          </p>
         </div>
-      ) : (
-        <div className="divide-y rounded-2xl border border-blue-600/5 bg-white/90 p-2 shadow-sm">
-          {recommendations.map((rec) => (
-            <div key={rec.title} className="flex items-center gap-3 px-3 py-3">
-              <img src={rec.image} alt={rec.title} className="h-12 w-12 rounded-md object-cover" />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-extrabold text-gray-900">{rec.title}</h4>
-                  <span className="text-xs font-bold text-[#1677FF]">{rec.badgeText}</span>
-                </div>
-                <p className="text-xs font-medium text-gray-500">{rec.meta}</p>
-                <div className="mt-2 flex gap-2">
-                  {rec.tags.map((t) => (
-                    <span key={t} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#1677FF] border border-blue-100">{t}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-[#1677FF]">Details</button>
-                <button className="rounded-full bg-[#1677FF] px-3 py-1 text-xs font-bold text-white">Apply</button>
-              </div>
-            </div>
-          ))}
+        <div className="text-right">
+          <p className="text-[9px] font-semibold text-gray-400">Hours completed</p>
+          <p className="mt-0.5 text-[12px] font-extrabold" style={{ color: COLORS.primary }}>
+            184 / 200 hrs
+          </p>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-// ------------------------------------------------------------
-// 6. AI Profile Strength Card
-// ------------------------------------------------------------
-const AIProfileCard = () => (
-  <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-[#1677FF] via-blue-600 to-indigo-700 p-6 shadow-[0_8px_25px_rgba(22,119,255,0.3)] hover-lift transition-all duration-300">
-    <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-xl pointer-events-none" />
-    <div className="relative flex flex-col gap-4">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
-          <InsightsIcon className="h-5 w-5 text-white" />
-        </div>
-        <h3 className="font-['Inter'] text-base font-extrabold text-white">AI Insight</h3>
-      </div>
-      <p className="font-['Inter'] text-xs font-medium leading-5 text-white/90">
-        Great job! Your profile is at 88% complete. Finish your &quot;Skills&quot;
-        section to unlock premium recommendations!
-      </p>
-      <div className="h-2 w-full rounded-full bg-white/25 overflow-hidden">
-        <div className="h-2 w-[88%] rounded-full bg-white transition-all duration-1000" />
-      </div>
-      <button className="w-full rounded-full bg-white py-3 font-['Inter'] text-xs font-bold text-[#1677FF] shadow-sm transition-all hover:bg-blue-50 cursor-pointer">
-        Complete Your Profile
-      </button>
-    </div>
+const Legend = ({ color, label }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+    <span className="text-[9px] font-semibold text-gray-400">{label}</span>
   </div>
 );
 
-// ------------------------------------------------------------
-// 7. Activity Feed
-// ------------------------------------------------------------
-const ACTIVITIES = [
+// ============================================================
+// Weekly Attendance Chart (static – needs API)
+// ============================================================
+
+const AttendanceChart = () => {
+  const attendance = [
+    { day: "Sun", value: 7.5 },
+    { day: "Mon", value: 8 },
+    { day: "Tue", value: 6 },
+    { day: "Wed", value: 8 },
+    { day: "Thu", value: 7 },
+    { day: "Fri", value: 4 },
+    { day: "Sat", value: 0 },
+  ];
+  const max = 8;
+
+  return (
+    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
+            Hours Activity
+          </h3>
+          <p className="mt-1 text-[10px] font-medium text-gray-400">
+            Your attendance hours this week
+          </p>
+        </div>
+        <button className="flex items-center gap-1 rounded-full border bg-white px-2.5 py-1.5 text-[9px] font-bold text-gray-500">
+          This week
+          <ChevronDown size={11} />
+        </button>
+      </div>
+
+      <div className="mt-5 flex h-[150px]">
+        <div className="flex w-7 flex-col justify-between pb-6 pt-1">
+          {[8, 6, 4, 2, 0].map((number) => (
+            <span key={number} className="text-[8px] font-semibold text-gray-300">
+              {number}h
+            </span>
+          ))}
+        </div>
+        <div className="relative flex flex-1 items-end justify-between gap-2 border-b border-gray-100">
+          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-6">
+            {[0, 1, 2, 3, 4].map((line) => (
+              <div key={line} className="border-t border-dashed border-gray-100" />
+            ))}
+          </div>
+          {attendance.map((item) => {
+            const height = `${(item.value / max) * 100}%`;
+            return (
+              <div key={item.day} className="relative z-10 flex h-full flex-1 flex-col items-center justify-end">
+                {item.value > 0 && (
+                  <div
+                    className="group relative w-4 rounded-t-full transition-all duration-500 hover:w-5"
+                    style={{
+                      height,
+                      backgroundColor: item.day === "Mon" ? COLORS.primary : "rgba(4,117,251,0.22)",
+                    }}
+                  >
+                    <div className="absolute -top-7 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[8px] font-bold text-white group-hover:block">
+                      {item.value}h
+                    </div>
+                  </div>
+                )}
+                <span className="absolute -bottom-5 text-[8px] font-bold text-gray-400">
+                  {item.day}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// AI Performance Card (static – needs API)
+// ============================================================
+
+const AIPerformanceCard = () => {
+  const score = 87;
+  return (
+    <div
+      className="relative overflow-hidden rounded-[20px] p-5"
+      style={{
+        background: "linear-gradient(145deg, #102B4F 0%, #123E70 60%, #0475FB 140%)",
+        boxShadow: "0 10px 28px rgba(15,45,80,0.16)",
+      }}
+    >
+      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#0475FB]/25 blur-2xl" />
+      <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+              <Brain size={17} color="#FFFFFF" />
+            </div>
+            <div>
+              <p className="text-[13px] font-extrabold text-white">AI Performance</p>
+              <p className="text-[9px] font-medium text-white/50">
+                Based on your internship activity
+              </p>
+            </div>
+          </div>
+          <Sparkles size={17} color={COLORS.accent} />
+        </div>
+
+        <div className="mt-6 flex items-center gap-5">
+          <div className="relative h-[92px] w-[92px] shrink-0">
+            <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
+              <circle cx="46" cy="46" r="39" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="7" />
+              <circle
+                cx="46"
+                cy="46"
+                r="39"
+                fill="none"
+                stroke="#FFAD4E"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={`${(score / 100) * 245} 245`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[23px] font-extrabold text-white">{score}</span>
+              <span className="text-[8px] font-bold text-white/45">/ 100</span>
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <TrendingUp size={13} color="#4ADE80" />
+              <span className="text-[11px] font-bold text-green-300">+6%</span>
+              <span className="text-[9px] font-medium text-white/40">this week</span>
+            </div>
+            <p className="mt-2 text-[11px] font-medium leading-5 text-white/65">
+              Your performance is above the average for students in similar internships.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          <AIMiniStat label="Tasks" value="91%" />
+          <AIMiniStat label="Skills" value="84%" />
+          <AIMiniStat label="Growth" value="86%" />
+        </div>
+
+        <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-[10px] font-bold text-white transition hover:bg-white/15">
+          <Sparkles size={12} color={COLORS.accent} />
+          View AI Insights
+          <ArrowUpRight size={12} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const AIMiniStat = ({ label, value }) => (
+  <div className="rounded-xl bg-white/[0.07] p-2.5">
+    <p className="text-[8px] font-medium text-white/40">{label}</p>
+    <p className="mt-0.5 text-[12px] font-extrabold text-white">{value}</p>
+  </div>
+);
+
+// ============================================================
+// Assignments (static – needs API)
+// ============================================================
+
+const ASSIGNMENTS = [
   {
-    icon: CheckCircle2,
-    iconColor: "#16A34A",
-    iconBg: "rgba(34,197,94,0.1)",
-    title: "Registration Approved",
-    description: "University Admin approved your registration at UP.",
-    time: "2 hours ago",
-  },
-  {
+    title: "Build Authentication API",
+    type: "Technical Task",
+    due: "Today, 4:00 PM",
+    status: "In Progress",
     icon: ClipboardList,
-    iconColor: "#1677FF",
-    iconBg: "rgba(22,119,255,0.1)",
-    title: "New Task Assigned",
-    description:
-      '"Project Planning Phase 1" assigned by TAQAT Supervisor.',
-    time: "5 hours ago",
+    iconColor: COLORS.primary,
+    iconBg: COLORS.primarySoft,
   },
   {
-    icon: Clock,
-    iconColor: "#FD761A",
-    iconBg: "rgba(253,118,26,0.1)",
-    title: "Deadline Approaching",
-    description: "Weekly report submission is due in 48 hours.",
-    time: "1 day ago",
+    title: "Weekly Training Report",
+    type: "Report",
+    due: "Tomorrow, 10:00 AM",
+    status: "Pending",
+    icon: Target,
+    iconColor: COLORS.accent,
+    iconBg: COLORS.accentSoft,
   },
   {
-    icon: MessageSquare,
-    iconColor: "#6B7280",
-    iconBg: "rgba(107,114,128,0.1)",
-    title: "New Message",
-    description:
-      "Sarah from Designly sent you a message about your application.",
-    time: "2 days ago",
+    title: "Code Review Session",
+    type: "Training",
+    due: "Aug 25, 11:00 AM",
+    status: "Upcoming",
+    icon: MessageCircle,
+    iconColor: COLORS.purple,
+    iconBg: COLORS.purpleSoft,
   },
 ];
 
-const ActivityItem = ({ activity, isLast }) => {
-  const Icon = activity.icon;
+const AssignmentsCard = () => (
+  <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
+          Assignments
+        </h3>
+        <p className="mt-1 text-[10px] font-medium text-gray-400">
+          Tasks from your internship
+        </p>
+      </div>
+      <button
+        type="button"
+        className="text-[10px] font-extrabold transition hover:underline"
+        style={{ color: COLORS.primary }}
+      >
+        View all
+      </button>
+    </div>
+
+    <div className="mt-4 space-y-2.5">
+      {ASSIGNMENTS.map((assignment) => {
+        const Icon = assignment.icon;
+        return (
+          <div
+            key={assignment.title}
+            className="group flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition hover:border-gray-100 hover:bg-gray-50"
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{ backgroundColor: assignment.iconBg }}
+            >
+              <Icon size={15} color={assignment.iconColor} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-extrabold" style={{ color: COLORS.text }}>
+                {assignment.title}
+              </p>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="text-[8px] font-medium text-gray-400">{assignment.type}</span>
+                <span className="h-1 w-1 rounded-full bg-gray-300" />
+                <span className="text-[8px] font-medium text-gray-400">{assignment.due}</span>
+              </div>
+            </div>
+            <span
+              className="hidden rounded-full px-2 py-1 text-[8px] font-bold sm:block"
+              style={{
+                backgroundColor:
+                  assignment.status === "In Progress"
+                    ? COLORS.primarySoft
+                    : assignment.status === "Pending"
+                      ? COLORS.accentSoft
+                      : "#F2F4F7",
+                color:
+                  assignment.status === "In Progress"
+                    ? COLORS.primary
+                    : assignment.status === "Pending"
+                      ? "#D97706"
+                      : COLORS.muted,
+              }}
+            >
+              {assignment.status}
+            </span>
+            <ArrowUpRight
+              size={13}
+              color="#B8BFCA"
+              className="opacity-0 transition group-hover:opacity-100"
+            />
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
+// ============================================================
+// Internship Progress (static – needs API)
+// ============================================================
+
+const InternshipProgress = () => {
+  const progress = 67;
+  const milestones = [
+    { title: "Orientation", status: "completed", date: "Jun 30" },
+    { title: "Training Phase", status: "completed", date: "Jul 01" },
+    { title: "Practical Training", status: "current", date: "Current" },
+    { title: "Final Evaluation", status: "upcoming", date: "Sep 15" },
+  ];
+
   return (
-    <div className="flex gap-3.5">
-      <div className="relative flex shrink-0 flex-col items-center">
-        {!isLast && (
-          <span className="absolute top-10 h-[calc(100%+16px-40px)] w-0.5 bg-gray-200" />
-        )}
-        <div
-          className="z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white shadow-sm"
-          style={{ backgroundColor: activity.iconBg }}
+    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
+            Current Internship
+          </h3>
+          <p className="mt-1 text-[10px] font-medium text-gray-400">
+            Your journey at TechCorp
+          </p>
+        </div>
+        <span
+          className="rounded-full px-2.5 py-1 text-[9px] font-extrabold"
+          style={{ backgroundColor: COLORS.greenSoft, color: "#16A34A" }}
         >
-          <Icon
-            className="h-4 w-4"
-            style={{ color: activity.iconColor }}
-            strokeWidth={2}
-          />
+          On Track
+        </span>
+      </div>
+
+      <div className="mt-5 flex items-end justify-between">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+            Overall progress
+          </p>
+          <p className="mt-0.5 text-[26px] font-extrabold tracking-tight" style={{ color: COLORS.text }}>
+            {progress}%
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] font-medium text-gray-400">Internship duration</p>
+          <p className="mt-0.5 text-[11px] font-extrabold text-gray-700">8 / 12 weeks</p>
         </div>
       </div>
-      <div className={`flex-1 ${isLast ? "" : "pb-5"}`}>
-        <p className="font-['Inter'] text-xs font-bold text-gray-900">
-          {activity.title}
-        </p>
-        <p className="mt-0.5 font-['Inter'] text-[12px] font-medium leading-4 text-gray-500">
-          {activity.description}
-        </p>
-        <p className="mt-1 font-['Inter'] text-[10px] font-medium text-gray-400">
-          {activity.time}
-        </p>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${progress}%`,
+            background: `linear-gradient(90deg, ${COLORS.primary}, #38A0FF)`,
+          }}
+        />
+      </div>
+
+      <div className="mt-6">
+        {milestones.map((milestone, index) => {
+          const completed = milestone.status === "completed";
+          const current = milestone.status === "current";
+          return (
+            <div key={milestone.title} className="relative flex items-start gap-3 pb-4 last:pb-0">
+              {index !== milestones.length - 1 && (
+                <div
+                  className="absolute left-[9px] top-5 h-[calc(100%-8px)] w-px"
+                  style={{ backgroundColor: completed ? "#A8D9B8" : COLORS.border }}
+                />
+              )}
+              <div
+                className="relative z-10 flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: completed ? COLORS.green : current ? COLORS.primary : "#F1F3F6",
+                  border: current ? "3px solid #DCEBFF" : "none",
+                }}
+              >
+                {completed ? <Check size={10} color="white" strokeWidth={3} /> : current ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
+              </div>
+              <div className="flex flex-1 items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-extrabold" style={{ color: completed || current ? COLORS.text : "#A3AAB7" }}>
+                    {milestone.title}
+                  </p>
+                  {current && <p className="mt-0.5 text-[8px] font-semibold" style={{ color: COLORS.primary }}>You are here</p>}
+                </div>
+                <span className="text-[8px] font-semibold text-gray-400">{milestone.date}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
-const ActivityFeed = () => (
-  <div className="flex max-h-[600px] w-full flex-col rounded-2xl border border-blue-600/5 bg-white/90 backdrop-blur-md p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300">
-    <div className="flex items-center justify-between pb-5">
-      <h3 className="font-['Inter'] text-[16px] font-extrabold text-gray-800">
-        Recent Activity
-      </h3>
-      <button
-        aria-label="More options"
-        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </button>
+// ============================================================
+// Today's Schedule (static – needs API)
+// ============================================================
+
+const TodaySchedule = () => {
+  const schedule = [
+    { time: "09:00", title: "Check In", subtitle: "TechCorp Office", icon: Clock, color: COLORS.primary, bg: COLORS.primarySoft },
+    { time: "10:00", title: "Daily Standup", subtitle: "Team Meeting", icon: MessageCircle, color: COLORS.purple, bg: COLORS.purpleSoft },
+    { time: "12:30", title: "Lunch Break", subtitle: "01:00 PM", icon: Coffee, color: COLORS.accent, bg: COLORS.accentSoft },
+    { time: "02:00", title: "Practical Training", subtitle: "Backend Development", icon: GraduationCap, color: COLORS.green, bg: COLORS.greenSoft },
+  ];
+
+  return (
+    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
+            Today&apos;s Schedule
+          </h3>
+          <p className="mt-1 text-[10px] font-medium text-gray-400">
+            Sunday, August 23
+          </p>
+        </div>
+        <button className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-50">
+          <MoreHorizontal size={15} color={COLORS.muted} />
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-1">
+        {schedule.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.title} className="relative flex gap-3 py-2">
+              <div className="w-9 shrink-0 pt-1">
+                <p className="text-[8px] font-bold text-gray-400">{item.time}</p>
+              </div>
+              <div
+                className="absolute left-[45px] top-0 h-full w-px"
+                style={{ backgroundColor: index === schedule.length - 1 ? "transparent" : "#EEF1F5" }}
+              />
+              <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: item.bg }}>
+                <Icon size={14} color={item.color} />
+              </div>
+              <div className="min-w-0 pt-0.5">
+                <p className="text-[10px] font-extrabold" style={{ color: COLORS.text }}>
+                  {item.title}
+                </p>
+                <p className="mt-0.5 truncate text-[8px] font-medium text-gray-400">{item.subtitle}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
+  );
+};
 
-    <div className="flex-1 space-y-0 overflow-y-auto pr-1">
-      {ACTIVITIES.map((activity, idx) => (
-        <ActivityItem
-          key={activity.title}
-          activity={activity}
-          isLast={idx === ACTIVITIES.length - 1}
-        />
-      ))}
-    </div>
+// ============================================================
+// MAIN DASHBOARD COMPONENT
+// ============================================================
 
-    <button className="mt-5 w-full rounded-full border border-blue-200 bg-blue-50 py-3 font-['Inter'] text-xs font-bold text-[#1677FF] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 cursor-pointer">
-      View All Activity
-    </button>
-  </div>
-);
-
-// ------------------------------------------------------------
-// 8. Main StudentDashboard Component
-// ------------------------------------------------------------
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [opportunitiesCount, setOpportunitiesCount] = useState(0);
+  const [checkedIn, setCheckedIn] = useState(false);
+
+  // ── Fetch profile & opportunities ──
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch profile from backend – exactly like StudentProfile
+        const response = await profileAPI.getProfile();
+        const normalized = normalizeProfileResponse(response, {});
+        // Ensure university is a string (if object)
+        if (normalized.university && typeof normalized.university === 'object') {
+          normalized.university = normalized.university.name || '';
+        }
+        setProfile(normalized);
+
+        // 2. Fetch opportunities count
+        const oppResponse = await opportunitiesAPI.getAvailableOpportunities();
+        const oppList = oppResponse?.data ?? [];
+        setOpportunitiesCount(Array.isArray(oppList) ? oppList.length : 0);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        // Fallback to user from context if profile fails
+        if (user) {
+          const fallback = {
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+            major: user.studentProfile?.major || 'Software Engineering',
+            university: user.studentProfile?.university?.name || 'Al-Azhar University',
+            studentNumber: user.studentProfile?.studentNumber || '',
+            gpa: user.studentProfile?.gpa || '',
+            avatar: user.profileImage || '',
+          };
+          setProfile(fallback);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const handleSignOut = () => {
     logout();
     navigate("/login", { replace: true });
   };
 
-  const metrics = [
+  const handleCheckIn = () => {
+    setCheckedIn(true);
+    // TODO: Call real check-in API
+  };
+
+  const fullName = useMemo(() => {
+    if (!profile) return "Student";
+    return `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "Student";
+  }, [profile]);
+
+  // Build studentUser for Sidebar using real data
+  const studentUser = useMemo(() => ({
+    name: fullName,
+    role: "Student",
+    avatar: profile?.avatar || "",
+  }), [fullName, profile]);
+
+  // Stats – still placeholder, can be replaced with real data later
+  const stats = [
     {
-      icon: TrendingUp,
-      iconColor: "#1677FF",
-      iconBg: "rgba(22,119,255,0.1)",
-      badgeText: "In progress",
-      badgeColor: "#1677FF",
-      badgeBg: "rgba(22,119,255,0.1)",
-      label: "Internship Progress",
-      value: "8 of 12 weeks",
-      progress: 65,
+      icon: Clock,
+      label: "Attendance",
+      value: "92%",
+      description: "2 late arrivals",
+      iconColor: COLORS.primary,
+      iconBg: COLORS.primarySoft,
+    },
+    {
+      icon: Timer,
+      label: "Training Hours",
+      value: "184 hrs",
+      description: "16 hrs remaining",
+      iconColor: COLORS.accent,
+      iconBg: COLORS.accentSoft,
     },
     {
       icon: ClipboardList,
-      iconColor: "#FD761A",
-      iconBg: "rgba(253,118,26,0.1)",
-      badgeText: "Due Soon",
-      badgeColor: "#FD761A",
-      badgeBg: "rgba(253,118,26,0.1)",
-      label: "Pending Tasks",
-      value: "2 Tasks",
-      subtext: "1 High Priority Task",
+      label: "Assignments",
+      value: "8 / 10",
+      description: "2 pending tasks",
+      iconColor: COLORS.purple,
+      iconBg: COLORS.purpleSoft,
+      progress: 80,
     },
     {
-      icon: Briefcase,
-      iconColor: "#8B5CF6",
-      iconBg: "rgba(139,92,246,0.1)",
-      badgeText: "Active",
-      badgeColor: "#8B5CF6",
-      badgeBg: "rgba(139,92,246,0.1)",
-      label: "Active Applications",
-      value: "3 Positions",
-      subtext: "2 in interview stage",
-    },
-    {
-      icon: CheckCircle2,
-      iconColor: "#16A34A",
-      iconBg: "rgba(34,197,94,0.1)",
-      badgeText: "On Track",
-      badgeColor: "#16A34A",
-      badgeBg: "rgba(34,197,94,0.1)",
-      label: "Attendance",
-      value: "90% Rate",
-      subtext: "0 Late arrivals",
+      icon: TrendingUp,
+      label: "Performance",
+      value: "87 / 100",
+      description: "Above average",
+      iconColor: COLORS.green,
+      iconBg: COLORS.greenSoft,
     },
   ];
 
-  const recommendations = [
-    {
-      title: "Frontend Developer",
-      meta: "TechCorp • Gaza City",
-      tags: ["Remote", "Full-Time"],
-      badgeText: "Matched",
-      badgeBg: "#1677FF",
-      image: TechCorp,
-    },
-    {
-      title: "UI/UX Designer",
-      meta: "Designly • Gaza City",
-      tags: ["Design", "Part-Time"],
-      badgeText: "Great Match",
-      badgeBg: "#1677FF",
-      image: UXResearch,
-    },
-    {
-      title: "Data Engineering Intern",
-      meta: "DataFlow • Gaza City",
-      tags: ["Hybrid", "Paid"],
-      badgeText: "Popular",
-      badgeBg: "#FD761A",
-      image: dataScienceIntern,
-    },
-  ];
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F5F7FA]">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#1677FF] border-t-transparent" />
+          <p className="mt-4 text-sm text-gray-500 font-['Inter']">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
+  // ── Render ──
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#eef1f8] font-sans">
+    <div className="flex h-screen w-full overflow-hidden font-sans" style={{ backgroundColor: COLORS.background }}>
       <Sidebar
         navItems={studentNavItems}
         footerItems={studentFooterItems}
@@ -450,68 +1059,73 @@ const StudentDashboard = () => {
         onSignOut={handleSignOut}
       />
 
-      <main className="flex-1 overflow-y-auto p-6 sm:p-8 animate-fade-in">
-        <div className="mx-auto max-w-[1186px]">
-          {/* Header with search and icons */}
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="relative w-full max-w-[576px]">
-              <Search className="absolute left-[19px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#1677FF]" />
-              <input
-                type="text"
-                placeholder="Search internships or tasks..."
-                className="w-full rounded-full border border-blue-600/10 bg-white/80 backdrop-blur-md py-[11px] pl-[48px] pr-4 text-[15px] text-[#374151] shadow-[0_2px_12px_rgba(0,0,0,0.04)] focus:border-[#1677FF] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-['Inter']"
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7">
+          {/* Top Bar */}
+          <div className="mb-6 flex items-center gap-5">
+            <div className="flex-1">
+              <SearchBar />
+            </div>
+            <div className="hidden lg:block">
+              <TopIconCluster
+                chatBadge={3}
+                notificationBadge={4}
+                avatarUrl={studentUser.avatar}
+                userName={studentUser.name}
               />
             </div>
-            <TopIconCluster
-              chatBadge={9}
-              notificationBadge={5}
-              avatarUrl=""
-              userName="Afnan Kullab"
+          </div>
+
+          {/* Welcome Header – now receives full profile */}
+          <WelcomeHeader profile={profile} />
+
+          {/* Internship Banner */}
+          <div className="mt-6">
+            <InternshipBanner
+              checkedIn={checkedIn}
+              onCheckIn={handleCheckIn}
+              profile={profile}
             />
           </div>
 
-          {/* Welcome banner */}
-          <GreetingBanner name={studentUser.name} />
-
-          {/* Smart action center */}
-          <div className="mt-6">
-            <SmartActionCenter />
+          {/* Quick Stats */}
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <StatCard key={stat.label} {...stat} />
+            ))}
           </div>
 
-          {/* Two-column grid: metrics/recommendations (left) + AI card/activity (right) */}
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row">
-            {/* Left column */}
-            <div className="flex flex-1 flex-col gap-6">
-              {/* Metric cards */}
-              <div className="flex flex-wrap gap-4">
-                {metrics.map((metric) => (
-                  <MetricCard key={metric.label} {...metric} />
-                ))}
+          {/* Main Grid */}
+          <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
+            <div className="min-w-0 space-y-5">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+                <AttendanceCalendar />
+                <AttendanceChart />
               </div>
-
-              {/* Recommendations */}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-['Inter'] text-[18px] font-extrabold text-gray-900">Recommended for You</h2>
-
-                  {/* view toggle */}
-                  <div className="flex items-center gap-2">
-                    <button className="font-['Inter'] text-xs font-bold text-[#1677FF] hover:underline cursor-pointer">
-                      View All Recommendations
-                    </button>
-                  </div>
-                </div>
-
-                {/* Use a compact list view by default on smaller widths; allow cards for richer view */}
-                <RecommendationsSection recommendations={recommendations} />
-              </div>
+              <InternshipProgress />
             </div>
 
-            {/* Right column */}
-            <div className="flex w-full flex-col gap-6 lg:w-[304px] lg:shrink-0">
-              <AIProfileCard />
-              <ActivityFeed />
+            <div className="space-y-5">
+              <AIPerformanceCard />
+              <AssignmentsCard />
+              <TodaySchedule />
             </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-5 flex flex-col items-center justify-between gap-2 pb-5 text-center sm:flex-row sm:text-left">
+            <p className="text-[9px] font-medium text-gray-400">
+              Tadreeby helps you stay on track throughout your field training.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/attendance")}
+              className="flex items-center gap-1 text-[9px] font-extrabold transition hover:underline"
+              style={{ color: COLORS.primary }}
+            >
+              View full attendance
+              <ArrowUpRight size={11} />
+            </button>
           </div>
         </div>
       </main>

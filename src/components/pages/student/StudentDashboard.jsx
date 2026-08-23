@@ -1,4 +1,4 @@
-
+// src/components/pages/student/StudentDashboard.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,11 +11,8 @@ import {
   Bell,
   CalendarDays,
   CheckCircle2,
-  Circle,
   ClipboardList,
   MapPin,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   ArrowUpRight,
   Sparkles,
@@ -28,7 +25,6 @@ import {
   Check,
   Coffee,
   Building2,
-  UserRound,
   MessageCircle,
 } from "lucide-react";
 
@@ -36,6 +32,22 @@ import Sidebar from "../../layout/Sidebar";
 import TopIconCluster from "../../common/pagesAssets/TopIconCluster";
 import { useAuth } from "../../../context/AuthContext";
 import { profileAPI, opportunitiesAPI } from "../../../services/api";
+
+// ============================================================
+// Import global skeleton components
+// ============================================================
+import {
+  SkeletonText,
+  SkeletonCard,
+  SkeletonWelcomeHeader,
+  SkeletonBanner,
+  SkeletonStatCard,
+  SkeletonCalendar,
+  SkeletonChart,
+  SkeletonAICard,
+  SkeletonAssignments,
+  SkeletonSchedule,
+} from "../../common/pagesAssets/Skeleton";
 
 // ============================================================
 // Tadreeby Design System
@@ -60,7 +72,7 @@ const COLORS = {
 };
 
 // ============================================================
-// Navigation
+// Navigation (defined outside component)
 // ============================================================
 
 const studentNavItems = [
@@ -73,7 +85,7 @@ const studentNavItems = [
 const studentFooterItems = [{ label: "Settings", icon: Settings, path: "/settings" }];
 
 // ============================================================
-// Normalize profile response (same as in StudentProfile)
+// Normalize profile response (same as StudentProfile)
 // ============================================================
 
 function normalizeProfileResponse(response, previousProfile = {}) {
@@ -133,9 +145,27 @@ const getInitials = (name) => {
 };
 
 // ============================================================
-// Welcome Header – uses real data from profile
+// Real Components (used when data is loaded)
 // ============================================================
 
+// 1. Search Bar
+const SearchBar = () => (
+  <div className="relative w-full">
+    <Search
+      size={17}
+      className="absolute left-4 top-1/2 -translate-y-1/2"
+      color={COLORS.muted}
+    />
+    <input
+      type="text"
+      placeholder="Search tasks, internship activities..."
+      className="h-11 w-full rounded-full border bg-white pl-11 pr-5 text-[13px] font-medium outline-none transition placeholder:text-gray-400 focus:ring-4"
+      style={{ borderColor: COLORS.border }}
+    />
+  </div>
+);
+
+// 2. Welcome Header
 const WelcomeHeader = ({ profile }) => {
   const fullName = `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() || "Student";
   const firstName = fullName.split(" ")[0];
@@ -215,36 +245,12 @@ const WelcomeHeader = ({ profile }) => {
   );
 };
 
-// ============================================================
-// Search Bar
-// ============================================================
-
-const SearchBar = () => (
-  <div className="relative w-full">
-    <Search
-      size={17}
-      className="absolute left-4 top-1/2 -translate-y-1/2"
-      color={COLORS.muted}
-    />
-    <input
-      type="text"
-      placeholder="Search tasks, internship activities..."
-      className="h-11 w-full rounded-full border bg-white pl-11 pr-5 text-[13px] font-medium outline-none transition placeholder:text-gray-400 focus:ring-4"
-      style={{ borderColor: COLORS.border }}
-    />
-  </div>
-);
-
-// ============================================================
-// Internship Banner – uses real data
-// ============================================================
-
+// 3. Internship Banner
 const InternshipBanner = ({ checkedIn, onCheckIn, profile }) => {
   const major = profile?.major || "Field Training";
   const universityName = typeof profile?.university === 'string'
     ? profile.university
     : (profile?.university?.name || 'Your University');
-  const fullName = `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() || "Student";
 
   const internshipTitle = major ? `${major} Intern` : "Field Training Intern";
   const companyName = universityName ? `${universityName} Partner` : "Your University";
@@ -321,10 +327,7 @@ const InternshipBanner = ({ checkedIn, onCheckIn, profile }) => {
   );
 };
 
-// ============================================================
-// Small Stat Card (static for now – will use real data later)
-// ============================================================
-
+// 4. Stat Card
 const StatCard = ({ icon: Icon, label, value, description, iconColor, iconBg, progress }) => (
   <div
     className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
@@ -375,10 +378,15 @@ const StatCard = ({ icon: Icon, label, value, description, iconColor, iconBg, pr
   </div>
 );
 
-// ============================================================
-// Attendance Calendar (static – needs API)
-// ============================================================
+// 5. Legend (for calendar)
+const Legend = ({ color, label }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+    <span className="text-[9px] font-semibold text-gray-400">{label}</span>
+  </div>
+);
 
+// 6. Attendance Calendar
 const AttendanceCalendar = () => {
   const [selectedDate, setSelectedDate] = useState(17);
 
@@ -492,17 +500,7 @@ const AttendanceCalendar = () => {
   );
 };
 
-const Legend = ({ color, label }) => (
-  <div className="flex items-center gap-1.5">
-    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-    <span className="text-[9px] font-semibold text-gray-400">{label}</span>
-  </div>
-);
-
-// ============================================================
-// Weekly Attendance Chart (static – needs API)
-// ============================================================
-
+// 7. Attendance Chart
 const AttendanceChart = () => {
   const attendance = [
     { day: "Sun", value: 7.5 },
@@ -575,10 +573,7 @@ const AttendanceChart = () => {
   );
 };
 
-// ============================================================
-// AI Performance Card (static – needs API)
-// ============================================================
-
+// 8. AI Performance Card
 const AIPerformanceCard = () => {
   const score = 87;
   return (
@@ -661,10 +656,7 @@ const AIMiniStat = ({ label, value }) => (
   </div>
 );
 
-// ============================================================
-// Assignments (static – needs API)
-// ============================================================
-
+// 9. Assignments Card
 const ASSIGNMENTS = [
   {
     title: "Build Authentication API",
@@ -770,10 +762,7 @@ const AssignmentsCard = () => (
   </div>
 );
 
-// ============================================================
-// Internship Progress (static – needs API)
-// ============================================================
-
+// 10. Internship Progress
 const InternshipProgress = () => {
   const progress = 67;
   const milestones = [
@@ -865,10 +854,7 @@ const InternshipProgress = () => {
   );
 };
 
-// ============================================================
-// Today's Schedule (static – needs API)
-// ============================================================
-
+// 11. Today's Schedule
 const TodaySchedule = () => {
   const schedule = [
     { time: "09:00", title: "Check In", subtitle: "TechCorp Office", icon: Clock, color: COLORS.primary, bg: COLORS.primarySoft },
@@ -935,27 +921,23 @@ const StudentDashboard = () => {
   const [opportunitiesCount, setOpportunitiesCount] = useState(0);
   const [checkedIn, setCheckedIn] = useState(false);
 
-  // ── Fetch profile & opportunities ──
+  // ── Fetch data ──
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch profile from backend – exactly like StudentProfile
         const response = await profileAPI.getProfile();
         const normalized = normalizeProfileResponse(response, {});
-        // Ensure university is a string (if object)
         if (normalized.university && typeof normalized.university === 'object') {
           normalized.university = normalized.university.name || '';
         }
         setProfile(normalized);
 
-        // 2. Fetch opportunities count
         const oppResponse = await opportunitiesAPI.getAvailableOpportunities();
         const oppList = oppResponse?.data ?? [];
         setOpportunitiesCount(Array.isArray(oppList) ? oppList.length : 0);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
-        // Fallback to user from context if profile fails
         if (user) {
           const fallback = {
             firstName: user.firstName || '',
@@ -992,14 +974,13 @@ const StudentDashboard = () => {
     return `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "Student";
   }, [profile]);
 
-  // Build studentUser for Sidebar using real data
   const studentUser = useMemo(() => ({
     name: fullName,
     role: "Student",
     avatar: profile?.avatar || "",
   }), [fullName, profile]);
 
-  // Stats – still placeholder, can be replaced with real data later
+  // Stats – placeholder values (will be replaced with real data later)
   const stats = [
     {
       icon: Clock,
@@ -1036,18 +1017,6 @@ const StudentDashboard = () => {
     },
   ];
 
-  // ── Loading state ──
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#F5F7FA]">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#1677FF] border-t-transparent" />
-          <p className="mt-4 text-sm text-gray-500 font-['Inter']">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   // ── Render ──
   return (
     <div className="flex h-screen w-full overflow-hidden font-sans" style={{ backgroundColor: COLORS.background }}>
@@ -1064,51 +1033,104 @@ const StudentDashboard = () => {
           {/* Top Bar */}
           <div className="mb-6 flex items-center gap-5">
             <div className="flex-1">
-              <SearchBar />
+              {loading ? (
+                <div className="relative h-11 w-full animate-pulse rounded-full bg-gray-200" />
+              ) : (
+                <SearchBar />
+              )}
             </div>
             <div className="hidden lg:block">
-              <TopIconCluster
-                chatBadge={3}
-                notificationBadge={4}
-                avatarUrl={studentUser.avatar}
-                userName={studentUser.name}
-              />
+              {loading ? (
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 animate-pulse rounded-full bg-gray-200" />
+                  <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
+                </div>
+              ) : (
+                <TopIconCluster
+                  chatBadge={3}
+                  notificationBadge={4}
+                  avatarUrl={studentUser.avatar}
+                  userName={studentUser.name}
+                />
+              )}
             </div>
           </div>
 
-          {/* Welcome Header – now receives full profile */}
-          <WelcomeHeader profile={profile} />
+          {/* Welcome Header */}
+          {loading ? <SkeletonWelcomeHeader /> : <WelcomeHeader profile={profile} />}
 
           {/* Internship Banner */}
           <div className="mt-6">
-            <InternshipBanner
-              checkedIn={checkedIn}
-              onCheckIn={handleCheckIn}
-              profile={profile}
-            />
+            {loading ? (
+              <SkeletonBanner />
+            ) : (
+              <InternshipBanner
+                checkedIn={checkedIn}
+                onCheckIn={handleCheckIn}
+                profile={profile}
+              />
+            )}
           </div>
 
           {/* Quick Stats */}
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {stats.map((stat) => (
-              <StatCard key={stat.label} {...stat} />
-            ))}
+            {loading ? (
+              <>
+                <SkeletonStatCard />
+                <SkeletonStatCard />
+                <SkeletonStatCard />
+                <SkeletonStatCard />
+              </>
+            ) : (
+              stats.map((stat) => <StatCard key={stat.label} {...stat} />)
+            )}
           </div>
 
           {/* Main Grid */}
           <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
             <div className="min-w-0 space-y-5">
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-                <AttendanceCalendar />
-                <AttendanceChart />
+                {loading ? (
+                  <>
+                    <SkeletonCalendar />
+                    <SkeletonChart />
+                  </>
+                ) : (
+                  <>
+                    <AttendanceCalendar />
+                    <AttendanceChart />
+                  </>
+                )}
               </div>
-              <InternshipProgress />
+              {loading ? (
+                <SkeletonCard className="p-5">
+                  <SkeletonText className="h-6 w-48" />
+                  <SkeletonText className="mt-2 h-3 w-full" />
+                  <div className="mt-4 flex items-end justify-between">
+                    <SkeletonText className="h-8 w-20" />
+                    <SkeletonText className="h-4 w-24" />
+                  </div>
+                  <div className="mt-3 h-2 w-full animate-pulse rounded-full bg-gray-200" />
+                </SkeletonCard>
+              ) : (
+                <InternshipProgress />
+              )}
             </div>
 
             <div className="space-y-5">
-              <AIPerformanceCard />
-              <AssignmentsCard />
-              <TodaySchedule />
+              {loading ? (
+                <>
+                  <SkeletonAICard />
+                  <SkeletonAssignments />
+                  <SkeletonSchedule />
+                </>
+              ) : (
+                <>
+                  <AIPerformanceCard />
+                  <AssignmentsCard />
+                  <TodaySchedule />
+                </>
+              )}
             </div>
           </div>
 

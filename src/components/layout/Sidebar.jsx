@@ -20,7 +20,7 @@ const DEFAULT_DISCOVERY = [
 ];
 
 const DEFAULT_MANAGEMENT = [
-  { label: "My Internship", icon: BriefcaseBusiness, path: "/internship" },
+  { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
   { label: "Attendance", icon: Clock3, path: "/attendance" },
   { label: "Tasks", icon: ListTodo, path: "/tasks" },
 ];
@@ -30,7 +30,7 @@ function Sidebar({
   managementItems = DEFAULT_MANAGEMENT,
   user = { name: "Afnan Kullab", role: "Student", avatar: "" },
   profilePath = "/profile",
-  chatPath = "/chat",
+  chatPath = "/student/chats",
   settingsPath = "/settings",
   onSignOut,
   chatAvatars = [],

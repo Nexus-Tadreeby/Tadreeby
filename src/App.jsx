@@ -19,10 +19,13 @@ import Companies from "./components/pages/superAdmin/Companies";
 
 import StudentDashboard from './components/pages/student/StudentDashboard';
 import StudentProfile from "./components/pages/student/StudentProfile";
+import Settings from "./components/common/pagesAssets/Settings";
 import Internships from "./components/pages/opportunities/opportunities";
 import InternshipDetails from "./components/pages/opportunities/OpportunityDetails";
 import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
+import MyInternship from "./components/pages/internship/my-internship";
+import StudentChats from "./components/pages/student/studentChats"; 
 
 function App() {
   return (
@@ -37,7 +40,7 @@ function App() {
       <Route path="/terms" element={<TermsAndPrivacyPage />} />
       <Route path="/privacy" element={<TermsAndPrivacyPage />} />
       {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
-
+      <Route path="/student/chats" element={<StudentChats />} />
       <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
         <Route path="/superAdmin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="/superAdmin/universities" element={<Universities />} />
@@ -58,9 +61,13 @@ function App() {
         <Route path="/student/internships/:id" element={<InternshipDetails />} />
         <Route path="/student/internship/:id" element={<InternshipDetails />} />
 
-        {/* <Route path="/my-internship" element={<MyInternshipPage />} /> */}
+        <Route path="/student/my-internship" element={<MyInternship />} />
+        <Route path="/internship/my-internship" element={<MyInternship />} />
+        <Route path="/my/internship" element={<MyInternship />} />
         {/* <Route path="/attendance" element={<AttendancePage />} /> */}
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/settings" element={<Settings />} />
+
       </Route>
 
       {/* Catch-all 404 Route */}

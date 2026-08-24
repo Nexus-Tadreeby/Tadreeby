@@ -469,7 +469,7 @@ const studentNavItems = [
     {
         label: "My Internship",
         icon: GraduationCap,
-        path: "/my/internship",
+        path: "/student/my-internship",
     },
     {
         label: "Attendance",

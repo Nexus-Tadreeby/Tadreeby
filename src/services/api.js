@@ -139,6 +139,22 @@ export const opportunitiesAPI = {
   },
 };
 
+export const internshipAPI = {
+  getMyInternship: async () => {
+    return apiRequest('/student/internships', {
+      method: 'GET',
+    });
+  },
+
+  getMyInternships: async () => {
+    return apiRequest('/student/internships', {
+      method: 'GET',
+    });
+  },
+};
+
+export const myInternshipAPI = internshipAPI;
+
 // ─── Helper: convert File to base64 ──────────────────────────────────
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -244,6 +260,40 @@ export const profileAPI = {
       method: 'DELETE',
     });
     return response.data;
+  },
+};
+
+
+// ─── Chat API ─────────────────────────────────────────────────────────
+export const chatAPI = {
+  // Get all active/past chats for the student
+  getChats: async () => {
+    return apiRequest('/student/chats', {
+      method: 'GET',
+    });
+  },
+
+  // Get messages for a specific chat conversation
+  getChatMessages: async (chatId) => {
+    return apiRequest(`/student/chats/${chatId}/messages`, {
+      method: 'GET',
+    });
+  },
+
+  // Send a new message in a specific chat
+  sendMessage: async (chatId, messageData) => {
+    return apiRequest(`/student/chats/${chatId}/messages`, {
+      method: 'POST',
+      // If handling file uploads (images/audio), you might need to use FormData here instead of JSON
+      body: JSON.stringify(messageData),
+    });
+  },
+
+  // Mark a chat as closed
+  markAsClosed: async (chatId) => {
+    return apiRequest(`/student/chats/${chatId}/close`, {
+      method: 'PATCH',
+    });
   },
 };
 

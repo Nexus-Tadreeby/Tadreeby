@@ -2647,6 +2647,9 @@
 // export default StudentProfile;
 
 
+
+
+
 // src/components/pages/student/StudentProfile.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -2683,10 +2686,11 @@ import {
   Trash2
 } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
-import TopIconCluster from "../../common/pagesAssets/TopIconCluster";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../context/ToastContext";
 import { profileAPI } from "../../../services/api";
+import PageHeader from "../../common/pagesAssets/PageHeader";
+import AIAssistant from "../../common/pagesAssets/AIAssistant";
 
 // ─── Import skeleton components ──────────────────────────────────────
 import {
@@ -2699,10 +2703,8 @@ import {
   SkeletonAccountStatus,
   SkeletonTabNav,
   SkeletonVerificationStatus,
-  SkeletonText,
-  SkeletonCard,
-  SkeletonCircle,
   SkeletonRect,
+  SkeletonCircle,
 } from "../../common/pagesAssets/Skeleton";
 
 // ─── Normalize backend response ──────────────────────────────────────
@@ -2752,7 +2754,7 @@ function normalizeProfileResponse(response, previousProfile = {}) {
 const studentNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
   { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
-  { label: "My Internship", icon: GraduationCap, path: "/my/internship" },
+  { label: "My Internship", icon: GraduationCap, path: "/student/my-internship" },
   { label: "Attendance", icon: Clock, path: "/attendance" },
 ];
 
@@ -4030,8 +4032,8 @@ const StudentProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Photo must be under 2MB.", "error");
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Photo must be under 5MB.", "error");
       return;
     }
 
@@ -4357,7 +4359,11 @@ const StudentProfile = () => {
   // ─── Loading state (Skeleton) ──────────────────────────────────────
   if (isLoadingProfile) {
     return (
-      <div className="flex h-screen w-full overflow-hidden bg-[#F5F7FA] font-sans text-gray-900">
+      <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+        <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+
         <Sidebar
           navItems={studentNavItems}
           footerItems={studentFooterItems}
@@ -4366,20 +4372,19 @@ const StudentProfile = () => {
           onSignOut={handleSignOut}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative z-10">
           <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-            <header className="mb-6 flex items-center justify-between gap-4">
-              <div className="relative w-full max-w-[540px]">
-                <SkeletonRect className="h-11 rounded-xl" />
-              </div>
-              <div className="flex items-center gap-3">
-                <SkeletonCircle className="h-11 w-11" />
-                <SkeletonCircle className="h-9 w-9" />
-              </div>
-            </header>
+            {/* ✅ استخدم PageHeader هنا */}
+            <PageHeader
+              loading={isLoadingProfile}
+              profile={profile}
+              fullName={studentUser.name}
+              studentUser={studentUser}
+              chatBadge={9}
+              notificationBadge={5}
+            />
 
             <SkeletonProfileHeader />
-
             <SkeletonTabNav />
 
             <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -4418,7 +4423,11 @@ const StudentProfile = () => {
 
   // ─── Render main profile ──────────────────────────────────────────
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F5F7FA] font-sans text-gray-900">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+      <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+
       <Sidebar
         navItems={studentNavItems}
         footerItems={studentFooterItems}
@@ -4427,24 +4436,17 @@ const StudentProfile = () => {
         onSignOut={handleSignOut}
       />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto relative z-10">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-          <header className="mb-6 flex items-center justify-between gap-4">
-            <div className="relative w-full max-w-[540px]">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="search"
-                placeholder="Search internships or tasks..."
-                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-xs text-gray-700 shadow-[0_1px_5px_rgba(20,35,60,0.03)] transition focus:border-[#1677FF] focus:outline-none focus:ring-4 focus:ring-[#1677FF]/10"
-              />
-            </div>
-            <TopIconCluster
-              chatBadge={9}
-              notificationBadge={5}
-              avatarUrl={profile.avatar}
-              userName={studentUser.name}
-            />
-          </header>
+          {/* ✅ استخدم PageHeader هنا بدلاً من الـ header القديم */}
+          <PageHeader
+            loading={isLoadingProfile}
+            profile={profile}
+            fullName={studentUser.name}
+            studentUser={studentUser}
+            chatBadge={9}
+            notificationBadge={5}
+          />
 
           <ProfileHeader
             profile={profile}
@@ -4560,6 +4562,8 @@ const StudentProfile = () => {
           </div>
         </div>
       </main>
+
+      {/* <AIAssistant /> */}
     </div>
   );
 };

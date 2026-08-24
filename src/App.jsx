@@ -19,6 +19,7 @@ import Companies from "./components/pages/superAdmin/Companies";
 
 import StudentDashboard from './components/pages/student/StudentDashboard';
 import StudentProfile from "./components/pages/student/StudentProfile";
+import Settings from "./components/common/pagesAssets/Settings";
 import Internships from "./components/pages/opportunities/opportunities";
 import InternshipDetails from "./components/pages/opportunities/OpportunityDetails";
 import NotFoundPage from "./components/pages/NotFoundPage";
@@ -65,6 +66,8 @@ function App() {
         <Route path="/my/internship" element={<MyInternship />} />
         {/* <Route path="/attendance" element={<AttendancePage />} /> */}
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/settings" element={<Settings />} />
+
       </Route>
 
       {/* Catch-all 404 Route */}

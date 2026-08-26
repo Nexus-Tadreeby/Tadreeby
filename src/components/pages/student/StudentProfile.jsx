@@ -3658,7 +3658,7 @@ const DocumentsCard = ({
                 Delete your CV?
               </h3>
               <p className="mt-1.5 text-center text-[12px] leading-5 text-gray-500">
-                Are you sure you want to remove your uploaded CV? You can always upload a new one later.
+                Are you sure you want to remove your uploaded CV? <br />You can always upload a new one later.
               </p>
 
               {/* Actions */}
@@ -4429,7 +4429,6 @@ const StudentProfile = () => {
 
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-            {/* ✅ استخدم PageHeader هنا */}
             <PageHeader
               loading={isLoadingProfile}
               profile={profile}
@@ -4493,7 +4492,6 @@ const StudentProfile = () => {
 
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-          {/* ✅ استخدم PageHeader هنا بدلاً من الـ header القديم */}
           <PageHeader
             loading={isLoadingProfile}
             profile={profile}

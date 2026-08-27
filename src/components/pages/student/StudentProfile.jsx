@@ -1,4 +1,3 @@
-
 // src/components/pages/student/StudentProfile.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -61,7 +60,19 @@ function normalizeProfileResponse(response, previousProfile = {}) {
   const data = response?.data ?? response;
   const user = data?.user ?? {};
 
-  // ... skills parsing ...
+  let skills = previousProfile.skills || [];
+  if (data?.skills) {
+    if (Array.isArray(data.skills)) {
+      skills = data.skills;
+    } else if (typeof data.skills === 'string') {
+      try {
+        const parsed = JSON.parse(data.skills);
+        if (Array.isArray(parsed)) skills = parsed;
+      } catch {
+        skills = data.skills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+  }
 
   return {
     ...previousProfile,
@@ -71,18 +82,10 @@ function normalizeProfileResponse(response, previousProfile = {}) {
     major: data?.major ?? previousProfile.major,
     academicYear: data?.academicYear ?? previousProfile.academicYear,
     gpa: data?.gpa ?? previousProfile.gpa,
-
-    // 🔁 Override with new values, even if they are null
-    cvUrl: data.hasOwnProperty('cvUrl') ? data.cvUrl : previousProfile.cvUrl,
-    hasCv: data.hasOwnProperty('cvUrl') ? !!data.cvUrl : previousProfile.hasCv,
-
-    verificationDocument: data.hasOwnProperty('verificationDocument') 
-      ? data.verificationDocument 
-      : previousProfile.verificationDocument,
-    hasVerificationDoc: data.hasOwnProperty('verificationDocument') 
-      ? !!data.verificationDocument 
-      : previousProfile.hasVerificationDoc,
-
+    cvUrl: data?.cvUrl ?? previousProfile.cvUrl,
+    verificationDocument: data?.verificationDocument ?? previousProfile.verificationDocument,
+    hasVerificationDoc: !!data?.verificationDocument || previousProfile.hasVerificationDoc,
+    hasCv: !!data?.cvUrl || previousProfile.hasCv,
     verificationStatus: data?.approvalStatus?.toLowerCase() ?? previousProfile.verificationStatus,
     firstName: user?.firstName ?? previousProfile.firstName,
     lastName: user?.lastName ?? previousProfile.lastName,
@@ -883,6 +886,7 @@ const DocumentsCard = ({
   const cvInputRef = useRef(null);
   const verificationDocumentInputRef = useRef(null);
   const isRejected = profile.verificationStatus?.toLowerCase() === "rejected";
+  const [showCvDeleteConfirm, setShowCvDeleteConfirm] = useState(false);
 
   return (
     <SectionCard className="h-full">
@@ -956,7 +960,7 @@ const DocumentsCard = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRemoveCv();
+                    setShowCvDeleteConfirm(true);
                   }}
                   disabled={isCvRemoving}
                   className="rounded p-1.5 text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -980,6 +984,56 @@ const DocumentsCard = ({
             onChange={onCvUpload}
           />
         </div>
+
+        {/* ── CV Delete Confirmation Dialog ─────────────────────────── */}
+        {showCvDeleteConfirm && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: "rgba(17, 24, 39, 0.45)", backdropFilter: "blur(4px)" }}
+            onClick={() => setShowCvDeleteConfirm(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-fade-in-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Icon */}
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </div>
+
+              {/* Text */}
+              <h3 className="text-center text-[15px] font-extrabold tracking-tight text-gray-900">
+                Delete your CV?
+              </h3>
+              <p className="mt-1.5 text-center text-[12px] leading-5 text-gray-500">
+                Are you sure you want to remove your uploaded CV? <br />You can always upload a new one later.
+              </p>
+
+              {/* Actions */}
+              <div className="mt-5 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCvDeleteConfirm(false)}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-xs font-bold text-gray-700 transition hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCvDeleteConfirm(false);
+                    onRemoveCv();
+                  }}
+                  disabled={isCvRemoving}
+                  className="flex-1 rounded-xl bg-red-500 py-2.5 text-xs font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCvRemoving ? "Removing…" : "Yes, delete it"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         <div
           className={`rounded-xl border p-4 ${isRejected ? "border-red-200 bg-red-50/50" : "border-gray-100 bg-gray-50"
@@ -1499,16 +1553,20 @@ const StudentProfile = () => {
   };
 
   const handleRemoveCv = async () => {
+    // Optimistic update — clear CV from UI immediately
+    const previousProfile = profile;
+    setProfile((prev) => ({ ...prev, hasCv: false, cvUrl: null }));
+    setDraft((prev) => (prev ? { ...prev, hasCv: false, cvUrl: null } : prev));
     setIsCvRemoving(true);
 
     try {
-      const response = await profileAPI.removeCV();
-      const normalized = normalizeProfileResponse(response, profile);
-      setProfile(normalized);
-      setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
+      await profileAPI.removeCV();
       showToast("CV removed.", "success");
     } catch (error) {
+      // Revert UI on failure
       console.error("CV removal error:", error);
+      setProfile(previousProfile);
+      setDraft((prev) => (prev ? { ...prev, ...previousProfile } : prev));
       showToast(error?.message || "Failed to remove CV.", "error");
     } finally {
       setIsCvRemoving(false);
@@ -1700,8 +1758,7 @@ const StudentProfile = () => {
   };
 
   const currentProfile = isEditing && draft ? draft : profile;
-
-  // ─── Loading state (Skeleton) ──────────────────────────────────────
+// ─── Loading state (Skeleton) ──────────────────────────────────────
   if (isLoadingProfile) {
     return (
       <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
@@ -1719,7 +1776,6 @@ const StudentProfile = () => {
 
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-            {/* ✅ استخدم PageHeader هنا */}
             <PageHeader
               loading={isLoadingProfile}
               profile={profile}
@@ -1783,7 +1839,6 @@ const StudentProfile = () => {
 
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
-          {/* ✅ استخدم PageHeader هنا بدلاً من الـ header القديم */}
           <PageHeader
             loading={isLoadingProfile}
             profile={profile}
@@ -1835,7 +1890,6 @@ const StudentProfile = () => {
                       onCvUpload={handleCvUpload}
                       isCvUploading={isCvUploading}
                       cvProgress={cvProgress}
-                      
                       onRemoveCv={handleRemoveCv}
                       isCvRemoving={isCvRemoving}
                       onVerificationDocumentUpload={handleVerificationDocumentUpload}

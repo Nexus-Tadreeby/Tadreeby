@@ -320,7 +320,49 @@ export const chatAPI = {
     });
   },
 };
+// ─── Dashboard API ────────────────────────────────────────────────────
+export const dashboardAPI = {
+  getDashboard: async () => {
+    const response = await apiRequest('/student/dashboard', { method: 'GET' });
+    return response.data; // { success: true, data: {...} }
+  },
+};
 
+
+// ─── Tasks API ─────────────────────────────────────────────────────────
+export const tasksAPI = {
+  // Get all tasks for the student
+  getTasks: async () => {
+    const response = await apiRequest('/student/tasks', { method: 'GET' });
+    return response.data; // { success: true, data: [...] }
+  },
+
+  // Get a single task by ID
+  getTask: async (taskId) => {
+    const response = await apiRequest(`/student/tasks/${taskId}`, { method: 'GET' });
+    return response.data;
+  },
+
+  // Submit a task (file upload)
+  submitTask: async (taskId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiRequest(`/student/tasks/${taskId}/submission`, {
+      method: 'POST',
+      body: formData,
+    });
+    return response.data;
+  },
+
+  // Get submission for a task
+  getTaskSubmission: async (taskId) => {
+    const response = await apiRequest(`/student/tasks/${taskId}/submission`, { method: 'GET' });
+    return response.data;
+  },
+};
+
+
+export { apiRequest };
 // // src/services/api.js
 
 // const API_BASE_URL = 'http://localhost:6060';

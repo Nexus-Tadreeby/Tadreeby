@@ -2,6 +2,73 @@
 // const API_BASE_URL = 'https://tadreeby-api.onrender.com';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
 
+// const apiRequest = async (endpoint, options = {}) => {
+//   const token = localStorage.getItem('accessToken');
+
+//   const headers = {
+//     'Accept': 'application/json',
+//     'Content-Type': 'application/json',
+//     ...(token && { 'Authorization': `Bearer ${token}` }),
+//     ...options.headers,
+//   };
+
+//   if (options.body instanceof FormData) {
+//     delete headers['Content-Type'];
+//   }
+
+//   const config = {
+//     ...options,
+//     headers,
+//   };
+
+//   try {
+//     const url = `${API_BASE_URL}${endpoint}`;
+//     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
+
+//     const response = await fetch(url, config);
+
+
+//     const isLoginRequest = endpoint.startsWith('/auth/login');
+
+//     // ✅ Handle 401 Unauthorized – token expired/invalid
+//     // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
+//     if (response.status === 401 && !isLoginRequest) {
+
+//       // Clear authentication data
+//       localStorage.removeItem('accessToken');
+//       localStorage.removeItem('refreshToken');
+//       localStorage.removeItem('user');
+
+//       // Redirect to login page (using window.location for non-React context)
+//       window.location.href = '/login';
+
+//       // Throw an error to stop further execution
+//       throw new Error('Session expired. Please log in again.');
+//     }
+
+//     let responseData;
+//     const contentType = response.headers.get('content-type');
+//     if (contentType && contentType.includes('application/json')) {
+//       responseData = await response.json();
+//     } else {
+//       responseData = await response.text();
+//     }
+
+//     if (!response.ok) {
+//       throw {
+//         status: response.status,
+//         data: responseData,
+//         message: responseData?.message || responseData?.error || `HTTP error ${response.status}`
+//       };
+//     }
+
+//     return responseData;
+//   } catch (error) {
+//     console.error('API Error:', error);
+//     throw error;
+//   }
+// };
+
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
 
@@ -25,24 +92,31 @@ const apiRequest = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
 
+    // =============================================
+    // 👇 ADD THIS: Performance timing block
+    // =============================================
+    const start = performance.now();
     const response = await fetch(url, config);
+    const duration = performance.now() - start;
 
+    // Log slow endpoints (threshold: 200ms — adjust as needed)
+    if (duration > 200) {
+      console.warn(
+        `🐢 [Slow API] ${options.method || 'GET'} ${endpoint} took ${duration.toFixed(2)}ms`
+      );
+      // Optional: You can send this to a logging service here
+      // e.g., if (window.gtag) window.gtag('event', 'slow_api', { endpoint, duration });
+    }
+    // =============================================
 
     const isLoginRequest = endpoint.startsWith('/auth/login');
 
     // ✅ Handle 401 Unauthorized – token expired/invalid
-    // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
     if (response.status === 401 && !isLoginRequest) {
-
-      // Clear authentication data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
-
-      // Redirect to login page (using window.location for non-React context)
       window.location.href = '/login';
-
-      // Throw an error to stop further execution
       throw new Error('Session expired. Please log in again.');
     }
 
@@ -68,7 +142,6 @@ const apiRequest = async (endpoint, options = {}) => {
     throw error;
   }
 };
-
 
 export const authAPI = {
   registerStudent: async (formData) => {
@@ -297,154 +370,3 @@ export const chatAPI = {
   },
 };
 
-// // src/services/api.js
-
-// const API_BASE_URL = 'http://localhost:6060';
-
-// const apiRequest = async (endpoint, options = {}) => {
-//   const token = localStorage.getItem('accessToken');
-  
-//   // For FormData, do NOT set Content-Type – browser will set it with boundary
-//   const headers = {
-//     'Accept': 'application/json',
-//     'Content-Type': 'application/json',
-//     ...(token && { 'Authorization': `Bearer ${token}` }),
-//     ...options.headers,
-//   };
-
-//   // If body is FormData, remove any 'Content-Type' that may have been set
-//   if (options.body instanceof FormData) {
-//     delete headers['Content-Type'];
-//   }
-
-//   const config = {
-//     ...options,
-//     headers,
-//   };
-
-//   try {
-//     const url = `${API_BASE_URL}${endpoint}`;
-//     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
-    
-//     const response = await fetch(url, config);
-    
-//     let responseData;
-//     const contentType = response.headers.get('content-type');
-//     if (contentType && contentType.includes('application/json')) {
-//       responseData = await response.json();
-//     } else {
-//       responseData = await response.text();
-//     }
-    
-//     if (!response.ok) {
-//       throw {
-//         status: response.status,
-//         data: responseData,
-//         message: responseData?.message || responseData?.error || `HTTP error ${response.status}`
-//       };
-//     }
-    
-//     return responseData;
-//   } catch (error) {
-//     console.error('API Error:', error);
-//     throw error;
-//   }
-// };
-
-// export const authAPI = {
-//   registerStudent: async (formData) => {
-//     // formData is already a FormData object
-//     return apiRequest('/auth/register/student', {
-//       method: 'POST',
-//       body: formData,
-//       // no extra headers – we want multipart/form-data
-//     });
-//   },
-  
-//   login: async (credentials) => {
-//     return apiRequest('/auth/login', {
-//       method: 'POST',
-//       body: JSON.stringify(credentials),
-//     });
-//   },
-  
-//   // ... other methods remain unchanged
-// };
-
-
-// // ─── Helper: convert File to base64 ──────────────────────────────────
-// const fileToBase64 = (file) => {
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader();
-//     reader.readAsDataURL(file);
-//     reader.onload = () => resolve(reader.result);
-//     reader.onerror = (error) => reject(error);
-//   });
-// };
-
-// // ─── Profile API (matches your backend) ──────────────────────────────
-// export const profileAPI = {
-//   // Get profile
-//   getProfile: async () => {
-//     const response = await apiRequest('/student/profile', { method: 'GET' });
-//     return response.data; // your backend returns { success: true, data: {...} }
-//   },
-
-//   // Update profile (JSON) – used for text fields like phone, recoveryEmail, gpa
-//   updateProfile: async (data) => {
-//     const response = await apiRequest('/student/profile', {
-//       method: 'PATCH',
-//       body: JSON.stringify(data),
-//     });
-//     return response.data;
-//   },
-
-//   // Upload avatar – convert file to base64, then send it via updateProfile
-//   uploadAvatar: async (file, onProgress) => {
-//     // First, convert file to base64 (we'll simulate progress since we can't track upload progress with JSON)
-//     // If you have a separate upload endpoint, you'd use XMLHttpRequest here.
-//     // For now, we convert to base64 and send via updateProfile.
-//     if (onProgress) onProgress(0);
-//     const base64 = await fileToBase64(file);
-//     if (onProgress) onProgress(50);
-//     const result = await profileAPI.updateProfile({ profileImage: base64 });
-//     if (onProgress) onProgress(100);
-//     return result;
-//   },
-
-//   // Upload CV – convert file to base64, then send via updateProfile
-//   uploadCV: async (file, onProgress) => {
-//     if (onProgress) onProgress(0);
-//     const base64 = await fileToBase64(file);
-//     if (onProgress) onProgress(50);
-//     const result = await profileAPI.updateProfile({ cvFile: base64 });
-//     if (onProgress) onProgress(100);
-//     return result;
-//   },
-
-//   // Skills endpoints (if you need them)
-//   getSkills: async () => {
-//     const response = await apiRequest('/student/skills', { method: 'GET' });
-//     return response.data;
-//   },
-//   updateSkills: async (skills) => {
-//     const response = await apiRequest('/student/skills', {
-//       method: 'PATCH',
-//       body: JSON.stringify({ skills }),
-//     });
-//     return response.data;
-//   },
-//   addSkill: async (skill) => {
-//     const response = await apiRequest('/student/skills/add', {
-//       method: 'POST',
-//       body: JSON.stringify({ skill }),
-//     });
-//     return response.data;
-//   },
-//   removeSkill: async (skill) => {
-//     const response = await apiRequest(`/student/skills/${encodeURIComponent(skill)}`, {
-//       method: 'DELETE',
-//     });
-//     return response.data;
-//   },
-// };

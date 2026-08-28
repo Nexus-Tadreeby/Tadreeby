@@ -282,6 +282,7 @@ export const attendanceAPI = {
   checkOut: async () => {
     const response = await apiRequest('/student/attendance/check-out', {
       method: 'PATCH',
+      body: JSON.stringify({}),
     });
     return response.data;
   },

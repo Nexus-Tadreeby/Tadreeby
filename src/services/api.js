@@ -435,6 +435,67 @@ export const tasksAPI = {
 };
 
 
+// ─── Company Admin API ─────────────────────────────────────────────────
+export const companyAdminAPI = {
+  // Dashboard
+  getDashboard: async () => {
+    const response = await apiRequest('/company/admin/dashboard', { method: 'GET' });
+    return response.data;
+  },
+
+  // Opportunities
+  getOpportunities: async (page = 1, limit = 10) => {
+    const response = await apiRequest(`/company/admin/opportunities?page=${page}&limit=${limit}`, { method: 'GET' });
+    return response.data;
+  },
+  createOpportunity: async (data) => {
+    const response = await apiRequest('/company/admin/opportunities', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  updateOpportunity: async (id, data) => {
+    const response = await apiRequest(`/company/admin/opportunities/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  deleteOpportunity: async (id) => {
+    const response = await apiRequest(`/company/admin/opportunities/${id}`, {
+      method: 'DELETE',
+    });
+    return response.data;
+  },
+
+  // Trainers
+  getTrainers: async (page = 1, limit = 10) => {
+    const response = await apiRequest(`/company/admin/trainers?page=${page}&limit=${limit}`, { method: 'GET' });
+    return response.data;
+  },
+  createTrainer: async (data) => {
+    const response = await apiRequest('/company/admin/trainers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  updateTrainer: async (id, data) => {
+    const response = await apiRequest(`/company/admin/trainers/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  deleteTrainer: async (id) => {
+    const response = await apiRequest(`/company/admin/trainers/${id}`, {
+      method: 'DELETE',
+    });
+    return response.data;
+  },
+};
+
 export { apiRequest };
 // // src/services/api.js
 

@@ -25,14 +25,14 @@ import InternshipDetails from "./components/pages/opportunities/OpportunityDetai
 import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 import MyInternship from "./components/pages/internship/my-internship";
-import StudentChats from "./components/pages/student/studentChats"; 
+import StudentChats from "./components/pages/student/studentChats";
 import Attendance from './components/pages/student/Attendance';
 import UniversityAdminDashboard from './components/pages/university-admin/UniversityAdminDashboard';
 import StudentTasks from './components/pages/student/StudentTasks';
 import CompanyDashboard from './components/pages/company-admin/companyDashboard';
 import CreateOpportunity from './components/pages/company-admin/CreateOpportunity';
 import CreateTrainer from './components/pages/company-admin/CreateTrainer';
-
+import Opportunities from './components/pages/company-admin/Opportunities';
 
 function App() {
   return (
@@ -81,9 +81,13 @@ function App() {
 
       {/* COMPANY_ADMIN or other roles */}
       <Route element={<ProtectedRoute allowedRoles={["COMPANY_ADMIN", "COMPANY_TRAINER"]} />}>
-        <Route path="/companyAdmin/dashboard" element={<CompanyDashboard />} />
-        <Route path="/company/opportunities/create" element={<CreateOpportunity />} />
-        <Route path="/company/trainers/create" element={<CreateTrainer />} />
+        <Route path="/company/admin/dashboard" element={<CompanyDashboard />} />
+        <Route path="/company/admin/opportunities/create" element={<CreateOpportunity />} />
+        <Route path="/company/admin/trainers/create" element={<CreateTrainer />} />
+        <Route path="/company/admin/opportunities" element={<Opportunities />} />
+        {/* <Route path="/companyAdmin/opportunities/create" element={<CreateOpportunity />} />
+        <Route path="/companyAdmin/opportunities/:id/edit" element={<EditOpportunity />} /> // للتعديل
+        <Route path="/companyAdmin/opportunities/:id" element={<OpportunityDetails />} /> */}
       </Route>
 
       {/* Catch-all 404 Route */}

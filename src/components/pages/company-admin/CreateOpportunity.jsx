@@ -6,12 +6,11 @@ import {
     Settings,
     Users,
     Briefcase,
-    X,
     AlertCircle,
     ArrowLeft,
 } from "lucide-react";
 
-import Sidebar from "../../layout/Sidebar";
+import CompanySidebar from "../../layout/CompanySidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
@@ -36,12 +35,13 @@ const COLORS = {
     background: "#F5F7FB",
 };
 
+// ─── Navigation Items ──────────────────────────────────────────────
 const companyNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/company/dashboard" },
-    { label: "Opportunities", icon: Briefcase, path: "/company/opportunities" },
-    { label: "Trainers", icon: Users, path: "/company/trainers" },
+    { label: "Dashboard", icon: LayoutDashboard, path: "/company/admin/dashboard" },
+    { label: "Opportunities", icon: Briefcase, path: "/company/admin/opportunities" },
+    { label: "Trainers", icon: Users, path: "/company/admin/trainers" },
 ];
-const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/settings" }];
+const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/admin/settings" }];
 
 export default function CreateOpportunity() {
     const navigate = useNavigate();
@@ -88,13 +88,32 @@ export default function CreateOpportunity() {
 
         try {
             const payload = {
-                ...formData,
+                title: formData.title.trim(),
+                description: formData.description.trim(),
+                type: formData.type,
                 totalSeats: parseInt(formData.totalSeats) || 0,
+                isActive: formData.isActive,
             };
+
+            if (formData.requiredSkills.trim()) {
+                payload.requiredSkills = formData.requiredSkills.trim();
+            }
+            if (formData.duration.trim()) {
+                payload.duration = formData.duration.trim(); // ✅ كنص
+            }
+            if (formData.location.trim()) {
+                payload.location = formData.location.trim();
+            }
+            if (formData.meetingLink.trim()) {
+                payload.meetingLink = formData.meetingLink.trim();
+            }
+
+            console.log("📦 Sending payload:", payload);
+
             await companyAdminAPI.createOpportunity(payload);
-            navigate("/company/dashboard");
+            navigate("/company/admin/dashboard");
         } catch (err) {
-            console.error("Failed to create opportunity:", err);
+            console.error("❌ Failed to create opportunity:", err);
             setError(err?.message || "Failed to create opportunity. Please try again.");
         } finally {
             setLoading(false);
@@ -107,11 +126,11 @@ export default function CreateOpportunity() {
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
-            <Sidebar
+            <CompanySidebar
                 navItems={companyNavItems}
                 footerItems={companyFooterItems}
                 user={companyUser}
-                profilePath="/company/profile"
+                profilePath="/company/admin/profile"
                 onSignOut={handleSignOut}
             />
 
@@ -129,7 +148,7 @@ export default function CreateOpportunity() {
                     />
 
                     <button
-                        onClick={() => navigate("/company/dashboard")}
+                        onClick={() => navigate("/company/admin/dashboard")}
                         className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-[#7B8497] hover:text-[#0475FB] transition"
                     >
                         <ArrowLeft size={15} />
@@ -277,12 +296,17 @@ export default function CreateOpportunity() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <Button type="submit" variant="blue" disabled={loading} className="px-6 py-2.5 text-[13px] font-bold">
+                            <Button
+                                type="submit"
+                                variant="blue"
+                                disabled={loading}
+                                className="px-6 py-2.5 text-[13px] font-bold"
+                            >
                                 {loading ? "Creating..." : "Create Opportunity"}
                             </Button>
                             <Button
                                 variant="secondary"
-                                onClick={() => navigate("/company/dashboard")}
+                                onClick={() => navigate("/company/admin/dashboard")}
                                 className="px-6 py-2.5 text-[13px] font-bold"
                             >
                                 Cancel

@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-import Sidebar from "../../layout/Sidebar";
+// import Sidebar from "../../layout/Sidebar";
+import CompanySidebar from "../../layout/CompanySidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
@@ -55,11 +56,11 @@ const COLORS = {
 
 // ─── Navigation ──────────────────────────────────────────────────────
 const companyNavItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/company/dashboard" },
-  { label: "Opportunities", icon: Briefcase, path: "/company/opportunities" },
-  { label: "Trainers", icon: Users, path: "/company/trainers" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/company/admin/dashboard" },
+  { label: "Opportunities", icon: Briefcase, path: "/company/admin/opportunities" },
+  { label: "Trainers", icon: Users, path: "/company/admin/trainers" },
 ];
-const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/settings" }];
+const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/admin/settings" }];
 
 // ─── Chart Data (mock, replace with real data later) ──────────────
 const chartData = [
@@ -270,9 +271,9 @@ export default function CompanyDashboard() {
   }, []);
 
   // ── Handlers ──
-  const handleAddOpportunity = () => navigate("/company/opportunities/create");
-  const handleAddTrainer = () => navigate("/company/trainers/create");
-  const handleEditOpportunity = (opp) => navigate(`/company/opportunities/${opp.id}/edit`);
+  const handleAddOpportunity = () => navigate("/company/admin/opportunities/create");
+  const handleAddTrainer = () => navigate("/company/admin/trainers/create");
+  const handleEditOpportunity = (opp) => navigate(`/company/admin/opportunities/${opp.id}/edit`);
   const handleDeleteOpportunity = async (id) => {
     if (!window.confirm("Are you sure you want to delete this opportunity?")) return;
     try {
@@ -290,11 +291,11 @@ export default function CompanyDashboard() {
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
-      <Sidebar
+      <CompanySidebar
         navItems={companyNavItems}
         footerItems={companyFooterItems}
         user={companyUser}
-        profilePath="/company/profile"
+        profilePath="/company/admin/profile"
         onSignOut={handleSignOut}
       />
 

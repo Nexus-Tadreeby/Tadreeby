@@ -37,11 +37,11 @@ const COLORS = {
 };
 
 const companyNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/company/dashboard" },
-    { label: "Opportunities", icon: Briefcase, path: "/company/opportunities" },
-    { label: "Trainers", icon: Users, path: "/company/trainers" },
+    { label: "Dashboard", icon: LayoutDashboard, path: "/company/admin/dashboard" },
+    { label: "Opportunities", icon: Briefcase, path: "/company/admin/opportunities" },
+    { label: "Trainers", icon: Users, path: "/company/admin/trainers" },
 ];
-const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/settings" }];
+const companyFooterItems = [{ label: "Settings", icon: Settings, path: "/company/admin/settings" }];
 
 export default function CreateTrainer() {
     const navigate = useNavigate();
@@ -92,7 +92,7 @@ export default function CreateTrainer() {
                 personalID: parseInt(formData.personalID) || 0,
             };
             await companyAdminAPI.createTrainer(payload);
-            navigate("/company/dashboard");
+            navigate("/company/admin/");
         } catch (err) {
             console.error("Failed to create trainer:", err);
             setError(err?.message || "Failed to create trainer. Please try again.");
@@ -111,7 +111,7 @@ export default function CreateTrainer() {
                 navItems={companyNavItems}
                 footerItems={companyFooterItems}
                 user={companyUser}
-                profilePath="/company/profile"
+                profilePath="/company/admin/profile"
                 onSignOut={handleSignOut}
             />
 
@@ -129,7 +129,7 @@ export default function CreateTrainer() {
                     />
 
                     <button
-                        onClick={() => navigate("/company/dashboard")}
+                        onClick={() => navigate("/company/admin/")}
                         className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-[#7B8497] hover:text-[#0475FB] transition"
                     >
                         <ArrowLeft size={15} />
@@ -281,7 +281,7 @@ export default function CreateTrainer() {
                             </Button>
                             <Button
                                 variant="secondary"
-                                onClick={() => navigate("/company/dashboard")}
+                                onClick={() => navigate("/company/admin/dashboard")}
                                 className="px-6 py-2.5 text-[13px] font-bold"
                             >
                                 Cancel

@@ -26,6 +26,7 @@ import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 import MyInternship from "./components/pages/internship/my-internship";
 import StudentChats from "./components/pages/student/studentChats"; 
+import Attendance from './components/pages/student/Attendance';
 
 function App() {
   return (
@@ -64,7 +65,7 @@ function App() {
         <Route path="/student/my-internship" element={<MyInternship />} />
         <Route path="/internship/my-internship" element={<MyInternship />} />
         <Route path="/my/internship" element={<MyInternship />} />
-        {/* <Route path="/attendance" element={<AttendancePage />} /> */}
+        <Route path="/attendance" element={<Attendance />} />
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/settings" element={<Settings />} />
 

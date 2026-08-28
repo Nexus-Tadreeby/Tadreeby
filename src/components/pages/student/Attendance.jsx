@@ -118,15 +118,17 @@ function parseDurationToHours(durationStr) {
 // ─── Normalize internships from API response ──────────────────────
 const normalizeInternships = (list) => {
     if (!Array.isArray(list)) return [];
-    return list.map((item) => ({
-        id: item.internship?.id || item.id,
-        status: item.internship?.status,
-        company: item.internship?.company,
-        opportunity: item.internship?.opportunity,
-        createdAt: item.createdAt || item.internship?.createdAt,
-        // spread other fields if needed
-        ...item.internship,
-    }));
+    return list.map((item) => {
+        const internshipData = item.internship || item;
+        return {
+            id: internshipData.id || item.id,
+            status: internshipData.status,
+            company: internshipData.company,
+            opportunity: internshipData.opportunity,
+            createdAt: item.createdAt || internshipData.createdAt,
+            ...internshipData,
+        };
+    });
 };
 
 // ─── Reusable Components ──────────────────────────────────────────────
@@ -231,7 +233,7 @@ const AttendanceSummary = ({ sessions, requiredHours = 200 }) => {
 };
 
 // ============================================================
-// Active Session Banner – now uses flattened internships
+// Active Session Banner
 // ============================================================
 const ActiveSessionBanner = ({
     isCheckedIn,
@@ -244,11 +246,11 @@ const ActiveSessionBanner = ({
     isLoading,
     onBrowseOpportunities,
 }) => {
-    // Find active internship from flattened list
-    const activeInternship = internships?.find((i) => i.status === "ACTIVE") || internships?.[0];
     const hasInternship = internships && internships.length > 0;
+    const activeInternship = hasInternship
+        ? internships.find((i) => i.status === "ACTIVE") || internships[0]
+        : null;
 
-    // If no internship and not loading, show "enroll first" message
     if (!isLoading && !hasInternship) {
         return (
             <div className="relative overflow-hidden rounded-[22px] p-5 sm:p-6 border border-dashed border-[#E9EDF4] bg-white/60">
@@ -274,11 +276,24 @@ const ActiveSessionBanner = ({
         );
     }
 
+    if (isLoading) {
+        return (
+            <div className="rounded-[22px] border border-[#E9EDF4] bg-white p-5 shadow-sm animate-pulse">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-gray-200" />
+                    <div className="flex-1">
+                        <div className="h-4 w-48 bg-gray-200 rounded" />
+                        <div className="mt-2 h-3 w-64 bg-gray-200 rounded" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const companyName = activeInternship?.company?.name || "Your University Partner";
     const internshipTitle = activeInternship?.opportunity?.title || `${profile?.major || "Field Training"} Intern`;
     const universityName = profile?.university?.name || "Your University";
 
-    // Compute week number (mock – you can replace with real start date logic)
     const startDate = activeInternship?.createdAt ? new Date(activeInternship.createdAt) : new Date();
     const now = new Date();
     const diffWeeks = Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000));
@@ -457,10 +472,8 @@ const Attendance = () => {
     const [selectedSessions, setSelectedSessions] = useState([]);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
-    // Internships – will be flattened
     const [internships, setInternships] = useState([]);
 
-    // Active session
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [activeSessionId, setActiveSessionId] = useState(null);
     const [checkInTimestamp, setCheckInTimestamp] = useState(null);
@@ -480,21 +493,21 @@ const Attendance = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [attendanceData, internshipsData] = await Promise.all([
-                attendanceAPI.getAttendance(),
-                internshipAPI.getMyInternships(),
-            ]);
-
+            let attendanceData = await attendanceAPI.getAttendance();
+            if (attendanceData && typeof attendanceData === 'object' && 'data' in attendanceData) {
+                attendanceData = attendanceData.data;
+            }
             const attendanceList = Array.isArray(attendanceData) ? attendanceData : [];
+            setSessions(attendanceList);
 
-            // Flatten internships
+            let internshipsData = await internshipAPI.getMyInternships();
+            if (internshipsData && typeof internshipsData === 'object' && 'data' in internshipsData) {
+                internshipsData = internshipsData.data;
+            }
             const rawInternships = Array.isArray(internshipsData) ? internshipsData : [];
             const flattenedInternships = normalizeInternships(rawInternships);
             setInternships(flattenedInternships);
 
-            setSessions(attendanceList);
-
-            // Check for active session
             const active = attendanceList.find((s) => s.status === "CHECKED_IN");
             if (active) {
                 setIsCheckedIn(true);
@@ -574,6 +587,7 @@ const Attendance = () => {
         if (!activeSessionId) return;
 
         try {
+            // ✅ The API call now sends { dummy: true } to satisfy validation
             const updatedRecord = await attendanceAPI.checkOut();
             if (updatedRecord) {
                 setSessions((prev) =>
@@ -664,7 +678,6 @@ const Attendance = () => {
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
-            {/* Orbs */}
             <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl print:hidden" />
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl print:hidden" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl print:hidden" />

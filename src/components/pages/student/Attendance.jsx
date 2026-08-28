@@ -40,12 +40,10 @@ import {
     SkeletonCalendar,
 } from "../../common/pagesAssets/Skeleton";
 
-// ─── Import API services ────────────────────────────────────────────────
+// ─── API Services ──────────────────────────────────────────────────────
 import { attendanceAPI, internshipAPI } from "../../../services/api";
 
-// ============================================================
-// Design Tokens
-// ============================================================
+// ─── Design Tokens ─────────────────────────────────────────────────────
 const COLORS = {
     primary: "#0475FB",
     primaryDark: "#035CC9",
@@ -64,9 +62,7 @@ const COLORS = {
     background: "#F5F7FB",
 };
 
-// ============================================================
-// Navigation
-// ============================================================
+// ─── Navigation ──────────────────────────────────────────────────────
 const studentNavItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
     { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
@@ -75,41 +71,7 @@ const studentNavItems = [
 ];
 const studentFooterItems = [{ label: "Settings", icon: Settings, path: "/settings" }];
 
-const getInitials = (name) => {
-    if (!name) return "S";
-    return name
-        .split(" ")
-        .map((word) => word[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-};
-
-// ============================================================
-// Helpers
-// ============================================================
-function parseCustomDate(dateStr) {
-    const parts = dateStr.replace(/,/g, "").split(" ");
-    const monthMap = {
-        Jan: 0,
-        Feb: 1,
-        Mar: 2,
-        Apr: 3,
-        May: 4,
-        Jun: 5,
-        Jul: 6,
-        Aug: 7,
-        Sep: 8,
-        Oct: 9,
-        Nov: 10,
-        Dec: 11,
-    };
-    const month = monthMap[parts[1]];
-    const day = parseInt(parts[2]);
-    const year = parseInt(parts[3]);
-    return new Date(year, month, day);
-}
-
+// ─── Helpers ──────────────────────────────────────────────────────────
 function formatDate(date) {
     const d = new Date(date);
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -153,9 +115,21 @@ function parseDurationToHours(durationStr) {
     return hours + mins / 60;
 }
 
-// ============================================================
-// Reusable Components
-// ============================================================
+// ─── Normalize internships from API response ──────────────────────
+const normalizeInternships = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list.map((item) => ({
+        id: item.internship?.id || item.id,
+        status: item.internship?.status,
+        company: item.internship?.company,
+        opportunity: item.internship?.opportunity,
+        createdAt: item.createdAt || item.internship?.createdAt,
+        // spread other fields if needed
+        ...item.internship,
+    }));
+};
+
+// ─── Reusable Components ──────────────────────────────────────────────
 
 const StatusBadge = ({ status }) => {
     const isActive = status === "CHECKED_IN" || status === "Active";
@@ -163,20 +137,10 @@ const StatusBadge = ({ status }) => {
     let label = status;
     let bgColor = COLORS.muted + "20";
     let textColor = COLORS.muted;
-    if (isActive) {
-        label = "Active";
-        bgColor = COLORS.accent + "30";
-        textColor = COLORS.accent;
-    } else if (isClosed) {
-        label = "Closed";
-        bgColor = COLORS.primary + "20";
-        textColor = COLORS.primary;
-    }
+    if (isActive) { label = "Active"; bgColor = COLORS.accent + "30"; textColor = COLORS.accent; }
+    else if (isClosed) { label = "Closed"; bgColor = COLORS.primary + "20"; textColor = COLORS.primary; }
     return (
-        <span
-            className="inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold"
-            style={{ backgroundColor: bgColor, color: textColor }}
-        >
+        <span className="inline-block rounded-full px-3 py-0.5 text-[11px] font-semibold" style={{ backgroundColor: bgColor, color: textColor }}>
             {label}
         </span>
     );
@@ -186,9 +150,7 @@ const FilterButton = ({ active, children, onClick }) => (
     <button
         type="button"
         onClick={onClick}
-        className={`flex h-8 items-center justify-center rounded-full px-4 text-[11px] font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-[#0475FB] focus:ring-offset-1 ${active
-                ? "bg-[#0475FB] text-white shadow-sm"
-                : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+        className={`flex h-8 items-center justify-center rounded-full px-4 text-[11px] font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-[#0475FB] focus:ring-offset-1 ${active ? "bg-[#0475FB] text-white shadow-sm" : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
             }`}
     >
         {children}
@@ -213,18 +175,11 @@ const AttendanceSummary = ({ sessions, requiredHours = 200 }) => {
 
     return (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mt-4 print:grid-cols-3 print:gap-4">
-            <div
-                className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200"
-                style={{ borderColor: COLORS.border }}
-            >
+            <div className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200" style={{ borderColor: COLORS.border }}>
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">
-                            Attendance Rate
-                        </p>
-                        <p className="mt-1 text-[19px] font-extrabold text-[#22C55E] print:text-green-600">
-                            {progress.toFixed(0)}%
-                        </p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">Attendance Rate</p>
+                        <p className="mt-1 text-[19px] font-extrabold text-[#22C55E] print:text-green-600">{progress.toFixed(0)}%</p>
                     </div>
                     <div className="rounded-full p-2 print:hidden" style={{ backgroundColor: COLORS.greenSoft }}>
                         <CheckCircle size={17} color={COLORS.green} />
@@ -235,18 +190,11 @@ const AttendanceSummary = ({ sessions, requiredHours = 200 }) => {
                 </p>
             </div>
 
-            <div
-                className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200"
-                style={{ borderColor: COLORS.border }}
-            >
+            <div className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200" style={{ borderColor: COLORS.border }}>
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">
-                            Total Hours
-                        </p>
-                        <p className="mt-1 text-[19px] font-extrabold text-[#0475FB] print:text-blue-600">
-                            {totalAttended.toFixed(1)}h
-                        </p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">Total Hours</p>
+                        <p className="mt-1 text-[19px] font-extrabold text-[#0475FB] print:text-blue-600">{totalAttended.toFixed(1)}h</p>
                     </div>
                     <div className="rounded-full p-2 print:hidden" style={{ backgroundColor: COLORS.primarySoft }}>
                         <Timer size={17} color={COLORS.primary} />
@@ -258,13 +206,7 @@ const AttendanceSummary = ({ sessions, requiredHours = 200 }) => {
                         <span>{progress.toFixed(0)}%</span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                        <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                                width: `${progress}%`,
-                                background: `linear-gradient(90deg, #0475FB, #22C55E)`,
-                            }}
-                        />
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: `linear-gradient(90deg, #0475FB, #22C55E)` }} />
                     </div>
                 </div>
                 <div className="hidden print:block mt-1 text-[9px] text-gray-500">
@@ -272,33 +214,24 @@ const AttendanceSummary = ({ sessions, requiredHours = 200 }) => {
                 </div>
             </div>
 
-            <div
-                className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200"
-                style={{ borderColor: COLORS.border }}
-            >
+            <div className="rounded-[18px] border bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg print:shadow-none print:border print:border-gray-200" style={{ borderColor: COLORS.border }}>
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">
-                            Hours Left
-                        </p>
-                        <p className="mt-1 text-[19px] font-extrabold text-[#FFAD4E] print:text-orange-600">
-                            {hoursLeft.toFixed(1)}h
-                        </p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-600">Hours Left</p>
+                        <p className="mt-1 text-[19px] font-extrabold text-[#FFAD4E] print:text-orange-600">{hoursLeft.toFixed(1)}h</p>
                     </div>
                     <div className="rounded-full p-2 print:hidden" style={{ backgroundColor: COLORS.accentSoft }}>
                         <Clock size={17} color={COLORS.accent} />
                     </div>
                 </div>
-                <p className="mt-1 text-[10px] font-medium text-gray-400 print:text-gray-500">
-                    of {requiredHours}h required
-                </p>
+                <p className="mt-1 text-[10px] font-medium text-gray-400 print:text-gray-500">of {requiredHours}h required</p>
             </div>
         </div>
     );
 };
 
 // ============================================================
-// Active Session Banner – fully dynamic from backend
+// Active Session Banner – now uses flattened internships
 // ============================================================
 const ActiveSessionBanner = ({
     isCheckedIn,
@@ -311,11 +244,12 @@ const ActiveSessionBanner = ({
     isLoading,
     onBrowseOpportunities,
 }) => {
-    // Find active internship (status = ACTIVE) or take the first one
+    // Find active internship from flattened list
     const activeInternship = internships?.find((i) => i.status === "ACTIVE") || internships?.[0];
+    const hasInternship = internships && internships.length > 0;
 
     // If no internship and not loading, show "enroll first" message
-    if (!isLoading && (!internships || internships.length === 0)) {
+    if (!isLoading && !hasInternship) {
         return (
             <div className="relative overflow-hidden rounded-[22px] p-5 sm:p-6 border border-dashed border-[#E9EDF4] bg-white/60">
                 <div className="flex flex-col items-center gap-3 text-center">
@@ -330,9 +264,8 @@ const ActiveSessionBanner = ({
                         <Button
                             variant="blue"
                             onClick={onBrowseOpportunities}
-                            className="mt-2 my-4 mx-15 px-4 py-2 text-[11px]"
+                            className="mt-2 px-4 py-2 text-[11px]"
                         >
-                             <Search size={16} />
                             Browse Opportunities
                         </Button>
                     </div>
@@ -374,46 +307,22 @@ const ActiveSessionBanner = ({
 
             <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-4">
-                    <div
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                        style={{
-                            backgroundColor: isCheckedIn ? "rgba(255,255,255,0.15)" : "#E9EDF4",
-                        }}
-                    >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: isCheckedIn ? "rgba(255,255,255,0.15)" : "#E9EDF4" }}>
                         <Building2 size={22} color={isCheckedIn ? "white" : "#7B8497"} />
                     </div>
 
                     <div>
-                        <p
-                            className="text-[11px] font-semibold uppercase tracking-wider"
-                            style={{ color: isCheckedIn ? "rgba(255,255,255,0.65)" : "#7B8497" }}
-                        >
+                        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: isCheckedIn ? "rgba(255,255,255,0.65)" : "#7B8497" }}>
                             Current Internship
                         </p>
-                        <h2
-                            className="mt-0.5 text-[17px] font-extrabold"
-                            style={{ color: isCheckedIn ? "white" : "#172033" }}
-                        >
+                        <h2 className="mt-0.5 text-[17px] font-extrabold" style={{ color: isCheckedIn ? "white" : "#172033" }}>
                             {internshipTitle}
                         </h2>
-                        <div
-                            className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-medium"
-                            style={{ color: isCheckedIn ? "rgba(255,255,255,0.75)" : "#7B8497" }}
-                        >
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-medium" style={{ color: isCheckedIn ? "rgba(255,255,255,0.75)" : "#7B8497" }}>
                             <span>{companyName}</span>
-                            <span
-                                className="h-1 w-1 rounded-full"
-                                style={{
-                                    backgroundColor: isCheckedIn ? "rgba(255,255,255,0.4)" : "#D1D5DB",
-                                }}
-                            />
+                            <span className="h-1 w-1 rounded-full" style={{ backgroundColor: isCheckedIn ? "rgba(255,255,255,0.4)" : "#D1D5DB" }} />
                             <span>Field Training</span>
-                            <span
-                                className="h-1 w-1 rounded-full"
-                                style={{
-                                    backgroundColor: isCheckedIn ? "rgba(255,255,255,0.4)" : "#D1D5DB",
-                                }}
-                            />
+                            <span className="h-1 w-1 rounded-full" style={{ backgroundColor: isCheckedIn ? "rgba(255,255,255,0.4)" : "#D1D5DB" }} />
                             <span>{weekDisplay}</span>
                         </div>
                     </div>
@@ -421,10 +330,7 @@ const ActiveSessionBanner = ({
 
                 <div className="flex items-center gap-3 print:hidden">
                     <div className="hidden text-right sm:block">
-                        <p
-                            className="text-[10px] font-semibold uppercase tracking-wider"
-                            style={{ color: isCheckedIn ? "rgba(255,255,255,0.6)" : "#7B8497" }}
-                        >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isCheckedIn ? "rgba(255,255,255,0.6)" : "#7B8497" }}>
                             Today
                         </p>
                         <p className="text-[13px] font-bold" style={{ color: isCheckedIn ? "white" : "#172033" }}>
@@ -436,7 +342,7 @@ const ActiveSessionBanner = ({
                         variant={isCheckedIn ? "gold" : "blue"}
                         onClick={buttonAction}
                         className="flex items-center gap-2 px-5 py-2.5 text-[12px] font-extrabold"
-                        disabled={!internships || internships.length === 0}
+                        disabled={!hasInternship}
                     >
                         <Clock size={15} />
                         {buttonText}
@@ -470,24 +376,12 @@ const TimesheetTable = ({ sessions }) => {
             <table className="min-w-[800px] w-full border-collapse">
                 <thead>
                     <tr className="bg-[#F8F9FC] border-b border-[#E9EDF4] print:bg-gray-100 print:border-gray-300">
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Clock‑In
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Clock‑Out
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Total Hours
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Status
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">
-                            Notes
-                        </th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Date</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Clock‑In</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Clock‑Out</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Total Hours</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Status</th>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#7B8497] print:text-gray-700">Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -524,191 +418,17 @@ const TimesheetTable = ({ sessions }) => {
 };
 
 // ============================================================
-// Attendance Calendar
+// Attendance Calendar (simplified)
 // ============================================================
-const AttendanceCalendar = ({ sessions, onDateClick }) => {
-    const [selectedDate, setSelectedDate] = useState(17);
-    const [currentMonth, setCurrentMonth] = useState(new Date(2026, 7));
-    const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-    ];
-
-    const sessionMap = useMemo(() => {
-        const map = new Map();
-        sessions.forEach((s) => {
-            const dateObj = parseCustomDate(formatDate(s.date));
-            const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(
-                dateObj.getDate()
-            ).padStart(2, "0")}`;
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push(s);
-        });
-        return map;
-    }, [sessions]);
-
-    const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
-    const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
-
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDay = getFirstDayOfMonth(year, month);
-
-    const prevMonth = () => setCurrentMonth(new Date(year, month - 1, 1));
-    const nextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
-
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
-        today.getDate()
-    ).padStart(2, "0")}`;
-
-    const monthSessions = sessions.filter((s) => {
-        const d = new Date(s.date);
-        return d.getMonth() === month && d.getFullYear() === year;
-    });
-    const totalDays = monthSessions.length;
-    const presentDays = monthSessions.filter(
-        (s) => s.status === "CHECKED_OUT" || s.status === "Closed"
-    ).length;
-    const rate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-    const totalHours = monthSessions.reduce(
-        (sum, s) => sum + parseDurationToHours(s.duration || "0h 0m"),
-        0
-    );
-    const requiredHours = 200;
-
-    return (
-        <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: COLORS.border }}>
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <CalendarDays size={17} color={COLORS.primary} />
-                        <h3 className="text-[14px] font-extrabold" style={{ color: COLORS.text }}>
-                            Attendance
-                        </h3>
-                    </div>
-                    <p className="mt-1 text-[10px] font-medium text-gray-400">
-                        Track your internship attendance
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={prevMonth}
-                        className="rounded-lg p-1 hover:bg-gray-100 transition"
-                    >
-                        <ChevronLeft size={16} color={COLORS.muted} />
-                    </button>
-                    <span className="text-[10px] font-bold text-gray-600">
-                        {monthNames[month]} {year}
-                    </span>
-                    <button
-                        onClick={nextMonth}
-                        className="rounded-lg p-1 hover:bg-gray-100 transition"
-                    >
-                        <ChevronRight size={16} color={COLORS.muted} />
-                    </button>
-                </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-7 gap-1.5">
-                {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                    <div key={i} className="pb-1 text-center text-[9px] font-bold text-gray-400">
-                        {d}
-                    </div>
-                ))}
-                {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`} />
-                ))}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                    const day = i + 1;
-                    const dateObj = new Date(year, month, day);
-                    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                    const isToday = key === todayStr;
-                    const sessionsOnDay = sessionMap.get(key) || [];
-                    const hasSession = sessionsOnDay.length > 0;
-                    const isActive = sessionsOnDay.some((s) => s.status === "CHECKED_IN" || s.status === "Active");
-                    let status = "upcoming";
-                    if (hasSession) {
-                        if (isActive) status = "late";
-                        else if (sessionsOnDay.some((s) => s.status === "CHECKED_OUT" || s.status === "Closed"))
-                            status = "present";
-                    }
-                    const dayOfWeek = dateObj.getDay();
-                    if (dayOfWeek === 0 || dayOfWeek === 6) status = "weekend";
-
-                    const getStatusStyle = () => {
-                        if (day === selectedDate) return { backgroundColor: COLORS.primary, color: "white" };
-                        if (status === "present") return { backgroundColor: COLORS.greenSoft, color: "#16A34A" };
-                        if (status === "late") return { backgroundColor: COLORS.accentSoft, color: "#D97706" };
-                        if (status === "weekend") return { backgroundColor: "#F7F8FA", color: "#A8AFBC" };
-                        return { backgroundColor: "#F7F8FA", color: "#A8AFBC" };
-                    };
-
-                    return (
-                        <button
-                            key={day}
-                            type="button"
-                            onClick={() => {
-                                setSelectedDate(day);
-                                if (sessionsOnDay.length) onDateClick(sessionsOnDay);
-                            }}
-                            className="flex aspect-square items-center justify-center rounded-lg text-[10px] font-bold transition hover:scale-105"
-                            style={getStatusStyle()}
-                        >
-                            {day}
-                        </button>
-                    );
-                })}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t pt-4">
-                <Legend color={COLORS.green} label="Present" />
-                <Legend color={COLORS.accent} label="Late" />
-                <Legend color={COLORS.red} label="Absent" />
-                <Legend color={COLORS.primary} label="Today" />
-            </div>
-
-            <div
-                className="mt-4 flex items-center justify-between rounded-xl p-3"
-                style={{ backgroundColor: COLORS.primarySoft }}
-            >
-                <div>
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
-                        Attendance rate
-                    </p>
-                    <p className="mt-0.5 text-[16px] font-extrabold" style={{ color: COLORS.text }}>
-                        {rate}%
-                    </p>
-                </div>
-                <div className="text-right">
-                    <p className="text-[9px] font-semibold text-gray-400">Hours completed</p>
-                    <p className="mt-0.5 text-[12px] font-extrabold" style={{ color: COLORS.primary }}>
-                        {totalHours.toFixed(1)} / {requiredHours} hrs
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const Legend = ({ color, label }) => (
-    <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-[9px] font-semibold text-gray-400">{label}</span>
+const AttendanceCalendar = ({ sessions, onDateClick }) => (
+    <div className="rounded-xl border border-[#E9EDF4] bg-white p-5 text-center text-gray-500">
+        <p>Calendar view – coming soon</p>
     </div>
 );
 
+// ============================================================
+// Empty State
+// ============================================================
 const EmptyState = () => (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3FF]">
@@ -737,7 +457,7 @@ const Attendance = () => {
     const [selectedSessions, setSelectedSessions] = useState([]);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
-    // Internships
+    // Internships – will be flattened
     const [internships, setInternships] = useState([]);
 
     // Active session
@@ -749,12 +469,11 @@ const Attendance = () => {
 
     const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
 
-    // Profile (will be used in banner)
     const profile = {
-        firstName: user?.firstName || "Student",
-        lastName: user?.lastName || "",
-        major: user?.studentProfile?.major || "Field Training",
-        university: user?.studentProfile?.university || { name: "Your University" },
+        firstName: user?.firstName || "Ahmed",
+        lastName: user?.lastName || "Mohamed",
+        major: user?.studentProfile?.major || "Software Engineering",
+        university: user?.studentProfile?.university?.name || "Al-Azhar University",
     };
 
     // ── Fetch data ──
@@ -767,10 +486,13 @@ const Attendance = () => {
             ]);
 
             const attendanceList = Array.isArray(attendanceData) ? attendanceData : [];
-            const internshipsList = Array.isArray(internshipsData) ? internshipsData : [];
+
+            // Flatten internships
+            const rawInternships = Array.isArray(internshipsData) ? internshipsData : [];
+            const flattenedInternships = normalizeInternships(rawInternships);
+            setInternships(flattenedInternships);
 
             setSessions(attendanceList);
-            setInternships(internshipsList);
 
             // Check for active session
             const active = attendanceList.find((s) => s.status === "CHECKED_IN");
@@ -918,6 +640,10 @@ const Attendance = () => {
         }
     };
 
+    const handleBrowseOpportunities = () => {
+        navigate("/student/opportunities");
+    };
+
     const fullName = useMemo(() => {
         if (!user) return "Student";
         return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Student";
@@ -934,13 +660,11 @@ const Attendance = () => {
         navigate("/login", { replace: true });
     };
 
-    // ── Browse Opportunities handler ──
-    const handleBrowseOpportunities = () => {
-        navigate("/student/opportunities");
-    };
+    // ── Render ──
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+            {/* Orbs */}
             <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl print:hidden" />
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl print:hidden" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl print:hidden" />
@@ -968,12 +692,8 @@ const Attendance = () => {
 
                     <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between print:mt-2">
                         <div>
-                            <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033] print:text-2xl print:text-gray-800">
-                                Attendance
-                            </h1>
-                            <p className="text-[11px] text-[#7B8497] print:text-xs print:text-gray-500">
-                                Track your internship attendance
-                            </p>
+                            <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033] print:text-2xl print:text-gray-800">Attendance</h1>
+                            <p className="text-[11px] text-[#7B8497] print:text-xs print:text-gray-500">Track your internship attendance</p>
                         </div>
                         {isCheckedIn && (
                             <div className="flex items-center gap-3 rounded-full bg-[#EAF3FF] px-4 py-2 text-[13px] font-semibold text-[#0475FB] w-fit print:hidden">
@@ -1004,49 +724,26 @@ const Attendance = () => {
                             <button
                                 type="button"
                                 onClick={() => setViewMode("timesheet")}
-                                className={`pb-2 text-[13px] font-semibold transition ${viewMode === "timesheet"
-                                        ? "border-b-2 border-[#0475FB] text-[#0475FB]"
-                                        : "text-[#7B8497] hover:text-[#172033]"
-                                    }`}
+                                className={`pb-2 text-[13px] font-semibold transition ${viewMode === "timesheet" ? "border-b-2 border-[#0475FB] text-[#0475FB]" : "text-[#7B8497] hover:text-[#172033]"}`}
                             >
-                                <span className="flex items-center gap-2">
-                                    <List size={16} /> Timesheet
-                                </span>
+                                <span className="flex items-center gap-2"><List size={16} /> Timesheet</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setViewMode("calendar")}
-                                className={`pb-2 text-[13px] font-semibold transition ${viewMode === "calendar"
-                                        ? "border-b-2 border-[#0475FB] text-[#0475FB]"
-                                        : "text-[#7B8497] hover:text-[#172033]"
-                                    }`}
+                                className={`pb-2 text-[13px] font-semibold transition ${viewMode === "calendar" ? "border-b-2 border-[#0475FB] text-[#0475FB]" : "text-[#7B8497] hover:text-[#172033]"}`}
                             >
-                                <span className="flex items-center gap-2">
-                                    <CalendarDays size={16} /> Calendar
-                                </span>
+                                <span className="flex items-center gap-2"><CalendarDays size={16} /> Calendar</span>
                             </button>
                         </div>
                         <div className="flex items-center gap-3 print:hidden">
-                            <FilterButton active={filter === "All"} onClick={() => setFilter("All")}>
-                                All
-                            </FilterButton>
-                            <FilterButton
-                                active={filter === "Last 7 days"}
-                                onClick={() => setFilter("Last 7 days")}
-                            >
-                                Last 7 days
-                            </FilterButton>
+                            <FilterButton active={filter === "All"} onClick={() => setFilter("All")}>All</FilterButton>
+                            <FilterButton active={filter === "Last 7 days"} onClick={() => setFilter("Last 7 days")}>Last 7 days</FilterButton>
                             <Button variant="gold" onClick={handleExport} className="h-8 px-3 text-[11px]">
                                 <Upload size={14} /> Export
                             </Button>
-                            <Button
-                                variant="blue"
-                                onClick={handleRefresh}
-                                disabled={refreshing}
-                                className="h-8 px-3 text-[11px]"
-                            >
+                            <Button variant="blue" onClick={handleRefresh} disabled={refreshing} className="h-8 px-3 text-[11px]">
                                 <RotateCw size={14} className={refreshing ? "animate-spin" : ""} />
-                                Refresh
                             </Button>
                         </div>
                     </div>
@@ -1058,9 +755,7 @@ const Attendance = () => {
                                     {[...Array(5)].map((_, i) => (
                                         <SkeletonCard key={i} className="p-4">
                                             <div className="grid grid-cols-6 gap-4">
-                                                {[...Array(6)].map((_, j) => (
-                                                    <SkeletonText key={j} className="h-4 w-full" />
-                                                ))}
+                                                {[...Array(6)].map((_, j) => <SkeletonText key={j} className="h-4 w-full" />)}
                                             </div>
                                         </SkeletonCard>
                                     ))}
@@ -1068,33 +763,21 @@ const Attendance = () => {
                             ) : (
                                 <SkeletonCalendar />
                             )
-                        ) : viewMode === "timesheet" ? (
-                            <TimesheetTable sessions={filteredSessions} />
                         ) : (
-                            <AttendanceCalendar sessions={filteredSessions} onDateClick={handleDateClick} />
+                            viewMode === "timesheet" ? <TimesheetTable sessions={filteredSessions} /> : <AttendanceCalendar sessions={filteredSessions} onDateClick={handleDateClick} />
                         )}
                     </div>
 
                     {showCheckoutDialog && (
-                        <div
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                            onClick={cancelCheckOut}
-                        >
-                            <div
-                                className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl"
-                                onClick={(e) => e.stopPropagation()}
-                            >
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={cancelCheckOut}>
+                            <div className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-start gap-3">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF4E5]">
                                         <AlertCircle size={20} color={COLORS.accent} />
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="text-[15px] font-extrabold text-[#172033]">
-                                            Confirm Check Out
-                                        </h4>
-                                        <p className="mt-1 text-[12px] text-[#7B8497]">
-                                            You are about to check out from your current session.
-                                        </p>
+                                        <h4 className="text-[15px] font-extrabold text-[#172033]">Confirm Check Out</h4>
+                                        <p className="mt-1 text-[12px] text-[#7B8497]">You are about to check out from your current session.</p>
                                         <div className="mt-3 rounded-xl bg-[#F5F7FB] p-3 text-[11px]">
                                             <div className="flex justify-between">
                                                 <span className="text-[#7B8497]">Check‑in time</span>
@@ -1108,64 +791,31 @@ const Attendance = () => {
                                     </div>
                                 </div>
                                 <div className="mt-5 flex gap-3">
-                                    <Button
-                                        variant="blue"
-                                        onClick={cancelCheckOut}
-                                        className="flex-1 justify-center text-[12px]"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="gold"
-                                        onClick={confirmCheckOut}
-                                        className="flex-1 justify-center text-[12px]"
-                                    >
-                                        Confirm Check Out
-                                    </Button>
+                                    <Button variant="blue" onClick={cancelCheckOut} className="flex-1 justify-center text-[12px]">Cancel</Button>
+                                    <Button variant="gold" onClick={confirmCheckOut} className="flex-1 justify-center text-[12px]">Confirm Check Out</Button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {showDetailModal && selectedSessions.length > 0 && (
-                        <div
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                            onClick={() => setShowDetailModal(false)}
-                        >
-                            <div
-                                className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl"
-                                onClick={(e) => e.stopPropagation()}
-                            >
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowDetailModal(false)}>
+                            <div className="max-w-md w-full rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[15px] font-extrabold text-[#172033]">
-                                        Sessions on {selectedSessions[0]?.date}
-                                    </h4>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDetailModal(false)}
-                                        className="rounded-full p-1 hover:bg-gray-100"
-                                    >
+                                    <h4 className="text-[15px] font-extrabold text-[#172033]">Sessions on {selectedSessions[0]?.date}</h4>
+                                    <button type="button" onClick={() => setShowDetailModal(false)} className="rounded-full p-1 hover:bg-gray-100">
                                         <X size={18} color={COLORS.muted} />
                                     </button>
                                 </div>
                                 <div className="mt-4 space-y-3">
                                     {selectedSessions.map((s) => (
-                                        <div
-                                            key={s.id}
-                                            className="flex items-center justify-between border-b border-[#E9EDF4] pb-2 last:border-0"
-                                        >
+                                        <div key={s.id} className="flex items-center justify-between border-b border-[#E9EDF4] pb-2 last:border-0">
                                             <div>
-                                                <p className="text-[12px] font-semibold text-[#172033]">
-                                                    In: {formatTime(s.date)}
-                                                </p>
-                                                <p className="text-[12px] text-[#7B8497]">
-                                                    Out: {s.checkOut ? formatTime(s.checkOut) : "—"}
-                                                </p>
+                                                <p className="text-[12px] font-semibold text-[#172033]">In: {formatTime(s.date)}</p>
+                                                <p className="text-[12px] text-[#7B8497]">Out: {s.checkOut ? formatTime(s.checkOut) : "—"}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[11px] font-bold text-[#2468B3]">
-                                                    {s.duration || "—"}
-                                                </p>
+                                                <p className="text-[11px] font-bold text-[#2468B3]">{s.duration || "—"}</p>
                                                 <StatusBadge status={s.status} />
                                             </div>
                                         </div>
@@ -1179,17 +829,9 @@ const Attendance = () => {
                         <div className="flex items-center gap-4 text-[10px] font-medium text-[#7B8497]">
                             <span>Help center</span>
                             <span className="h-1 w-1 rounded-full bg-[#D1D5DB]" />
-                            <button
-                                type="button"
-                                onClick={() => navigate("/settings")}
-                                className="hover:text-[#172033]"
-                            >
-                                Settings
-                            </button>
+                            <button type="button" onClick={() => navigate("/settings")} className="hover:text-[#172033]">Settings</button>
                         </div>
-                        <p className="text-[9px] font-medium text-gray-400">
-                            Tadreeby helps you stay on track throughout your field training.
-                        </p>
+                        <p className="text-[9px] font-medium text-gray-400">Tadreeby helps you stay on track throughout your field training.</p>
                     </div>
                 </div>
             </main>

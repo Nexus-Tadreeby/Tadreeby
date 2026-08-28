@@ -1,6 +1,6 @@
 // src/services/api.js
 // const API_BASE_URL = 'https://tadreeby-api.onrender.com';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
 
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
@@ -263,6 +263,29 @@ export const profileAPI = {
   },
 };
 
+
+// ─── Attendance API ────────────────────────────────────────────────────
+export const attendanceAPI = {
+  getAttendance: async () => {
+    const response = await apiRequest('/student/attendance', { method: 'GET' });
+    return response.data;
+  },
+
+  checkIn: async (internshipId) => {
+    const response = await apiRequest('/student/attendance/check-in', {
+      method: 'POST',
+      body: JSON.stringify({ internshipId }),
+    });
+    return response.data;
+  },
+
+  checkOut: async () => {
+    const response = await apiRequest('/student/attendance/check-out', {
+      method: 'PATCH',
+    });
+    return response.data;
+  },
+};
 
 // ─── Chat API ─────────────────────────────────────────────────────────
 export const chatAPI = {

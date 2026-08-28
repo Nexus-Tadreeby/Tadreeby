@@ -1512,7 +1512,6 @@ export default function OpportunitiesDetails() {
                                             {internship.location || "Remote"}
                                         </span>
                                     </div>
-
                                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                                         <p className="text-[12px] font-medium text-white/80">
                                             {internship.companyName || internship.company?.name || "Training Provider"}

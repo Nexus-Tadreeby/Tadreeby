@@ -2,6 +2,73 @@
 // const API_BASE_URL = 'https://tadreeby-api.onrender.com';
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
 
+// const apiRequest = async (endpoint, options = {}) => {
+//   const token = localStorage.getItem('accessToken');
+
+//   const headers = {
+//     'Accept': 'application/json',
+//     'Content-Type': 'application/json',
+//     ...(token && { 'Authorization': `Bearer ${token}` }),
+//     ...options.headers,
+//   };
+
+//   if (options.body instanceof FormData) {
+//     delete headers['Content-Type'];
+//   }
+
+//   const config = {
+//     ...options,
+//     headers,
+//   };
+
+//   try {
+//     const url = `${API_BASE_URL}${endpoint}`;
+//     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
+
+//     const response = await fetch(url, config);
+
+
+//     const isLoginRequest = endpoint.startsWith('/auth/login');
+
+//     // ✅ Handle 401 Unauthorized – token expired/invalid
+//     // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
+//     if (response.status === 401 && !isLoginRequest) {
+
+//       // Clear authentication data
+//       localStorage.removeItem('accessToken');
+//       localStorage.removeItem('refreshToken');
+//       localStorage.removeItem('user');
+
+//       // Redirect to login page (using window.location for non-React context)
+//       window.location.href = '/login';
+
+//       // Throw an error to stop further execution
+//       throw new Error('Session expired. Please log in again.');
+//     }
+
+//     let responseData;
+//     const contentType = response.headers.get('content-type');
+//     if (contentType && contentType.includes('application/json')) {
+//       responseData = await response.json();
+//     } else {
+//       responseData = await response.text();
+//     }
+
+//     if (!response.ok) {
+//       throw {
+//         status: response.status,
+//         data: responseData,
+//         message: responseData?.message || responseData?.error || `HTTP error ${response.status}`
+//       };
+//     }
+
+//     return responseData;
+//   } catch (error) {
+//     console.error('API Error:', error);
+//     throw error;
+//   }
+// };
+
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
 
@@ -25,24 +92,31 @@ const apiRequest = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
 
+    // =============================================
+    // 👇 ADD THIS: Performance timing block
+    // =============================================
+    const start = performance.now();
     const response = await fetch(url, config);
+    const duration = performance.now() - start;
 
+    // Log slow endpoints (threshold: 200ms — adjust as needed)
+    if (duration > 200) {
+      console.warn(
+        `🐢 [Slow API] ${options.method || 'GET'} ${endpoint} took ${duration.toFixed(2)}ms`
+      );
+      // Optional: You can send this to a logging service here
+      // e.g., if (window.gtag) window.gtag('event', 'slow_api', { endpoint, duration });
+    }
+    // =============================================
 
     const isLoginRequest = endpoint.startsWith('/auth/login');
 
     // ✅ Handle 401 Unauthorized – token expired/invalid
-    // Skip redirect for a failed login attempt: invalid credentials should stay on the login page.
     if (response.status === 401 && !isLoginRequest) {
-
-      // Clear authentication data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
-
-      // Redirect to login page (using window.location for non-React context)
       window.location.href = '/login';
-
-      // Throw an error to stop further execution
       throw new Error('Session expired. Please log in again.');
     }
 
@@ -68,7 +142,6 @@ const apiRequest = async (endpoint, options = {}) => {
     throw error;
   }
 };
-
 
 export const authAPI = {
   registerStudent: async (formData) => {

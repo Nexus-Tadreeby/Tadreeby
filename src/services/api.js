@@ -393,4 +393,197 @@ export const chatAPI = {
     });
   },
 };
+// ─── Dashboard API ────────────────────────────────────────────────────
+export const dashboardAPI = {
+  getDashboard: async () => {
+    const response = await apiRequest('/student/dashboard', { method: 'GET' });
+    return response.data; // { success: true, data: {...} }
+  },
+};
 
+
+// ─── Tasks API ─────────────────────────────────────────────────────────
+export const tasksAPI = {
+  // Get all tasks for the student
+  getTasks: async () => {
+    const response = await apiRequest('/student/tasks', { method: 'GET' });
+    return response.data; // { success: true, data: [...] }
+  },
+
+  // Get a single task by ID
+  getTask: async (taskId) => {
+    const response = await apiRequest(`/student/tasks/${taskId}`, { method: 'GET' });
+    return response.data;
+  },
+
+  // Submit a task (file upload)
+  submitTask: async (taskId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiRequest(`/student/tasks/${taskId}/submission`, {
+      method: 'POST',
+      body: formData,
+    });
+    return response.data;
+  },
+
+  // Get submission for a task
+  getTaskSubmission: async (taskId) => {
+    const response = await apiRequest(`/student/tasks/${taskId}/submission`, { method: 'GET' });
+    return response.data;
+  },
+};
+
+
+export { apiRequest };
+// // src/services/api.js
+
+// const API_BASE_URL = 'http://localhost:6060';
+
+// const apiRequest = async (endpoint, options = {}) => {
+//   const token = localStorage.getItem('accessToken');
+  
+//   // For FormData, do NOT set Content-Type – browser will set it with boundary
+//   const headers = {
+//     'Accept': 'application/json',
+//     'Content-Type': 'application/json',
+//     ...(token && { 'Authorization': `Bearer ${token}` }),
+//     ...options.headers,
+//   };
+
+//   // If body is FormData, remove any 'Content-Type' that may have been set
+//   if (options.body instanceof FormData) {
+//     delete headers['Content-Type'];
+//   }
+
+//   const config = {
+//     ...options,
+//     headers,
+//   };
+
+//   try {
+//     const url = `${API_BASE_URL}${endpoint}`;
+//     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
+    
+//     const response = await fetch(url, config);
+    
+//     let responseData;
+//     const contentType = response.headers.get('content-type');
+//     if (contentType && contentType.includes('application/json')) {
+//       responseData = await response.json();
+//     } else {
+//       responseData = await response.text();
+//     }
+    
+//     if (!response.ok) {
+//       throw {
+//         status: response.status,
+//         data: responseData,
+//         message: responseData?.message || responseData?.error || `HTTP error ${response.status}`
+//       };
+//     }
+    
+//     return responseData;
+//   } catch (error) {
+//     console.error('API Error:', error);
+//     throw error;
+//   }
+// };
+
+// export const authAPI = {
+//   registerStudent: async (formData) => {
+//     // formData is already a FormData object
+//     return apiRequest('/auth/register/student', {
+//       method: 'POST',
+//       body: formData,
+//       // no extra headers – we want multipart/form-data
+//     });
+//   },
+  
+//   login: async (credentials) => {
+//     return apiRequest('/auth/login', {
+//       method: 'POST',
+//       body: JSON.stringify(credentials),
+//     });
+//   },
+  
+//   // ... other methods remain unchanged
+// };
+
+
+// // ─── Helper: convert File to base64 ──────────────────────────────────
+// const fileToBase64 = (file) => {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader();
+//     reader.readAsDataURL(file);
+//     reader.onload = () => resolve(reader.result);
+//     reader.onerror = (error) => reject(error);
+//   });
+// };
+
+// // ─── Profile API (matches your backend) ──────────────────────────────
+// export const profileAPI = {
+//   // Get profile
+//   getProfile: async () => {
+//     const response = await apiRequest('/student/profile', { method: 'GET' });
+//     return response.data; // your backend returns { success: true, data: {...} }
+//   },
+
+//   // Update profile (JSON) – used for text fields like phone, recoveryEmail, gpa
+//   updateProfile: async (data) => {
+//     const response = await apiRequest('/student/profile', {
+//       method: 'PATCH',
+//       body: JSON.stringify(data),
+//     });
+//     return response.data;
+//   },
+
+//   // Upload avatar – convert file to base64, then send it via updateProfile
+//   uploadAvatar: async (file, onProgress) => {
+//     // First, convert file to base64 (we'll simulate progress since we can't track upload progress with JSON)
+//     // If you have a separate upload endpoint, you'd use XMLHttpRequest here.
+//     // For now, we convert to base64 and send via updateProfile.
+//     if (onProgress) onProgress(0);
+//     const base64 = await fileToBase64(file);
+//     if (onProgress) onProgress(50);
+//     const result = await profileAPI.updateProfile({ profileImage: base64 });
+//     if (onProgress) onProgress(100);
+//     return result;
+//   },
+
+//   // Upload CV – convert file to base64, then send via updateProfile
+//   uploadCV: async (file, onProgress) => {
+//     if (onProgress) onProgress(0);
+//     const base64 = await fileToBase64(file);
+//     if (onProgress) onProgress(50);
+//     const result = await profileAPI.updateProfile({ cvFile: base64 });
+//     if (onProgress) onProgress(100);
+//     return result;
+//   },
+
+//   // Skills endpoints (if you need them)
+//   getSkills: async () => {
+//     const response = await apiRequest('/student/skills', { method: 'GET' });
+//     return response.data;
+//   },
+//   updateSkills: async (skills) => {
+//     const response = await apiRequest('/student/skills', {
+//       method: 'PATCH',
+//       body: JSON.stringify({ skills }),
+//     });
+//     return response.data;
+//   },
+//   addSkill: async (skill) => {
+//     const response = await apiRequest('/student/skills/add', {
+//       method: 'POST',
+//       body: JSON.stringify({ skill }),
+//     });
+//     return response.data;
+//   },
+//   removeSkill: async (skill) => {
+//     const response = await apiRequest(`/student/skills/${encodeURIComponent(skill)}`, {
+//       method: 'DELETE',
+//     });
+//     return response.data;
+//   },
+// };

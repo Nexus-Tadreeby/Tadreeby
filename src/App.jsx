@@ -27,6 +27,9 @@ import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 import MyInternship from "./components/pages/internship/my-internship";
 import StudentChats from "./components/pages/student/studentChats"; 
 import Attendance from './components/pages/student/Attendance';
+import UniversityAdminDashboard from './components/pages/university-admin/UniversityAdminDashboard';
+import StudentTasks from './components/pages/student/StudentTasks';
+
 
 function App() {
   return (
@@ -67,7 +70,12 @@ function App() {
         <Route path="/my/internship" element={<MyInternship />} />
         <Route path="/attendance" element={<Attendance />} />
         <Route path="/student/profile" element={<StudentProfile />} />
+        <Route path="/student/tasks" element={<StudentTasks />} />
         <Route path="/settings" element={<Settings />} />
+
+
+
+        <Route path="/universityAdmin/dashboard" element={<UniversityAdminDashboard />} />
 
       </Route>
 

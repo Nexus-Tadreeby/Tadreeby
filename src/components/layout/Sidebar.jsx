@@ -22,7 +22,7 @@ const DEFAULT_DISCOVERY = [
 const DEFAULT_MANAGEMENT = [
   { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
   { label: "Attendance", icon: Clock3, path: "/attendance" },
-  { label: "Tasks", icon: ListTodo, path: "/tasks" },
+  { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
 ];
 
 function Sidebar({

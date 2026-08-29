@@ -33,6 +33,8 @@ import CompanyDashboard from './components/pages/company-admin/companyDashboard'
 import CreateOpportunity from './components/pages/company-admin/CreateOpportunity';
 import CreateTrainer from './components/pages/company-admin/CreateTrainer';
 import Opportunities from './components/pages/company-admin/Opportunities';
+import Trainers from './components/pages/company-admin/Trainers';
+
 
 function App() {
   return (
@@ -83,6 +85,7 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={["COMPANY_ADMIN", "COMPANY_TRAINER"]} />}>
         <Route path="/company/admin/dashboard" element={<CompanyDashboard />} />
         <Route path="/company/admin/opportunities/create" element={<CreateOpportunity />} />
+        <Route path="/company/admin/trainers" element={<Trainers />} />
         <Route path="/company/admin/trainers/create" element={<CreateTrainer />} />
         <Route path="/company/admin/opportunities" element={<Opportunities />} />
         {/* <Route path="/companyAdmin/opportunities/create" element={<CreateOpportunity />} />

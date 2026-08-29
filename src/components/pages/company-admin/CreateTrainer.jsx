@@ -6,12 +6,11 @@ import {
     Settings,
     Users,
     Briefcase,
-    X,
     AlertCircle,
     ArrowLeft,
 } from "lucide-react";
 
-import Sidebar from "../../layout/Sidebar";
+import CompanySidebar from "../../layout/CompanySidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
@@ -36,6 +35,7 @@ const COLORS = {
     background: "#F5F7FB",
 };
 
+// ─── Navigation Items ──────────────────────────────────────────────
 const companyNavItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/company/admin/dashboard" },
     { label: "Opportunities", icon: Briefcase, path: "/company/admin/opportunities" },
@@ -88,13 +88,23 @@ export default function CreateTrainer() {
 
         try {
             const payload = {
-                ...formData,
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                email: formData.email.trim().toLowerCase(),
+                phone: formData.phone.trim() || null,
                 personalID: parseInt(formData.personalID) || 0,
+                position: formData.position.trim() || null,
+                specialization: formData.specialization.trim() || null,
+                password: formData.password.trim(),
+                isActive: formData.isActive,
             };
+
+            console.log("📦 Sending payload:", payload);
+
             await companyAdminAPI.createTrainer(payload);
-            navigate("/company/admin/");
+            navigate("/company/admin/trainers");
         } catch (err) {
-            console.error("Failed to create trainer:", err);
+            console.error("❌ Failed to create trainer:", err);
             setError(err?.message || "Failed to create trainer. Please try again.");
         } finally {
             setLoading(false);
@@ -107,12 +117,13 @@ export default function CreateTrainer() {
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
-            <Sidebar
+            <CompanySidebar
                 navItems={companyNavItems}
                 footerItems={companyFooterItems}
                 user={companyUser}
                 profilePath="/company/admin/profile"
                 onSignOut={handleSignOut}
+                defaultExpanded={true} // ✅ اجعله مفتوحاً مثل Dashboard
             />
 
             <main className="flex-1 overflow-y-auto relative z-10">
@@ -129,11 +140,11 @@ export default function CreateTrainer() {
                     />
 
                     <button
-                        onClick={() => navigate("/company/admin/")}
+                        onClick={() => navigate("/company/admin/trainers")}
                         className="mt-4 flex items-center gap-2 text-[12px] font-semibold text-[#7B8497] hover:text-[#0475FB] transition"
                     >
                         <ArrowLeft size={15} />
-                        Back to Dashboard
+                        Back to Trainers
                     </button>
 
                     <div className="mt-4">
@@ -276,12 +287,17 @@ export default function CreateTrainer() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <Button type="submit" variant="blue" disabled={loading} className="px-6 py-2.5 text-[13px] font-bold">
+                            <Button
+                                type="submit"
+                                variant="blue"
+                                disabled={loading}
+                                className="px-6 py-2.5 text-[13px] font-bold"
+                            >
                                 {loading ? "Creating..." : "Add Trainer"}
                             </Button>
                             <Button
                                 variant="secondary"
-                                onClick={() => navigate("/company/admin/dashboard")}
+                                onClick={() => navigate("/company/admin/trainers")}
                                 className="px-6 py-2.5 text-[13px] font-bold"
                             >
                                 Cancel

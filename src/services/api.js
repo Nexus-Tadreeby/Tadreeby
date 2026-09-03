@@ -496,6 +496,50 @@ export const companyAdminAPI = {
   },
 };
 
+export const trainerAPI = {
+  // Overview: assigned company, active interns, pending applications, task stats
+  getDashboard: async () => {
+    const response = await apiRequest('/company/trainer/dashboard', { method: 'GET' });
+    return response.data;
+  },
+
+  // Students/interns currently assigned to this trainer
+  getMyStudents: async (page = 1, limit = 20) => {
+    const response = await apiRequest(`/company/trainer/students?page=${page}&limit=${limit}`, { method: 'GET' });
+    return response.data;
+  },
+
+  // Applications waiting for this trainer's review
+  getPendingApplications: async (page = 1, limit = 20) => {
+    const response = await apiRequest(`/company/trainer/applications?page=${page}&limit=${limit}`, { method: 'GET' });
+    return response.data;
+  },
+  approveApplication: async (applicationId) => {
+    const response = await apiRequest(`/company/trainer/applications/${applicationId}/approve`, { method: 'POST' });
+    return response.data;
+  },
+  rejectApplication: async (applicationId, reason) => {
+    const response = await apiRequest(`/company/trainer/applications/${applicationId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason || '' }),
+    });
+    return response.data;
+  },
+
+  // Tasks (created next iteration — dashboard just needs counts/recent list)
+  getTasks: async (page = 1, limit = 20) => {
+    const response = await apiRequest(`/company/trainer/tasks?page=${page}&limit=${limit}`, { method: 'GET' });
+    return response.data;
+  },
+  createTask: async (payload) => {
+    const response = await apiRequest('/company/trainer/tasks', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return response.data;
+  },
+};
+
 export { apiRequest };
 // // src/services/api.js
 

@@ -34,6 +34,7 @@ import CreateOpportunity from "./components/pages/company-admin/CreateOpportunit
 import CreateTrainer from "./components/pages/company-admin/CreateTrainer";
 import Opportunities from "./components/pages/company-admin/Opportunities";
 import Trainers from "./components/pages/company-admin/Trainers";
+import TrainerDashboard from "./components/pages/company-trainer/TrainerDashboard";
 
 function App() {
   return (
@@ -95,7 +96,7 @@ function App() {
       {/* COMPANY_ADMIN or other roles */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={["COMPANY_ADMIN", "COMPANY_TRAINER"]} />
+          <ProtectedRoute allowedRoles={["COMPANY_ADMIN"]} />
         }
       >
         <Route path="/company/admin/dashboard" element={<CompanyDashboard />} />
@@ -112,10 +113,18 @@ function App() {
           path="/company/admin/opportunities"
           element={<Opportunities />}
         />
+
+        
         {/* <Route path="/companyAdmin/opportunities/create" element={<CreateOpportunity />} />
         <Route path="/companyAdmin/opportunities/:id/edit" element={<EditOpportunity />} /> // للتعديل
         <Route path="/companyAdmin/opportunities/:id" element={<OpportunityDetails />} /> */}
       </Route>
+      <Route element={<ProtectedRoute allowedRoles={["COMPANY_TRAINER"]} />}>
+          <Route
+            path="/company/trainer/dashboard"
+            element={<TrainerDashboard />}
+          />
+        </Route>
 
       {/* Catch-all 404 Route */}
       <Route path="*" element={<NotFoundPage />} />

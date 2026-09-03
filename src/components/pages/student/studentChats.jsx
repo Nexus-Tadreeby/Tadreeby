@@ -317,12 +317,15 @@ export default function StudentChats() {
     return (
         <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
             <Sidebar
-                navItems={studentNavItems}
-                footerItems={studentFooterItems}
-                user={studentUser}
-                profilePath="/student/profile"
-                onSignOut={handleSignOut}
-            />
+                    navItems={studentNavItems}
+                    footerItems={studentFooterItems}
+                    user={studentUser}
+                    profilePath="/student/profile"
+                    onSignOut={handleSignOut}
+                    chatPath="/student/chats"
+                    brandPath="/student/dashboard"
+                    storageKey="sidebar-student"
+                />
 
             <main className="flex-1 overflow-hidden p-4">
                 <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>

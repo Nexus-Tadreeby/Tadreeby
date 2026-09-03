@@ -682,13 +682,16 @@ const Attendance = () => {
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl print:hidden" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl print:hidden" />
 
-            <Sidebar
-                navItems={studentNavItems}
-                footerItems={studentFooterItems}
-                user={studentUser}
-                profilePath="/student/profile"
-                onSignOut={handleSignOut}
-            />
+              <Sidebar
+                    navItems={studentNavItems}
+                    footerItems={studentFooterItems}
+                    user={studentUser}
+                    profilePath="/student/profile"
+                    onSignOut={handleSignOut}
+                    chatPath="/student/chats"
+                    brandPath="/student/dashboard"
+                    storageKey="sidebar-student"
+                />
 
             <main className="flex-1 overflow-y-auto relative z-10 print:overflow-visible">
                 <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7 print:max-w-full print:px-4 print:py-0">

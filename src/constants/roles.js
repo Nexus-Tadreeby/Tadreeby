@@ -5,5 +5,5 @@ export const ROLE_HOME_ROUTES = {
   // fill these in with your real enum values —
   // I only have SUPER_ADMIN confirmed from your sample response
   UNIVERSITY_ADMIN: "/universityAdmin/dashboard",
-  COMPANY_ADMIN: "/companyAdmin/dashboard",
+  COMPANY_ADMIN: "/company/admin/dashboard",
 };

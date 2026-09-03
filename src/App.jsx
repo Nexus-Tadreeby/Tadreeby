@@ -25,10 +25,15 @@ import InternshipDetails from "./components/pages/opportunities/OpportunityDetai
 import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
 import MyInternship from "./components/pages/internship/my-internship";
-import StudentChats from "./components/pages/student/studentChats"; 
+import StudentChats from "./components/pages/student/studentChats";
 import Attendance from './components/pages/student/Attendance';
-// import UniversityAdminDashboard from './components/pages/university-admin/UniversityAdminDashboard';
+import UniversityAdminDashboard from './components/pages/university-admin/UniversityAdminDashboard';
 import StudentTasks from './components/pages/student/StudentTasks';
+import CompanyDashboard from './components/pages/company-admin/companyDashboard';
+import CreateOpportunity from './components/pages/company-admin/CreateOpportunity';
+import CreateTrainer from './components/pages/company-admin/CreateTrainer';
+import Opportunities from './components/pages/company-admin/Opportunities';
+import Trainers from './components/pages/company-admin/Trainers';
 
 
 function App() {
@@ -43,28 +48,24 @@ function App() {
       <Route path="/terms-privacy" element={<TermsAndPrivacyPage />} />
       <Route path="/terms" element={<TermsAndPrivacyPage />} />
       <Route path="/privacy" element={<TermsAndPrivacyPage />} />
-      {/* <Route path="/unauthorized" element={<UnauthorizedPage />} /> */}
       <Route path="/student/chats" element={<StudentChats />} />
+
+      {/* SUPER_ADMIN routes */}
       <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
         <Route path="/superAdmin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="/superAdmin/universities" element={<Universities />} />
         <Route path="/superAdmin/companies" element={<Companies />} />
-        {/* <Route path="/users" element={<UsersPage />} /> */}
-        {/* <Route path="/logs" element={<SystemLogsPage />} /> */}
-        {/* <Route path="/profile" element={<SuperAdminProfile />} /> */}
       </Route>
 
+      {/* STUDENT routes */}
       <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
         <Route path="/student/dashboard" element={<StudentDashboard />} />
-
         <Route path="/student/opportunities" element={<Internships />} />
         <Route path="/student/opportunities/:id" element={<InternshipDetails />} />
         <Route path="/student/opportunity/:id" element={<InternshipDetails />} />
-
         <Route path="/student/internships" element={<Internships />} />
         <Route path="/student/internships/:id" element={<InternshipDetails />} />
         <Route path="/student/internship/:id" element={<InternshipDetails />} />
-
         <Route path="/student/my-internship" element={<MyInternship />} />
         <Route path="/internship/my-internship" element={<MyInternship />} />
         <Route path="/my/internship" element={<MyInternship />} />
@@ -72,11 +73,24 @@ function App() {
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/tasks" element={<StudentTasks />} />
         <Route path="/settings" element={<Settings />} />
+      </Route>
 
+      {/* UNIVERSITY_ADMIN routes */}
+      <Route element={<ProtectedRoute allowedRoles={["UNIVERSITY_ADMIN"]} />}>
+        <Route path="/universityAdmin/dashboard" element={<UniversityAdminDashboard />} />
+        {/* Add other university admin routes here */}
+      </Route>
 
-
-        {/* <Route path="/universityAdmin/dashboard" element={<UniversityAdminDashboard />} /> */}
-
+      {/* COMPANY_ADMIN or other roles */}
+      <Route element={<ProtectedRoute allowedRoles={["COMPANY_ADMIN", "COMPANY_TRAINER"]} />}>
+        <Route path="/company/admin/dashboard" element={<CompanyDashboard />} />
+        <Route path="/company/admin/opportunities/create" element={<CreateOpportunity />} />
+        <Route path="/company/admin/trainers" element={<Trainers />} />
+        <Route path="/company/admin/trainers/create" element={<CreateTrainer />} />
+        <Route path="/company/admin/opportunities" element={<Opportunities />} />
+        {/* <Route path="/companyAdmin/opportunities/create" element={<CreateOpportunity />} />
+        <Route path="/companyAdmin/opportunities/:id/edit" element={<EditOpportunity />} /> // للتعديل
+        <Route path="/companyAdmin/opportunities/:id" element={<OpportunityDetails />} /> */}
       </Route>
 
       {/* Catch-all 404 Route */}

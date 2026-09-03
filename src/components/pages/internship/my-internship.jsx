@@ -124,12 +124,21 @@ const mapBackendToUI = (data, user) => {
     const upcomingTasks = tasks
         .filter((t) => t.status !== "DONE")
         .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    // const nextTask = upcomingTasks[0]
+    //     ? {
+    //         title: nextTask.title,
+    //         due: nextTask.deadline ? new Date(nextTask.deadline).toLocaleDateString() : "No deadline",
+    //         progress: nextTask.status === "IN_PROGRESS" ? 70 : 0,
+    //         status: nextTask.status === "IN_PROGRESS" ? "In Progress" : "Not Started",
+    //     }
+    //     : null;
+
     const nextTask = upcomingTasks[0]
         ? {
-            title: nextTask.title,
-            due: nextTask.deadline ? new Date(nextTask.deadline).toLocaleDateString() : "No deadline",
-            progress: nextTask.status === "IN_PROGRESS" ? 70 : 0,
-            status: nextTask.status === "IN_PROGRESS" ? "In Progress" : "Not Started",
+            title: upcomingTasks[0].title,
+            due: upcomingTasks[0].deadline ? new Date(upcomingTasks[0].deadline).toLocaleDateString() : "No deadline",
+            progress: upcomingTasks[0].status === "IN_PROGRESS" ? 70 : 0,
+            status: upcomingTasks[0].status === "IN_PROGRESS" ? "In Progress" : "Not Started",
         }
         : null;
 
@@ -184,7 +193,6 @@ const mapBackendToUI = (data, user) => {
                 : avgScore >= 50 ? "Average"
                     : "Needs Improvement";
 
-    // ✅ Ensure skills is always defined
     const skills = {
         technical: hasEvaluations ? 89 : 0,
         communication: hasEvaluations ? 84 : 0,

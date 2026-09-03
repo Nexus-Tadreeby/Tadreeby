@@ -124,9 +124,9 @@ function Sidebar({
         ].join(" ")}
       >
         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#EAF2FF]">
-          {user.avatar ? (
+          {user.avatar || user.profileImage ? (
             <img
-              src={user.avatar}
+              src={user.avatar || user.profileImage}
               alt={user.name}
               className="h-full w-full object-cover"
             />

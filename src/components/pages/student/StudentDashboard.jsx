@@ -3132,7 +3132,7 @@ export default function StudentDashboard() {
       ...dashboardData.profile,
       firstName: dashboardData.profile.firstName || user?.firstName,
       lastName: dashboardData.profile.lastName || user?.lastName,
-      avatar: dashboardData.profile.avatar || user?.profileImage,
+      avatar: user?.profileImage || dashboardData.profile.avatar,
     };
   }, [dashboardData, user]);
 
@@ -3200,6 +3200,33 @@ export default function StudentDashboard() {
     ];
   }, [dashboardData]);
 
+  const chatItems = useMemo(() => [
+    {
+      id: 1,
+      name: "Dr. Brandon Madsen",
+      initials: "BM",
+      lastMessage: "Awesome! You're all set!",
+      time: "11:19 AM",
+      unread: 0,
+      avatar: "https://i.pravatar.cc/150?u=brandon",
+      status: "online",
+    },
+    {
+      id: 2,
+      name: "TechCorp HR",
+      initials: "TH",
+      lastMessage: "What about 2:30 PM?",
+      time: "11:30 AM",
+      unread: 1,
+      avatar: "https://i.pravatar.cc/150?u=techcorp",
+      status: "offline",
+    },
+  ], []);
+
+  const handleViewAllChats = () => {
+    navigate('/student/chats');
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
@@ -3225,6 +3252,8 @@ export default function StudentDashboard() {
             onSearchChange={(e) => setSearchTerm(e.target.value)}
             chatBadge={3}
             notificationBadge={4}
+            chatItems={chatItems}
+            onViewAllChats={handleViewAllChats}
           />
 
           {/* Welcome Header */}
@@ -3324,3 +3353,14 @@ export default function StudentDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+

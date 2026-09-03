@@ -1351,7 +1351,7 @@ const StudentProfile = () => {
   };
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { showToast } = useToast();
 
   const [profile, setProfile] = useState(() => buildInitialProfile(user));
@@ -1467,8 +1467,10 @@ const StudentProfile = () => {
       if (normalized.university && typeof normalized.university === 'object') {
         normalized.university = normalized.university.name || '';
       }
-      setProfile(normalized);
-      setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
+      const updatedProfile = { ...normalized, avatar: base64 };
+      setProfile(updatedProfile);
+      setDraft((prev) => (prev ? { ...prev, ...updatedProfile } : prev));
+      if (updateUser) updateUser({ profileImage: base64, avatar: base64 });
       showToast("Profile photo updated.", "success");
     } catch (error) {
       console.error("Avatar upload error:", error);
@@ -1497,6 +1499,7 @@ const StudentProfile = () => {
       }
       setProfile({ ...normalized, avatar: null });
       setDraft((prev) => (prev ? { ...prev, avatar: null } : prev));
+      if (updateUser) updateUser({ profileImage: null, avatar: null });
       showToast("Profile photo removed.", "success");
     } catch (error) {
       console.error("Delete avatar error:", error);
@@ -1758,7 +1761,7 @@ const StudentProfile = () => {
   };
 
   const currentProfile = isEditing && draft ? draft : profile;
-// ─── Loading state (Skeleton) ──────────────────────────────────────
+  // ─── Loading state (Skeleton) ──────────────────────────────────────
   if (isLoadingProfile) {
     return (
       <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">

@@ -266,7 +266,7 @@ const ActiveSessionBanner = ({
                         <Button
                             variant="blue"
                             onClick={onBrowseOpportunities}
-                            className="mt-2 px-4 py-2 text-[11px]"
+                            className="mt-2 my-4 mx-15 px-4 py-2 text-[11px]"
                         >
                             Browse Opportunities
                         </Button>

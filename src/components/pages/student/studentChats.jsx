@@ -1,26 +1,28 @@
 // src/components/pages/student/StudentChats.jsx
 import React, { useState, useEffect, useRef } from "react";
 import {
-    Search,
-    MoreHorizontal,
-    Phone,
-    Paperclip,
-    Image as ImageIcon,
-    Smile,
-    Send,
-    Check,
-    CheckCheck,
-    ChevronRight,
-    Filter,
-    Bell,
-    ChevronDown,
-    LayoutDashboard,
-    GraduationCap,
-    Settings,
-    Clock as ClockIcon,
-    Briefcase as BriefcaseIcon,
-    MessageCircle,
-} from "lucide-react";
+      Search,
+      MoreHorizontal,
+      Phone,
+      Paperclip,
+      Image as ImageIcon,
+      Smile,
+      Send,
+      Check,
+      CheckCheck,
+      ChevronRight,
+      Filter,
+      Bell,
+      ChevronDown,
+      LayoutDashboard,
+      GraduationCap,
+      Settings,
+      Clock,
+      BriefcaseIcon,
+      BriefcaseBusiness,
+      MessageCircle,
+      ListTodo,
+  } from "lucide-react";
 
 import Sidebar from "../../layout/Sidebar";
 import { useAuth } from "../../../context/AuthContext";
@@ -51,16 +53,26 @@ const COLORS = {
     background: "#F5F7FB",
 };
 
-// ─── Navigation (مطابق للـ Dashboard) ──────────────────────────────
-const studentNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-    { label: "Opportunities", icon: BriefcaseIcon, path: "/student/opportunities" },
-    { label: "My Internship", icon: GraduationCap, path: "/student/my-internship" },
-    { label: "Attendance", icon: ClockIcon, path: "/attendance" },
+// ─── Navigation ──────────────────────────────────────────────────────
+const studentNavGroups = [
+  {
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
-
 const studentFooterItems = [
-    { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 // ─── Helper ─────────────────────────────────────────────────────────
@@ -297,12 +309,15 @@ export default function StudentChats() {
         return (
             <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
                 <Sidebar
-                    navItems={studentNavItems}
-                    footerItems={studentFooterItems}
-                    user={studentUser}
-                    profilePath="/student/profile"
-                    onSignOut={handleSignOut}
-                />
+        navGroups={studentNavGroups}
+        footerItems={studentFooterItems}
+        user={studentUser}
+        profilePath="/student/profile"
+        onSignOut={handleSignOut}
+        chatPath="/student/chats"
+        brandPath="/student/dashboard"
+        storageKey="sidebar-student"
+      />
                 <main className="flex-1 overflow-hidden p-4">
                     <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>
                         <ChatListSkeleton />
@@ -317,7 +332,7 @@ export default function StudentChats() {
     return (
         <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
             <Sidebar
-                    navItems={studentNavItems}
+                    navGroups={studentNavGroups}
                     footerItems={studentFooterItems}
                     user={studentUser}
                     profilePath="/student/profile"
@@ -326,7 +341,6 @@ export default function StudentChats() {
                     brandPath="/student/dashboard"
                     storageKey="sidebar-student"
                 />
-
             <main className="flex-1 overflow-hidden p-4">
                 <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>
 

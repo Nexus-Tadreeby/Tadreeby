@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Briefcase,
+  BriefcaseBusiness,
   GraduationCap,
   Clock,
   Settings,
@@ -24,6 +24,7 @@ import {
   Inbox,
   Filter,
   ChevronDown,
+  ListTodo,
 } from "lucide-react";
 
 import Sidebar from "../../layout/Sidebar";
@@ -55,15 +56,22 @@ const COLORS = {
 };
 
 // ─── Navigation ──────────────────────────────────────────────────────
-const studentNavItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
+const studentNavGroups = [
   {
-    label: "My Internship",
-    icon: GraduationCap,
-    path: "/student/my-internship",
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
   },
-  { label: "Attendance", icon: Clock, path: "/attendance" },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
 const studentFooterItems = [
   { label: "Settings", icon: Settings, path: "/settings" },
@@ -683,7 +691,7 @@ export default function StudentTasks() {
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
       <Sidebar
-        navItems={studentNavItems}
+        navGroups={studentNavGroups}
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"

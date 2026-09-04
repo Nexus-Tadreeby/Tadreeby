@@ -9,7 +9,7 @@ import React, {
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Briefcase,
+  BriefcaseBusiness,
   GraduationCap,
   Clock,
   Settings,
@@ -38,6 +38,7 @@ import {
   Building,
   TrendingUp,
   Trash2,
+  ListTodo,
 } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import { useAuth } from "../../../context/AuthContext";
@@ -111,17 +112,23 @@ function normalizeProfileResponse(response, previousProfile = {}) {
 }
 
 // ─── Navigation ──────────────────────────────────────────────────────
-const studentNavItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
+const studentNavGroups = [
   {
-    label: "My Internship",
-    icon: GraduationCap,
-    path: "/student/my-internship",
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
   },
-  { label: "Attendance", icon: Clock, path: "/attendance" },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
-
 const studentFooterItems = [
   { label: "Settings", icon: Settings, path: "/settings" },
 ];
@@ -2046,15 +2053,15 @@ const StudentProfile = () => {
         <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
         <Sidebar
-          navItems={studentNavItems}
-          footerItems={studentFooterItems}
-          user={studentUser}
-          profilePath="/student/profile"
-          onSignOut={handleSignOut}
-          chatPath="/student/chats"
-          brandPath="/student/dashboard"
-          storageKey="sidebar-student"
-        />
+        navGroups={studentNavGroups}
+        footerItems={studentFooterItems}
+        user={studentUser}
+        profilePath="/student/profile"
+        onSignOut={handleSignOut}
+        chatPath="/student/chats"
+        brandPath="/student/dashboard"
+        storageKey="sidebar-student"
+      />
 
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
@@ -2114,11 +2121,14 @@ const StudentProfile = () => {
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
       <Sidebar
-        navItems={studentNavItems}
+        navGroups={studentNavGroups}
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"
         onSignOut={handleSignOut}
+        chatPath="/student/chats"
+        brandPath="/student/dashboard"
+        storageKey="sidebar-student"
       />
 
       <main className="flex-1 overflow-y-auto relative z-10">

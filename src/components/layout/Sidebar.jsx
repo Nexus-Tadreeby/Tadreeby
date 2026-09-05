@@ -130,8 +130,12 @@ function Sidebar({
         ].join(" ")}
       >
         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#EAF2FF]">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+          {user.avatar || user.profileImage ? (
+            <img
+              src={user.avatar || user.profileImage}
+              alt={user.name}
+              className="h-full w-full object-cover"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-[#1677FF]">
               {user.name?.charAt(0)?.toUpperCase() || "U"}

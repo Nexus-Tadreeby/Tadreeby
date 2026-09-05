@@ -323,10 +323,35 @@ const ActiveSessionBanner = ({
   isLoading,
   onBrowseOpportunities,
 }) => {
-  const hasInternship = internships && internships.length > 0;
-  const activeInternship = hasInternship
-    ? internships.find((i) => i.status === "ACTIVE") || internships[0]
-    : null;
+    const hasInternship = internships && internships.length > 0;
+    const activeInternship = hasInternship
+        ? internships.find((i) => i.status === "ACTIVE") || internships[0]
+        : null;
+
+    if (!isLoading && !hasInternship) {
+        return (
+            <div className="relative overflow-hidden rounded-[22px] p-5 sm:p-6 border border-dashed border-[#E9EDF4] bg-white/60">
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3FF]">
+                        <Info size={22} color={COLORS.primary} />
+                    </div>
+                    <div>
+                        <p className="text-[13px] font-semibold text-[#172033]">No Internship Found</p>
+                        <p className="text-[11px] text-[#7B8497]">
+                            You must enroll in an internship first to track attendance.
+                        </p>
+                        <Button
+                            variant="blue"
+                            onClick={onBrowseOpportunities}
+                            className="mt-2 my-4 mx-15 px-4 py-2 text-[11px]"
+                        >
+                            Browse Opportunities
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
   if (!isLoading && !hasInternship) {
     return (

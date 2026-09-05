@@ -110,211 +110,163 @@ const parseDurationToHours = (durationStr) => {
 
 // ─── Mapping function ────────────────────────────────────────────────
 const mapBackendToUI = (data, user) => {
-  const {
-    opportunity,
-    company,
-    trainer,
-    supervisor,
-    status,
-    tasks = [],
-    attendance = [],
-    evaluations = [],
-    stats = {},
-    createdAt,
-  } = data;
+    const {
+        opportunity,
+        company,
+        trainer,
+        supervisor,
+        status,
+        tasks = [],
+        attendance = [],
+        evaluations = [],
+        stats = {},
+        createdAt,
+    } = data;
 
-  const present = attendance.filter(
-    (a) => a.status === "CHECKED_OUT" || a.status === "MARKED_PRESENT",
-  ).length;
-  const absent = attendance.filter((a) => a.status === "MARKED_ABSENT").length;
-  const late = attendance.filter((a) => a.status === "CHECKED_IN").length;
-  const attendancePercentage =
-    stats.attendanceRate ||
-    (attendance.length > 0
-      ? Math.round((present / attendance.length) * 100)
-      : 0);
+    const present = attendance.filter((a) => a.status === "CHECKED_OUT" || a.status === "MARKED_PRESENT").length;
+    const absent = attendance.filter((a) => a.status === "MARKED_ABSENT").length;
+    const late = attendance.filter((a) => a.status === "CHECKED_IN").length;
+    const attendancePercentage =
+        stats.attendanceRate || (attendance.length > 0 ? Math.round((present / attendance.length) * 100) : 0);
 
-  const totalHours = stats.totalHours || 200;
-  const completedHours =
-    stats.completedHours ||
-    attendance.reduce(
-      (sum, a) => sum + parseDurationToHours(a.duration || "0h 0m"),
-      0,
-    );
-  const progress =
-    stats.progress ||
-    (totalHours > 0 ? Math.round((completedHours / totalHours) * 100) : 0);
+    const totalHours = stats.totalHours || 200;
+    const completedHours =
+        stats.completedHours || attendance.reduce((sum, a) => sum + parseDurationToHours(a.duration || "0h 0m"), 0);
+    const progress = stats.progress || (totalHours > 0 ? Math.round((completedHours / totalHours) * 100) : 0);
 
-  // Next task
-  const upcomingTasks = tasks
-    .filter((t) => t.status !== "DONE")
-    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-  const nextTask = upcomingTasks[0]
-    ? {
-        title: upcomingTasks[0].title,
-        due: upcomingTasks[0].deadline
-          ? new Date(upcomingTasks[0].deadline).toLocaleDateString()
-          : "No deadline",
-        progress: upcomingTasks[0].status === "IN_PROGRESS" ? 70 : 0,
-        status:
-          upcomingTasks[0].status === "IN_PROGRESS"
-            ? "In Progress"
-            : "Not Started",
-      }
-    : null;
+    // Next task
+    const upcomingTasks = tasks
+        .filter((t) => t.status !== "DONE")
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    // const nextTask = upcomingTasks[0]
+    //     ? {
+    //         title: nextTask.title,
+    //         due: nextTask.deadline ? new Date(nextTask.deadline).toLocaleDateString() : "No deadline",
+    //         progress: nextTask.status === "IN_PROGRESS" ? 70 : 0,
+    //         status: nextTask.status === "IN_PROGRESS" ? "In Progress" : "Not Started",
+    //     }
+    //     : null;
 
-  const taskList = tasks.map((t) => ({
-    title: t.title,
-    category: t.description ? t.description.substring(0, 30) : "Task",
-    due: t.deadline ? new Date(t.deadline).toLocaleDateString() : "No deadline",
-    status:
-      t.status === "DONE"
-        ? "Completed"
-        : t.status === "IN_PROGRESS"
-          ? "In Progress"
-          : "Not Started",
-    progress: t.status === "DONE" ? 100 : t.status === "IN_PROGRESS" ? 70 : 0,
-  }));
-
-  const completedTasks = taskList.filter(
-    (t) => t.status === "Completed",
-  ).length;
-  const inProgressTasks = taskList.filter(
-    (t) => t.status === "In Progress",
-  ).length;
-
-  // Milestones
-  const milestones = [
-    {
-      title: "Training Started",
-      date: createdAt ? new Date(createdAt).toLocaleDateString() : "Start",
-      completed: true,
-    },
-    {
-      title: "First Evaluation",
-      date:
-        evaluations.length > 0
-          ? new Date(evaluations[0].createdAt).toLocaleDateString()
-          : "Pending",
-      completed: evaluations.length > 0,
-    },
-    { title: "Mid Training Review", date: "Coming soon", completed: false },
-    { title: "Final Evaluation", date: "Coming soon", completed: false },
-    { title: "Training Completed", date: "Coming soon", completed: false },
-  ];
-
-  // Activities
-  const activities = [
-    ...tasks.slice(0, 2).map((t) => ({
-      icon: t.status === "DONE" ? CheckCircle2 : FileText,
-      title: t.status === "DONE" ? "You completed" : "You worked on",
-      description: t.title,
-      time: t.updatedAt ? new Date(t.updatedAt).toLocaleString() : "Recently",
-    })),
-    ...evaluations.slice(0, 1).map((e) => ({
-      icon: Award,
-      title: "New evaluation",
-      description: `Score: ${e.score || "N/A"} - ${e.feedback || "No feedback"}`,
-      time: new Date(e.createdAt).toLocaleString(),
-    })),
-  ];
-
-  // Performance – default to 0 if no evaluations
-  const hasEvaluations = evaluations && evaluations.length > 0;
-  const avgScore = hasEvaluations
-    ? Math.round(
-        evaluations.reduce((sum, e) => sum + (e.score || 0), 0) /
-          evaluations.length,
-      )
-    : 0;
-  const performanceLabel =
-    avgScore >= 85
-      ? "Very Good"
-      : avgScore >= 70
-        ? "Good"
-        : avgScore >= 50
-          ? "Average"
-          : "Needs Improvement";
-
-  // ✅ Ensure skills is always defined
-  const skills = {
-    technical: hasEvaluations ? 89 : 0,
-    communication: hasEvaluations ? 84 : 0,
-    teamwork: hasEvaluations ? 86 : 0,
-  };
-
-  return {
-    title: opportunity?.title || "Training Internship",
-    company: company?.name || "Company",
-    field: opportunity?.title || "Field Training",
-    status: status === "ACTIVE" ? "Active" : status || "In Progress",
-    startDate: createdAt
-      ? new Date(createdAt).toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "Started",
-    endDate: opportunity?.duration
-      ? new Date(
-          new Date(createdAt).setDate(new Date(createdAt).getDate() + 90),
-        ).toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "Ongoing",
-    location: opportunity?.location || "Remote",
-    mode:
-      opportunity?.type === "REMOTE"
-        ? "Remote"
-        : opportunity?.type === "HYBRID"
-          ? "Hybrid"
-          : "On-site",
-    totalHours,
-    completedHours,
-    progress,
-    trainer: trainer
-      ? {
-          name: `${trainer.firstName} ${trainer.lastName}`,
-          role: "Company Trainer",
-          initials: getInitials(`${trainer.firstName} ${trainer.lastName}`),
+    const nextTask = upcomingTasks[0]
+        ? {
+            title: upcomingTasks[0].title,
+            due: upcomingTasks[0].deadline ? new Date(upcomingTasks[0].deadline).toLocaleDateString() : "No deadline",
+            progress: upcomingTasks[0].status === "IN_PROGRESS" ? 70 : 0,
+            status: upcomingTasks[0].status === "IN_PROGRESS" ? "In Progress" : "Not Started",
         }
-      : { name: "Not Assigned", role: "Trainer", initials: "NA" },
-    universitySupervisor: supervisor
-      ? {
-          name: `${supervisor.firstName} ${supervisor.lastName}`,
-          role: "University Supervisor",
-          initials: getInitials(
-            `${supervisor.firstName} ${supervisor.lastName}`,
-          ),
-        }
-      : { name: "Not Assigned", role: "Supervisor", initials: "NA" },
-    nextTask: nextTask || {
-      title: "No upcoming tasks",
-      due: "—",
-      progress: 0,
-      status: "None",
-    },
-    attendance: {
-      present,
-      absent,
-      late,
-      percentage: attendancePercentage,
-    },
-    performance: {
-      score: avgScore,
-      label: performanceLabel,
-      hasEvaluations,
-    },
-    skills,
-    tasks: taskList,
-    activities: activities.slice(0, 3),
-    milestones,
-    totalTasks: tasks.length,
-    completedTasks,
-    inProgressTasks,
-  };
+        : null;
+
+    const taskList = tasks.map((t) => ({
+        title: t.title,
+        category: t.description ? t.description.substring(0, 30) : "Task",
+        due: t.deadline ? new Date(t.deadline).toLocaleDateString() : "No deadline",
+        status: t.status === "DONE" ? "Completed" : t.status === "IN_PROGRESS" ? "In Progress" : "Not Started",
+        progress: t.status === "DONE" ? 100 : t.status === "IN_PROGRESS" ? 70 : 0,
+    }));
+
+    const completedTasks = taskList.filter((t) => t.status === "Completed").length;
+    const inProgressTasks = taskList.filter((t) => t.status === "In Progress").length;
+
+    // Milestones
+    const milestones = [
+        { title: "Training Started", date: createdAt ? new Date(createdAt).toLocaleDateString() : "Start", completed: true },
+        {
+            title: "First Evaluation",
+            date: evaluations.length > 0 ? new Date(evaluations[0].createdAt).toLocaleDateString() : "Pending",
+            completed: evaluations.length > 0,
+        },
+        { title: "Mid Training Review", date: "Coming soon", completed: false },
+        { title: "Final Evaluation", date: "Coming soon", completed: false },
+        { title: "Training Completed", date: "Coming soon", completed: false },
+    ];
+
+    // Activities
+    const activities = [
+        ...tasks.slice(0, 2).map((t) => ({
+            icon: t.status === "DONE" ? CheckCircle2 : FileText,
+            title: t.status === "DONE" ? "You completed" : "You worked on",
+            description: t.title,
+            time: t.updatedAt ? new Date(t.updatedAt).toLocaleString() : "Recently",
+        })),
+        ...evaluations.slice(0, 1).map((e) => ({
+            icon: Award,
+            title: "New evaluation",
+            description: `Score: ${e.score || "N/A"} - ${e.feedback || "No feedback"}`,
+            time: new Date(e.createdAt).toLocaleString(),
+        })),
+    ];
+
+    // Performance – default to 0 if no evaluations
+    const hasEvaluations = evaluations && evaluations.length > 0;
+    const avgScore = hasEvaluations
+        ? Math.round(evaluations.reduce((sum, e) => sum + (e.score || 0), 0) / evaluations.length)
+        : 0;
+    const performanceLabel =
+        avgScore >= 85 ? "Very Good"
+            : avgScore >= 70 ? "Good"
+                : avgScore >= 50 ? "Average"
+                    : "Needs Improvement";
+
+    const skills = {
+        technical: hasEvaluations ? 89 : 0,
+        communication: hasEvaluations ? 84 : 0,
+        teamwork: hasEvaluations ? 86 : 0,
+    };
+
+    return {
+        title: opportunity?.title || "Training Internship",
+        company: company?.name || "Company",
+        field: opportunity?.title || "Field Training",
+        status: status === "ACTIVE" ? "Active" : status || "In Progress",
+        startDate: createdAt
+            ? new Date(createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+            : "Started",
+        endDate: opportunity?.duration
+            ? new Date(new Date(createdAt).setDate(new Date(createdAt).getDate() + 90)).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            })
+            : "Ongoing",
+        location: opportunity?.location || "Remote",
+        mode: opportunity?.type === "REMOTE" ? "Remote" : opportunity?.type === "HYBRID" ? "Hybrid" : "On-site",
+        totalHours,
+        completedHours,
+        progress,
+        trainer: trainer
+            ? {
+                name: `${trainer.firstName} ${trainer.lastName}`,
+                role: "Company Trainer",
+                initials: getInitials(`${trainer.firstName} ${trainer.lastName}`),
+            }
+            : { name: "Not Assigned", role: "Trainer", initials: "NA" },
+        universitySupervisor: supervisor
+            ? {
+                name: `${supervisor.firstName} ${supervisor.lastName}`,
+                role: "University Supervisor",
+                initials: getInitials(`${supervisor.firstName} ${supervisor.lastName}`),
+            }
+            : { name: "Not Assigned", role: "Supervisor", initials: "NA" },
+        nextTask: nextTask || { title: "No upcoming tasks", due: "—", progress: 0, status: "None" },
+        attendance: {
+            present,
+            absent,
+            late,
+            percentage: attendancePercentage,
+        },
+        performance: {
+            score: avgScore,
+            label: performanceLabel,
+            hasEvaluations,
+        },
+        skills,
+        tasks: taskList,
+        activities: activities.slice(0, 3),
+        milestones,
+        totalTasks: tasks.length,
+        completedTasks,
+        inProgressTasks,
+    };
 };
 
 // ─── Skeleton Components ──────────────────────────────────────────────

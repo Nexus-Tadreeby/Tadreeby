@@ -124,7 +124,39 @@ const STATUS_CONFIG = {
 
 // ─── Demo Data (fallback) ───────────────────────────────────────────
 const DEMO_TASKS = [
-  // ... (same as before)
+    {
+        id: 1,
+        title: "Implement API integration",
+        description: "Integrate REST API endpoints for the dashboard.",
+        status: "TODO",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [],
+    },
+    {
+        id: 2,
+        title: "Create React components for dashboard",
+        description: "Build reusable components for the student dashboard.",
+        status: "IN_PROGRESS",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [],
+    },
+    {
+        id: 3,
+        title: "Set up development environment",
+        description: "Install and configure tools and dependencies.",
+        status: "DONE",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [
+            {
+                submittedAt: "2026-09-01T10:00:00Z",
+                score: 85,
+                feedback: "Well done!",
+            },
+        ],
+    },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────
@@ -177,33 +209,63 @@ const EmptyState = ({ status, search }) => {
   );
 };
 
-const TaskCard = ({ task, onOpen }) => {
-  const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.TODO;
-  const deadline = getDeadlineState(task);
-  const submission = task.submissions?.[0];
-  const company = task?.internship?.company?.name || "Training Company";
-  const hasSubmission = !!submission;
-  const isOverdue = deadline.type === "danger";
+// ========== TaskCard ==========
+const TaskCard = ({ task, onOpen, onDragStart }) => {
+    const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.TODO;
+    const deadline = getDeadlineState(task);
+    const submission = task.submissions?.[0];
+    const company = task?.internship?.company?.name || "Training Company";
+    const hasSubmission = !!submission;
+    const isOverdue = deadline.type === "danger";
 
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(task)}
-      className="group flex w-full flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 shrink-0">
-            <TaskStatusIcon status={task.status} size={18} />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-[13px] font-semibold text-[#172033] transition group-hover:text-[#0475FB]">
-                {task.title}
-              </h3>
-              {isOverdue && (
-                <span className="inline-flex items-center rounded-full bg-[#FEF0F0] px-2 py-0.5 text-[9px] font-bold text-[#EF4444]">
-                  Overdue
+    return (
+        <div
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", String(task.id));
+                e.dataTransfer.effectAllowed = "move";
+                if (onDragStart) onDragStart(task.id);
+            }}
+            onClick={() => onOpen(task)}
+            className="group flex w-full cursor-grab flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
+        >
+            <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-3">
+                    <div className="mt-0.5 shrink-0">
+                        <TaskStatusIcon status={task.status} size={18} />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h3 className="truncate text-[13px] font-semibold text-[#172033] transition group-hover:text-[#0475FB]">
+                                {task.title}
+                            </h3>
+                            {isOverdue && (
+                                <span className="inline-flex items-center rounded-full bg-[#FEF0F0] px-2 py-0.5 text-[9px] font-bold text-[#EF4444]">
+                                    Overdue
+                                </span>
+                            )}
+                        </div>
+                        <p className="mt-1 line-clamp-1 text-[10px] text-[#7B8497]">
+                            {task.description || "No description provided."}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] text-[#7B8497]">
+                                <Building2 size={12} /> {company}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[10px] text-[#7B8497]">
+                                <FileText size={12} /> Field Training
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-4 sm:gap-3">
+                <span
+                    className="inline-flex w-fit items-center rounded-full px-3 py-1 text-[10px] font-semibold sm:w-[86px] sm:justify-center"
+                    style={{ color: config.color, backgroundColor: config.bg }}
+                >
+                    {config.label}
                 </span>
               )}
             </div>
@@ -222,44 +284,27 @@ const TaskCard = ({ task, onOpen }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-3">
-        <span
-          className="inline-flex w-fit items-center rounded-full px-3 py-1 text-[10px] font-semibold sm:w-[86px] sm:justify-center"
-          style={{ color: config.color, backgroundColor: config.bg }}
-        >
-          {config.label}
-        </span>
-
-        <div className="flex min-w-[120px] items-center gap-2">
-          <CalendarDays
-            size={14}
-            color={
-              deadline.type === "danger"
-                ? COLORS.red
-                : deadline.type === "warning"
-                  ? COLORS.accent
-                  : COLORS.muted
-            }
-          />
-          <div>
-            <p className="text-[10px] font-medium text-[#172033]">
-              {formatDeadline(task.deadline)}
-            </p>
-            <p
-              className={`mt-0.5 text-[9px] ${
-                deadline.type === "danger"
-                  ? "text-[#EF4444]"
-                  : deadline.type === "warning"
-                    ? "text-[#FFAD4E]"
-                    : deadline.type === "done"
-                      ? "text-[#22C55E]"
-                      : "text-[#7B8497]"
-              }`}
-            >
-              {deadline.label}
-            </p>
-          </div>
-        </div>
+                <div className="flex min-w-[120px] items-center gap-2">
+                    <CalendarDays
+                        size={14}
+                        color={deadline.type === "danger" ? COLORS.red : deadline.type === "warning" ? COLORS.accent : COLORS.muted}
+                    />
+                    <div>
+                        <p className="text-[10px] font-medium text-[#172033]">{formatDeadline(task.deadline)}</p>
+                        <p
+                            className={`mt-0.5 text-[9px] ${deadline.type === "danger"
+                                ? "text-[#EF4444]"
+                                : deadline.type === "warning"
+                                    ? "text-[#FFAD4E]"
+                                    : deadline.type === "done"
+                                        ? "text-[#22C55E]"
+                                        : "text-[#7B8497]"
+                                }`}
+                        >
+                            {deadline.label}
+                        </p>
+                    </div>
+                </div>
 
         <div className="flex min-w-[110px] items-center gap-2">
           {hasSubmission ? (
@@ -289,103 +334,110 @@ const TaskCard = ({ task, onOpen }) => {
           )}
         </div>
 
-        <ChevronRight
-          size={16}
-          color="#B4BCC9"
-          className="hidden transition group-hover:translate-x-0.5 sm:block"
-        />
-      </div>
-    </button>
-  );
+                <ChevronRight
+                    size={16}
+                    color="#B4BCC9"
+                    className="hidden transition group-hover:translate-x-0.5 sm:block"
+                />
+            </div>
+        </div>
+    );
 };
 
-const TaskGroup = ({ status, tasks, onOpen }) => {
-  const config = STATUS_CONFIG[status];
-  return (
-    <section className="overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-[#E9EDF4] bg-[#FAFBFC] px-4 py-3">
-        <div className="flex items-center gap-2">
-          <TaskStatusIcon status={status} size={15} />
-          <h2 className="text-[12px] font-bold text-[#172033]">
-            {config.label}
-          </h2>
-          <span className="rounded-full bg-[#EEF1F5] px-2 py-0.5 text-[9px] font-medium text-[#7B8497]">
-            {tasks.length}
-          </span>
-        </div>
-      </div>
-      {tasks.length ? (
-        tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onOpen={onOpen} />
-        ))
-      ) : (
-        <div className="p-6 text-center text-[11px] text-[#7B8497]">
-          No tasks in this status
-        </div>
-      )}
-    </section>
-  );
+// ========== TaskGroup ==========
+const TaskGroup = ({ status, tasks, onOpen, onDrop, onDragStart, isDraggingOver }) => {
+    const config = STATUS_CONFIG[status];
+
+    const handleDragOver = (e) => {
+        e.preventDefault(); 
+        e.dataTransfer.dropEffect = "move";
+    };
+
+    return (
+        <section
+            className={`overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm transition-colors ${isDraggingOver ? "border-[#0475FB] bg-[#F0F7FF]" : ""}`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => {
+                e.preventDefault();
+                const taskId = e.dataTransfer.getData("text/plain");
+                if (taskId) {
+                    const id = Number(taskId);
+                    if (!isNaN(id)) {
+                        onDrop(id, status);
+                    }
+                }
+            }}
+        >
+            <div className="flex items-center justify-between border-b border-[#E9EDF4] bg-[#FAFBFC] px-4 py-3">
+                <div className="flex items-center gap-2">
+                    <TaskStatusIcon status={status} size={15} />
+                    <h2 className="text-[12px] font-bold text-[#172033]">{config.label}</h2>
+                    <span className="rounded-full bg-[#EEF1F5] px-2 py-0.5 text-[9px] font-medium text-[#7B8497]">
+                        {tasks.length}
+                    </span>
+                </div>
+            </div>
+            {tasks.length ? (
+                tasks.map((task) => (
+                    <TaskCard key={task.id} task={task} onOpen={onOpen} onDragStart={onDragStart} />
+                ))
+            ) : (
+                <div className="p-6 text-center text-[11px] text-[#7B8497]">No tasks in this status</div>
+            )}
+        </section>
+    );
 };
 
+// ========== TaskDetailsDrawer  ==========
 const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef(null);
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
+    const fileInputRef = useRef(null);
 
-  if (!task) return null;
+    if (!task) return null;
 
-  const submission = task.submissions?.[0];
-  const deadline = getDeadlineState(task);
-  const company = task?.internship?.company?.name || "Training Company";
-  const isSubmitted = !!submission;
+    const submission = task.submissions?.[0];
+    const deadline = getDeadlineState(task);
+    const company = task?.internship?.company?.name || "Training Company";
+    const isSubmitted = !!submission;
 
-  const handleSubmit = async () => {
-    if (!file) {
-      setError("Please select a file first.");
-      return;
-    }
+    const handleSubmit = async () => {
+        if (!file) {
+            setError("Please select a file first.");
+            return;
+        }
 
-    setError("");
-    setSuccess(false);
-    setUploading(true);
+        setError("");
+        setSuccess(false);
+        setUploading(true);
 
-    try {
-      const result = await tasksAPI.submitTask(task.id, file);
-      onSubmitted(task.id, result);
-      setFile(null);
-      setSuccess(true);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      // auto-close after success? we can keep it open.
-    } catch (err) {
-      setError(err?.message || "Unable to submit the task. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
+        try {
+            const result = await tasksAPI.submitTask(task.id, file);
+            onSubmitted(task.id, result, "DONE"); 
+            setFile(null);
+            setSuccess(true);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        } catch (err) {
+            setError(err?.message || "Unable to submit the task. Please try again.");
+        } finally {
+            setUploading(false);
+        }
+    };
 
-  return (
-    <>
-      <div
-        className="fixed inset-0 z-40 bg-[#172033]/20 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="task-details-title"
-        className="fixed right-0 top-0 z-50 h-full w-full max-w-[520px] overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out"
-      >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E9EDF4] bg-white/95 px-6 py-4 backdrop-blur-md">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">
-              Task details
-            </p>
-            <h2
-              id="task-details-title"
-              className="mt-1 text-[16px] font-extrabold text-[#172033]"
+    return (
+        <>
+            <div
+                className="fixed inset-0 z-40 bg-[#172033]/20 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+                aria-hidden="true"
+            />
+            <aside
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="task-details-title"
+                className="fixed right-0 top-0 z-50 h-full w-full max-w-[520px] overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out"
             >
               {task.title}
             </h2>
@@ -598,164 +650,299 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
 // ─── Main Component ──────────────────────────────────────────────────
 
 export default function StudentTasks() {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
+    const navigate = useNavigate();
+    const { logout, user } = useAuth();
 
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("ALL");
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [search, setSearch] = useState("");
+    const [filter, setFilter] = useState("ALL");
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
-  const fullName =
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
-  const studentUser = {
-    name: fullName,
-    role: "Student",
-    avatar: user?.profileImage || "",
-  };
+    const [draggedOverStatus, setDraggedOverStatus] = useState(null);
 
-  const handleSignOut = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
+    const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+    const studentUser = {
+        name: fullName,
+        role: "Student",
+        avatar: user?.profileImage || "",
+    };
 
-  // ── Load tasks ──
-  const loadTasks = async (showRefreshing = false) => {
-    try {
-      if (showRefreshing) setRefreshing(true);
-      else setLoading(true);
-      setError("");
+    const handleSignOut = () => {
+        logout();
+        navigate("/login", { replace: true });
+    };
 
-      const taskList = await tasksAPI.getTasks();
-      setTasks(Array.isArray(taskList) ? taskList : []);
-    } catch (err) {
-      console.warn("Using demo tasks (API not available)");
-      setTasks(DEMO_TASKS);
-      setError(
-        "Demo data is being displayed because the Tasks API could not be reached.",
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+    // ── Load tasks ──
+    const loadTasks = async (showRefreshing = false) => {
+        try {
+            if (showRefreshing) setRefreshing(true);
+            else setLoading(true);
+            setError("");
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
+            const taskList = await tasksAPI.getTasks();
+            setTasks(Array.isArray(taskList) ? taskList : []);
+        } catch (err) {
+            console.warn("Using demo tasks (API not available)");
+            setTasks(DEMO_TASKS);
+            setError("Demo data is being displayed because the Tasks API could not be reached.");
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
-  // ── Filters ──
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const matchesSearch = `${task.title} ${task.description || ""}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesFilter = filter === "ALL" || task.status === filter;
-      return matchesSearch && matchesFilter;
-    });
-  }, [tasks, search, filter]);
+    useEffect(() => {
+        loadTasks();
+    }, []);
 
-  const todoTasks = filteredTasks.filter((t) => t.status === "TODO");
-  const progressTasks = filteredTasks.filter((t) => t.status === "IN_PROGRESS");
-  const doneTasks = filteredTasks.filter((t) => t.status === "DONE");
+    // ── Drag & Drop handlers ──
+    const handleDragStart = (taskId) => {
+    };
 
-  const totalTasks = tasks.length;
-  const todoCount = tasks.filter((t) => t.status === "TODO").length;
-  const progressCount = tasks.filter((t) => t.status === "IN_PROGRESS").length;
-  const doneCount = tasks.filter((t) => t.status === "DONE").length;
-  const completion = totalTasks
-    ? Math.round((doneCount / totalTasks) * 100)
-    : 0;
+    const handleDrop = async (taskId, newStatus) => {
+        const taskToUpdate = tasks.find((t) => t.id === taskId);
+        if (!taskToUpdate) return;
 
-  // ── Submission update ──
-  const handleSubmitted = (taskId, submission) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId ? { ...task, submissions: [submission] } : task,
-      ),
-    );
-    setSelectedTask((current) =>
-      current ? { ...current, submissions: [submission] } : null,
-    );
-  };
+        if (taskToUpdate.status === newStatus) return;
 
-  // ── Render ──
-  return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
-      {/* Decorative orbs */}
-      <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task.id === taskId ? { ...task, status: newStatus } : task
+            )
+        );
 
-      <Sidebar
-        navGroups={studentNavGroups}
-        footerItems={studentFooterItems}
-        user={studentUser}
-        profilePath="/student/profile"
-        onSignOut={handleSignOut}
-        chatPath="/student/chats"
-        brandPath="/student/dashboard"
-        storageKey="sidebar-student"
-      />
+        try {
+      
+            await tasksAPI.updateTaskStatus(taskId, newStatus);
+        } catch (err) {
+            console.error("Failed to update task status on server:", err);
+            setError("Could not update task status on server. Changes saved locally.");
+        } finally {
+            setDraggedOverStatus(null);
+        }
+    };
 
-      <main className="flex-1 overflow-y-auto relative z-10">
-        <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7">
-          {/* Page Header */}
-          <PageHeader
-            loading={loading}
-            profile={user}
-            fullName={fullName}
-            studentUser={studentUser}
-            searchValue={search}
-            onSearchChange={(e) => setSearch(e.target.value)}
-            chatBadge={3}
-            notificationBadge={4}
-          />
+    // ── Filters ──
+    const filteredTasks = useMemo(() => {
+        return tasks.filter((task) => {
+            const matchesSearch = `${task.title} ${task.description || ""}`.toLowerCase().includes(search.toLowerCase());
+            const matchesFilter = filter === "ALL" || task.status === filter;
+            return matchesSearch && matchesFilter;
+        });
+    }, [tasks, search, filter]);
 
-          {/* Title & Stats */}
-          <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033]">
-                Tasks
-              </h1>
-              <p className="text-[11px] text-[#7B8497]">
-                Stay on top of your internship assignments and deadlines.
-              </p>
-            </div>
-            <Button
-              variant="blue"
-              onClick={() => loadTasks(true)}
-              disabled={refreshing}
-              className="h-8 px-3 text-[11px]"
-            >
-              <RefreshCw
-                size={14}
-                className={refreshing ? "animate-spin" : ""}
-              />
-              Refresh
-            </Button>
-          </div>
+    const todoTasks = filteredTasks.filter((t) => t.status === "TODO");
+    const progressTasks = filteredTasks.filter((t) => t.status === "IN_PROGRESS");
+    const doneTasks = filteredTasks.filter((t) => t.status === "DONE");
 
-          {/* Progress Overview */}
-          <section
-            className="mt-5 rounded-[18px] border bg-white p-5 shadow-sm"
-            style={{ borderColor: COLORS.border }}
-          >
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">
-                  Progress
-                </p>
-                <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[25px] font-extrabold tracking-tight text-[#0475FB]">
-                    {completion}%
-                  </span>
-                  <span className="mb-1 text-[10px] text-[#7B8497]">
-                    tasks completed
-                  </span>
+    const totalTasks = tasks.length;
+    const todoCount = tasks.filter((t) => t.status === "TODO").length;
+    const progressCount = tasks.filter((t) => t.status === "IN_PROGRESS").length;
+    const doneCount = tasks.filter((t) => t.status === "DONE").length;
+    const completion = totalTasks ? Math.round((doneCount / totalTasks) * 100) : 0;
+
+    // ── Submission update ──
+    const handleSubmitted = (taskId, submission, newStatus = "DONE") => {
+        setTasks((current) =>
+            current.map((task) =>
+                task.id === taskId
+                    ? {
+                        ...task,
+                        status: newStatus,
+                        submissions: [submission],
+                    }
+                    : task
+            )
+        );
+        setSelectedTask((current) =>
+            current
+                ? {
+                    ...current,
+                    status: newStatus,
+                    submissions: [submission],
+                }
+                : null
+        );
+    };
+
+    // ── Render ──
+    return (
+        <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+            {/* Decorative orbs */}
+            <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+
+            <Sidebar
+                navItems={studentNavItems}
+                footerItems={studentFooterItems}
+                user={studentUser}
+                profilePath="/student/profile"
+                onSignOut={handleSignOut}
+            />
+
+            <main className="flex-1 overflow-y-auto relative z-10">
+                <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7">
+                    {/* Page Header */}
+                    <PageHeader
+                        loading={loading}
+                        profile={user}
+                        fullName={fullName}
+                        studentUser={studentUser}
+                        searchValue={search}
+                        onSearchChange={(e) => setSearch(e.target.value)}
+                        chatBadge={3}
+                        notificationBadge={4}
+                    />
+
+                    {/* Title & Stats */}
+                    <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033]">Tasks</h1>
+                            <p className="text-[11px] text-[#7B8497]">Stay on top of your internship assignments and deadlines.</p>
+                        </div>
+                        <Button
+                            variant="blue"
+                            onClick={() => loadTasks(true)}
+                            disabled={refreshing}
+                            className="h-8 px-3 text-[11px]"
+                        >
+                            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+                            Refresh
+                        </Button>
+                    </div>
+
+                    {/* Progress Overview */}
+                    <section className="mt-5 rounded-[18px] border bg-white p-5 shadow-sm" style={{ borderColor: COLORS.border }}>
+                        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">Progress</p>
+                                <div className="mt-2 flex items-end gap-2">
+                                    <span className="text-[25px] font-extrabold tracking-tight text-[#0475FB]">{completion}%</span>
+                                    <span className="mb-1 text-[10px] text-[#7B8497]">tasks completed</span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                <StatCard label="To Do" value={todoCount} color="muted" />
+                                <StatCard label="In Progress" value={progressCount} color="primary" />
+                                <StatCard label="Done" value={doneCount} color="green" />
+                            </div>
+                        </div>
+                        <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+                            <div
+                                className="h-full rounded-full bg-[#0475FB] transition-all duration-500"
+                                style={{ width: `${completion}%` }}
+                            />
+                        </div>
+                    </section>
+
+                    {/* Error banner */}
+                    {error && (
+                        <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#F8D5D5] bg-[#FEF7F7] px-4 py-3 text-[10px] text-[#B42318]">
+                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Toolbar */}
+                    <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="relative w-full lg:max-w-[360px]">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B3]" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search tasks..."
+                                aria-label="Search tasks"
+                                className="h-9 w-full rounded-xl border border-[#E9EDF4] bg-white pl-9 pr-4 text-[11px] text-[#172033] outline-none transition placeholder:text-[#A1A9B7] focus:border-[#0475FB] focus:ring-2 focus:ring-[#0475FB]/10"
+                            />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {["ALL", "TODO", "IN_PROGRESS", "DONE"].map((value) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setFilter(value)}
+                                    className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${filter === value
+                                        ? "bg-[#0475FB] text-white shadow-sm"
+                                        : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+                                        }`}
+                                >
+                                    {value === "ALL" ? "All" : value === "TODO" ? "To Do" : value === "IN_PROGRESS" ? "In Progress" : "Done"}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Task Groups */}
+                    <div className="mt-5 space-y-3">
+                        {loading ? (
+                            <div className="space-y-2">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <SkeletonCard key={i} className="p-5">
+                                        <SkeletonText className="h-4 w-1/3" />
+                                        <SkeletonText className="mt-3 h-3 w-2/3" />
+                                        <SkeletonText className="mt-4 h-3 w-1/4" />
+                                    </SkeletonCard>
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                {(filter === "ALL" || filter === "TODO") && (
+                                    <TaskGroup
+                                        status="TODO"
+                                        tasks={todoTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "TODO"}
+                                    />
+                                )}
+                                {(filter === "ALL" || filter === "IN_PROGRESS") && (
+                                    <TaskGroup
+                                        status="IN_PROGRESS"
+                                        tasks={progressTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "IN_PROGRESS"}
+                                    />
+                                )}
+                                {(filter === "ALL" || filter === "DONE") && (
+                                    <TaskGroup
+                                        status="DONE"
+                                        tasks={doneTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "DONE"}
+                                    />
+                                )}
+                                {filteredTasks.length === 0 && <EmptyState status={filter} search={search} />}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-[#E9EDF4] pt-4 text-center sm:flex-row sm:text-left">
+                        <div className="flex items-center gap-4 text-[10px] font-medium text-[#7B8497]">
+                            <span>Help center</span>
+                            <span className="h-1 w-1 rounded-full bg-[#D1D5DB]" />
+                            <button
+                                type="button"
+                                onClick={() => navigate("/settings")}
+                                className="hover:text-[#172033]"
+                            >
+                                Settings
+                            </button>
+                        </div>
+                        <p className="text-[9px] font-medium text-gray-400">
+                            Tadreeby helps you stay on track throughout your field training.
+                        </p>
+                    </div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">

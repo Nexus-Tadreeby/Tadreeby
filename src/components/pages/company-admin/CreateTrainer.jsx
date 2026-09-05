@@ -10,7 +10,7 @@ import {
     ArrowLeft,
 } from "lucide-react";
 
-import CompanySidebar from "../../layout/CompanySidebar";
+import Sidebar from "../../layout/Sidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
@@ -117,13 +117,14 @@ export default function CreateTrainer() {
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
             <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
-            <CompanySidebar
+            <Sidebar
                 navItems={companyNavItems}
                 footerItems={companyFooterItems}
                 user={companyUser}
                 profilePath="/company/admin/profile"
                 onSignOut={handleSignOut}
-                defaultExpanded={true} // ✅ اجعله مفتوحاً مثل Dashboard
+                brandPath="/company/admin/dashboard"
+                storageKey="sidebar-company-admin"
             />
 
             <main className="flex-1 overflow-y-auto relative z-10">

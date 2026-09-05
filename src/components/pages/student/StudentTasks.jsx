@@ -2,102 +2,124 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    LayoutDashboard,
-    Briefcase,
-    GraduationCap,
-    Clock,
-    Settings,
-    Search,
-    CalendarDays,
-    CheckCircle2,
-    ClipboardList,
-    Building2,
-    MessageCircle,
-    X,
-    Upload,
-    RefreshCw,
-    ChevronRight,
-    Circle,
-    PlayCircle,
-    FileText,
-    AlertCircle,
-    Inbox,
-    Filter,
-    ChevronDown,
+  LayoutDashboard,
+  BriefcaseBusiness,
+  GraduationCap,
+  Clock,
+  Settings,
+  Search,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Building2,
+  MessageCircle,
+  X,
+  Upload,
+  RefreshCw,
+  ChevronRight,
+  Circle,
+  PlayCircle,
+  FileText,
+  AlertCircle,
+  Inbox,
+  Filter,
+  ChevronDown,
+  ListTodo,
 } from "lucide-react";
 
 import Sidebar from "../../layout/Sidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
-import {
-    SkeletonText,
-    SkeletonCard,
-} from "../../common/pagesAssets/Skeleton";
+import { SkeletonText, SkeletonCard } from "../../common/pagesAssets/Skeleton";
 
 // ─── Import API ──────────────────────────────────────────────────────
 import { tasksAPI } from "../../../services/api";
 
 // ─── Design Tokens ──────────────────────────────────────────────────
 const COLORS = {
-    primary: "#0475FB",
-    primaryDark: "#035CC9",
-    primarySoft: "#EAF3FF",
-    accent: "#FFAD4E",
-    accentSoft: "#FFF4E5",
-    green: "#22C55E",
-    greenSoft: "#EAF9EF",
-    red: "#EF4444",
-    redSoft: "#FEF0F0",
-    purple: "#8B5CF6",
-    purpleSoft: "#F2EDFF",
-    text: "#172033",
-    muted: "#7B8497",
-    border: "#E9EDF4",
-    background: "#F5F7FB",
+  primary: "#0475FB",
+  primaryDark: "#035CC9",
+  primarySoft: "#EAF3FF",
+  accent: "#FFAD4E",
+  accentSoft: "#FFF4E5",
+  green: "#22C55E",
+  greenSoft: "#EAF9EF",
+  red: "#EF4444",
+  redSoft: "#FEF0F0",
+  purple: "#8B5CF6",
+  purpleSoft: "#F2EDFF",
+  text: "#172033",
+  muted: "#7B8497",
+  border: "#E9EDF4",
+  background: "#F5F7FB",
 };
 
 // ─── Navigation ──────────────────────────────────────────────────────
-const studentNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-    { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
-    { label: "My Internship", icon: GraduationCap, path: "/student/my-internship" },
-    { label: "Attendance", icon: Clock, path: "/attendance" },
+const studentNavGroups = [
+  {
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
-const studentFooterItems = [{ label: "Settings", icon: Settings, path: "/settings" }];
+const studentFooterItems = [
+  { label: "Settings", icon: Settings, path: "/settings" },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 function formatDeadline(date) {
-    if (!date) return "No deadline";
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    }).format(new Date(date));
+  if (!date) return "No deadline";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(date));
 }
 
 function getDaysUntilDeadline(date) {
-    if (!date) return null;
-    const now = new Date();
-    const deadline = new Date(date);
-    const diff = deadline.getTime() - now.getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (!date) return null;
+  const now = new Date();
+  const deadline = new Date(date);
+  const diff = deadline.getTime() - now.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 function getDeadlineState(task) {
-    const days = getDaysUntilDeadline(task.deadline);
-    if (task.status === "DONE") return { label: "Completed", type: "done" };
-    if (days === null) return { label: "No deadline", type: "normal" };
-    if (days < 0) return { label: "Overdue", type: "danger" };
-    if (days === 0) return { label: "Due today", type: "warning" };
-    if (days <= 2) return { label: `${days} day${days > 1 ? "s" : ""} left`, type: "warning" };
-    return { label: `${days} days left`, type: "normal" };
+  const days = getDaysUntilDeadline(task.deadline);
+  if (task.status === "DONE") return { label: "Completed", type: "done" };
+  if (days === null) return { label: "No deadline", type: "normal" };
+  if (days < 0) return { label: "Overdue", type: "danger" };
+  if (days === 0) return { label: "Due today", type: "warning" };
+  if (days <= 2)
+    return { label: `${days} day${days > 1 ? "s" : ""} left`, type: "warning" };
+  return { label: `${days} days left`, type: "normal" };
 }
 
 const STATUS_CONFIG = {
-    TODO: { label: "To Do", color: COLORS.muted, bg: "#F4F5F7", icon: Circle },
-    IN_PROGRESS: { label: "In Progress", color: COLORS.primary, bg: COLORS.primarySoft, icon: PlayCircle },
-    DONE: { label: "Done", color: COLORS.green, bg: COLORS.greenSoft, icon: CheckCircle2 },
+  TODO: { label: "To Do", color: COLORS.muted, bg: "#F4F5F7", icon: Circle },
+  IN_PROGRESS: {
+    label: "In Progress",
+    color: COLORS.primary,
+    bg: COLORS.primarySoft,
+    icon: PlayCircle,
+  },
+  DONE: {
+    label: "Done",
+    color: COLORS.green,
+    bg: COLORS.greenSoft,
+    icon: CheckCircle2,
+  },
 };
 
 // ─── Demo Data (fallback) ───────────────────────────────────────────
@@ -140,45 +162,51 @@ const DEMO_TASKS = [
 // ─── Sub-components ──────────────────────────────────────────────────
 
 const TaskStatusIcon = ({ status, size = 17 }) => {
-    const config = STATUS_CONFIG[status];
-    if (!config) return <Circle size={size} color={COLORS.muted} strokeWidth={1.8} />;
-    const Icon = config.icon;
-    return <Icon size={size} color={config.color} strokeWidth={2} />;
+  const config = STATUS_CONFIG[status];
+  if (!config)
+    return <Circle size={size} color={COLORS.muted} strokeWidth={1.8} />;
+  const Icon = config.icon;
+  return <Icon size={size} color={config.color} strokeWidth={2} />;
 };
 
 const StatCard = ({ label, value, color }) => {
-    const colors = {
-        muted: { text: COLORS.muted, bg: "#F4F5F7" },
-        primary: { text: COLORS.primary, bg: COLORS.primarySoft },
-        green: { text: COLORS.green, bg: COLORS.greenSoft },
-    };
-    const current = colors[color] || colors.muted;
-    return (
-        <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: current.bg }}>
-            <p className="text-[18px] font-extrabold" style={{ color: current.text }}>{value}</p>
-            <p className="mt-0.5 text-[9px] font-medium text-[#7B8497]">{label}</p>
-        </div>
-    );
+  const colors = {
+    muted: { text: COLORS.muted, bg: "#F4F5F7" },
+    primary: { text: COLORS.primary, bg: COLORS.primarySoft },
+    green: { text: COLORS.green, bg: COLORS.greenSoft },
+  };
+  const current = colors[color] || colors.muted;
+  return (
+    <div
+      className="rounded-xl px-3 py-2.5"
+      style={{ backgroundColor: current.bg }}
+    >
+      <p className="text-[18px] font-extrabold" style={{ color: current.text }}>
+        {value}
+      </p>
+      <p className="mt-0.5 text-[9px] font-medium text-[#7B8497]">{label}</p>
+    </div>
+  );
 };
 
 const EmptyState = ({ status, search }) => {
-    const isFiltered = status && status !== "ALL";
-    const message = isFiltered
-        ? `No ${status?.toLowerCase() || ""} tasks found`
-        : "No tasks assigned yet";
-    const description = isFiltered
-        ? "Try changing your filter or search terms."
-        : "New tasks from your trainer will appear here.";
+  const isFiltered = status && status !== "ALL";
+  const message = isFiltered
+    ? `No ${status?.toLowerCase() || ""} tasks found`
+    : "No tasks assigned yet";
+  const description = isFiltered
+    ? "Try changing your filter or search terms."
+    : "New tasks from your trainer will appear here.";
 
-    return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#DCE3EC] bg-[#FAFBFC] px-6 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
-                <Inbox size={28} className="text-[#7B8497]" />
-            </div>
-            <h3 className="mt-4 text-[15px] font-bold text-[#172033]">{message}</h3>
-            <p className="mt-1 text-[12px] text-[#7B8497]">{description}</p>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#DCE3EC] bg-[#FAFBFC] px-6 py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+        <Inbox size={28} className="text-[#7B8497]" />
+      </div>
+      <h3 className="mt-4 text-[15px] font-bold text-[#172033]">{message}</h3>
+      <p className="mt-1 text-[12px] text-[#7B8497]">{description}</p>
+    </div>
+  );
 };
 
 // ========== TaskCard ==========
@@ -239,6 +267,22 @@ const TaskCard = ({ task, onOpen, onDragStart }) => {
                 >
                     {config.label}
                 </span>
+              )}
+            </div>
+            <p className="mt-1 line-clamp-1 text-[10px] text-[#7B8497]">
+              {task.description || "No description provided."}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#7B8497]">
+                <Building2 size={12} /> {company}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#7B8497]">
+                <FileText size={12} /> Field Training
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
                 <div className="flex min-w-[120px] items-center gap-2">
                     <CalendarDays
@@ -262,29 +306,33 @@ const TaskCard = ({ task, onOpen, onDragStart }) => {
                     </div>
                 </div>
 
-                <div className="flex min-w-[110px] items-center gap-2">
-                    {hasSubmission ? (
-                        <>
-                            <CheckCircle2 size={14} color={COLORS.green} />
-                            <div>
-                                <p className="text-[10px] font-semibold text-[#22C55E]">Submitted</p>
-                                <p className="text-[9px] text-[#7B8497]">
-                                    {submission.score !== null && submission.score !== undefined
-                                        ? `${submission.score}/100`
-                                        : "Awaiting review"}
-                                </p>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <Clock size={14} color={COLORS.muted} />
-                            <div>
-                                <p className="text-[10px] font-medium text-[#172033]">Not submitted</p>
-                                <p className="text-[9px] text-[#7B8497]">Action required</p>
-                            </div>
-                        </>
-                    )}
-                </div>
+        <div className="flex min-w-[110px] items-center gap-2">
+          {hasSubmission ? (
+            <>
+              <CheckCircle2 size={14} color={COLORS.green} />
+              <div>
+                <p className="text-[10px] font-semibold text-[#22C55E]">
+                  Submitted
+                </p>
+                <p className="text-[9px] text-[#7B8497]">
+                  {submission.score !== null && submission.score !== undefined
+                    ? `${submission.score}/100`
+                    : "Awaiting review"}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <Clock size={14} color={COLORS.muted} />
+              <div>
+                <p className="text-[10px] font-medium text-[#172033]">
+                  Not submitted
+                </p>
+                <p className="text-[9px] text-[#7B8497]">Action required</p>
+              </div>
+            </>
+          )}
+        </div>
 
                 <ChevronRight
                     size={16}
@@ -391,190 +439,212 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
                 aria-labelledby="task-details-title"
                 className="fixed right-0 top-0 z-50 h-full w-full max-w-[520px] overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out"
             >
-                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E9EDF4] bg-white/95 px-6 py-4 backdrop-blur-md">
-                    <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">Task details</p>
-                        <h2 id="task-details-title" className="mt-1 text-[16px] font-extrabold text-[#172033]">
-                            {task.title}
-                        </h2>
+              {task.title}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close task details"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-[#7B8497] transition hover:bg-[#F5F7FB] hover:text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#0475FB]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-6 p-6">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">
+                Status
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <TaskStatusIcon status={task.status} size={16} />
+                <span className="text-[11px] font-semibold text-[#172033]">
+                  {STATUS_CONFIG[task.status]?.label}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">
+                Deadline
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <CalendarDays
+                  size={15}
+                  color={
+                    deadline.type === "danger" ? COLORS.red : COLORS.primary
+                  }
+                />
+                <span className="text-[11px] font-semibold text-[#172033]">
+                  {formatDeadline(task.deadline)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <section>
+            <h3 className="text-[12px] font-bold text-[#172033]">
+              Description
+            </h3>
+            <p className="mt-2 text-[12px] leading-relaxed text-[#7B8497]">
+              {task.description || "No description was provided for this task."}
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-[#D9E8FA] bg-[#F7FAFF] p-4">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">
+              Internship
+            </p>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EAF3FF]">
+                <Building2 size={17} color={COLORS.primary} />
+              </div>
+              <div>
+                <p className="text-[12px] font-bold text-[#172033]">
+                  {task?.internship?.title || "Field Training"}
+                </p>
+                <p className="mt-0.5 text-[10px] text-[#7B8497]">{company}</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[12px] font-bold text-[#172033]">
+                Your submission
+              </h3>
+              {isSubmitted && (
+                <span className="rounded-full bg-[#EAF9EF] px-2.5 py-1 text-[9px] font-semibold text-[#22C55E]">
+                  Submitted
+                </span>
+              )}
+            </div>
+            {isSubmitted ? (
+              <div className="mt-3 rounded-xl border border-[#D9EDDF] bg-[#F7FCF8] p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EAF9EF]">
+                    <FileText size={17} color={COLORS.green} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-semibold text-[#172033]">
+                      Submission uploaded
+                    </p>
+                    <p className="mt-1 text-[9px] text-[#7B8497]">
+                      Submitted{" "}
+                      {new Date(submission.submittedAt).toLocaleString()}
+                    </p>
+                    {submission.score !== null &&
+                      submission.score !== undefined && (
+                        <p className="mt-2 text-[11px] font-bold text-[#22C55E]">
+                          Score: {submission.score}/100
+                        </p>
+                      )}
+                    {submission.feedback && (
+                      <div className="mt-3 rounded-lg bg-white p-3">
+                        <p className="text-[9px] font-semibold text-[#7B8497]">
+                          Trainer feedback
+                        </p>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[#172033]">
+                          {submission.feedback}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
+                <label
+                  htmlFor="task-file"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#C9D8EA] bg-white px-5 py-10 text-center transition hover:border-[#0475FB] hover:bg-[#F7FAFF]"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3FF]">
+                    <Upload size={20} color={COLORS.primary} />
+                  </div>
+                  <p className="mt-3 text-[12px] font-semibold text-[#172033]">
+                    Upload your report
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#7B8497]">
+                    PDF, DOC, DOCX or ZIP · max 10 MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    id="task-file"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.zip"
+                    className="sr-only"
+                    onChange={(e) => {
+                      setFile(e.target.files?.[0] || null);
+                      setError("");
+                      setSuccess(false);
+                    }}
+                  />
+                </label>
+
+                {file && (
+                  <div className="mt-3 flex items-center justify-between rounded-lg bg-[#EAF3FF] px-3 py-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <FileText size={14} color={COLORS.primary} />
+                      <span className="truncate text-[10px] font-medium text-[#172033]">
+                        {file.name}
+                      </span>
                     </div>
                     <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label="Close task details"
-                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[#7B8497] transition hover:bg-[#F5F7FB] hover:text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#0475FB]"
+                      type="button"
+                      onClick={() => {
+                        setFile(null);
+                        setError("");
+                        setSuccess(false);
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
+                      }}
+                      className="ml-2 text-[#7B8497] hover:text-[#EF4444]"
+                      aria-label="Remove selected file"
                     >
-                        <X size={18} />
+                      <X size={14} />
                     </button>
-                </div>
+                  </div>
+                )}
 
-                <div className="space-y-6 p-6">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
-                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">Status</p>
-                            <div className="mt-2 flex items-center gap-2">
-                                <TaskStatusIcon status={task.status} size={16} />
-                                <span className="text-[11px] font-semibold text-[#172033]">
-                                    {STATUS_CONFIG[task.status]?.label}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
-                            <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">Deadline</p>
-                            <div className="mt-2 flex items-center gap-2">
-                                <CalendarDays
-                                    size={15}
-                                    color={deadline.type === "danger" ? COLORS.red : COLORS.primary}
-                                />
-                                <span className="text-[11px] font-semibold text-[#172033]">
-                                    {formatDeadline(task.deadline)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                {error && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg bg-[#FEF0F0] px-3 py-2 text-[10px] text-[#EF4444]">
+                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
-                    <section>
-                        <h3 className="text-[12px] font-bold text-[#172033]">Description</h3>
-                        <p className="mt-2 text-[12px] leading-relaxed text-[#7B8497]">
-                            {task.description || "No description was provided for this task."}
-                        </p>
-                    </section>
+                {success && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg bg-[#EAF9EF] px-3 py-2 text-[10px] text-[#22C55E]">
+                    <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
+                    <span>Task submitted successfully!</span>
+                  </div>
+                )}
 
-                    <section className="rounded-xl border border-[#D9E8FA] bg-[#F7FAFF] p-4">
-                        <p className="text-[9px] font-semibold uppercase tracking-wide text-[#7B8497]">Internship</p>
-                        <div className="mt-2 flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EAF3FF]">
-                                <Building2 size={17} color={COLORS.primary} />
-                            </div>
-                            <div>
-                                <p className="text-[12px] font-bold text-[#172033]">
-                                    {task?.internship?.title || "Field Training"}
-                                </p>
-                                <p className="mt-0.5 text-[10px] text-[#7B8497]">{company}</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[12px] font-bold text-[#172033]">Your submission</h3>
-                            {isSubmitted && (
-                                <span className="rounded-full bg-[#EAF9EF] px-2.5 py-1 text-[9px] font-semibold text-[#22C55E]">
-                                    Submitted
-                                </span>
-                            )}
-                        </div>
-                        {isSubmitted ? (
-                            <div className="mt-3 rounded-xl border border-[#D9EDDF] bg-[#F7FCF8] p-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EAF9EF]">
-                                        <FileText size={17} color={COLORS.green} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="truncate text-[11px] font-semibold text-[#172033]">Submission uploaded</p>
-                                        <p className="mt-1 text-[9px] text-[#7B8497]">
-                                            Submitted {new Date(submission.submittedAt).toLocaleString()}
-                                        </p>
-                                        {submission.score !== null && submission.score !== undefined && (
-                                            <p className="mt-2 text-[11px] font-bold text-[#22C55E]">Score: {submission.score}/100</p>
-                                        )}
-                                        {submission.feedback && (
-                                            <div className="mt-3 rounded-lg bg-white p-3">
-                                                <p className="text-[9px] font-semibold text-[#7B8497]">Trainer feedback</p>
-                                                <p className="mt-1 text-[10px] leading-relaxed text-[#172033]">
-                                                    {submission.feedback}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="mt-3 rounded-xl border border-[#E9EDF4] bg-[#FAFBFC] p-4">
-                                <label
-                                    htmlFor="task-file"
-                                    className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#C9D8EA] bg-white px-5 py-10 text-center transition hover:border-[#0475FB] hover:bg-[#F7FAFF]"
-                                >
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3FF]">
-                                        <Upload size={20} color={COLORS.primary} />
-                                    </div>
-                                    <p className="mt-3 text-[12px] font-semibold text-[#172033]">Upload your report</p>
-                                    <p className="mt-1 text-[10px] text-[#7B8497]">
-                                        PDF, DOC, DOCX or ZIP · max 10 MB
-                                    </p>
-                                    <input
-                                        ref={fileInputRef}
-                                        id="task-file"
-                                        type="file"
-                                        accept=".pdf,.doc,.docx,.zip"
-                                        className="sr-only"
-                                        onChange={(e) => {
-                                            setFile(e.target.files?.[0] || null);
-                                            setError("");
-                                            setSuccess(false);
-                                        }}
-                                    />
-                                </label>
-
-                                {file && (
-                                    <div className="mt-3 flex items-center justify-between rounded-lg bg-[#EAF3FF] px-3 py-2">
-                                        <div className="flex min-w-0 items-center gap-2">
-                                            <FileText size={14} color={COLORS.primary} />
-                                            <span className="truncate text-[10px] font-medium text-[#172033]">{file.name}</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setFile(null);
-                                                setError("");
-                                                setSuccess(false);
-                                                if (fileInputRef.current) fileInputRef.current.value = "";
-                                            }}
-                                            className="ml-2 text-[#7B8497] hover:text-[#EF4444]"
-                                            aria-label="Remove selected file"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {error && (
-                                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-[#FEF0F0] px-3 py-2 text-[10px] text-[#EF4444]">
-                                        <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                                        <span>{error}</span>
-                                    </div>
-                                )}
-
-                                {success && (
-                                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-[#EAF9EF] px-3 py-2 text-[10px] text-[#22C55E]">
-                                        <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
-                                        <span>Task submitted successfully!</span>
-                                    </div>
-                                )}
-
-                                <button
-                                    type="button"
-                                    disabled={!file || uploading}
-                                    onClick={handleSubmit}
-                                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0475FB] px-4 py-2.5 text-[11px] font-semibold text-white transition hover:bg-[#035CC9] disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0475FB] focus:ring-offset-2"
-                                >
-                                    {uploading ? (
-                                        <>
-                                            <RefreshCw size={14} className="animate-spin" /> Submitting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={14} /> Submit task
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        )}
-                    </section>
-                </div>
-            </aside>
-        </>
-    );
+                <button
+                  type="button"
+                  disabled={!file || uploading}
+                  onClick={handleSubmit}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0475FB] px-4 py-2.5 text-[11px] font-semibold text-white transition hover:bg-[#035CC9] disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0475FB] focus:ring-offset-2"
+                >
+                  {uploading ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />{" "}
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} /> Submit task
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </section>
+        </div>
+      </aside>
+    </>
+  );
 };
 
 // ─── Main Component ──────────────────────────────────────────────────
@@ -874,14 +944,141 @@ export default function StudentTasks() {
                         </p>
                     </div>
                 </div>
-            </main>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <StatCard label="To Do" value={todoCount} color="muted" />
+                <StatCard
+                  label="In Progress"
+                  value={progressCount}
+                  color="primary"
+                />
+                <StatCard label="Done" value={doneCount} color="green" />
+              </div>
+            </div>
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+              <div
+                className="h-full rounded-full bg-[#0475FB] transition-all duration-500"
+                style={{ width: `${completion}%` }}
+              />
+            </div>
+          </section>
 
-            {/* Task Details Drawer */}
-            <TaskDetailsDrawer
-                task={selectedTask}
-                onClose={() => setSelectedTask(null)}
-                onSubmitted={handleSubmitted}
-            />
+          {/* Error banner */}
+          {error && (
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#F8D5D5] bg-[#FEF7F7] px-4 py-3 text-[10px] text-[#B42318]">
+              <AlertCircle size={14} className="mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Toolbar */}
+          <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full lg:max-w-[360px]">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B3]"
+              />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tasks..."
+                aria-label="Search tasks"
+                className="h-9 w-full rounded-xl border border-[#E9EDF4] bg-white pl-9 pr-4 text-[11px] text-[#172033] outline-none transition placeholder:text-[#A1A9B7] focus:border-[#0475FB] focus:ring-2 focus:ring-[#0475FB]/10"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {["ALL", "TODO", "IN_PROGRESS", "DONE"].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${
+                    filter === value
+                      ? "bg-[#0475FB] text-white shadow-sm"
+                      : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+                  }`}
+                >
+                  {value === "ALL"
+                    ? "All"
+                    : value === "TODO"
+                      ? "To Do"
+                      : value === "IN_PROGRESS"
+                        ? "In Progress"
+                        : "Done"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Task Groups */}
+          <div className="mt-5 space-y-3">
+            {loading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonCard key={i} className="p-5">
+                    <SkeletonText className="h-4 w-1/3" />
+                    <SkeletonText className="mt-3 h-3 w-2/3" />
+                    <SkeletonText className="mt-4 h-3 w-1/4" />
+                  </SkeletonCard>
+                ))}
+              </div>
+            ) : (
+              <>
+                {(filter === "ALL" || filter === "TODO") && (
+                  <TaskGroup
+                    status="TODO"
+                    tasks={todoTasks}
+                    onOpen={setSelectedTask}
+                  />
+                )}
+                {(filter === "ALL" || filter === "IN_PROGRESS") && (
+                  <TaskGroup
+                    status="IN_PROGRESS"
+                    tasks={progressTasks}
+                    onOpen={setSelectedTask}
+                  />
+                )}
+                {(filter === "ALL" || filter === "DONE") && (
+                  <TaskGroup
+                    status="DONE"
+                    tasks={doneTasks}
+                    onOpen={setSelectedTask}
+                  />
+                )}
+                {filteredTasks.length === 0 && (
+                  <EmptyState status={filter} search={search} />
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-[#E9EDF4] pt-4 text-center sm:flex-row sm:text-left">
+            <div className="flex items-center gap-4 text-[10px] font-medium text-[#7B8497]">
+              <span>Help center</span>
+              <span className="h-1 w-1 rounded-full bg-[#D1D5DB]" />
+              <button
+                type="button"
+                onClick={() => navigate("/settings")}
+                className="hover:text-[#172033]"
+              >
+                Settings
+              </button>
+            </div>
+            <p className="text-[9px] font-medium text-gray-400">
+              Tadreeby helps you stay on track throughout your field training.
+            </p>
+          </div>
         </div>
-    );
+      </main>
+
+      {/* Task Details Drawer */}
+      <TaskDetailsDrawer
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onSubmitted={handleSubmitted}
+      />
+    </div>
+  );
 }

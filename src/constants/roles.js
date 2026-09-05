@@ -6,4 +6,5 @@ export const ROLE_HOME_ROUTES = {
   // I only have SUPER_ADMIN confirmed from your sample response
   UNIVERSITY_ADMIN: "/universityAdmin/dashboard",
   COMPANY_ADMIN: "/company/admin/dashboard",
+  COMPANY_TRAINER: "/company/trainer/dashboard",
 };

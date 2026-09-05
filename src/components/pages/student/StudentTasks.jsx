@@ -267,7 +267,7 @@ const TaskCard = ({ task, onOpen, onDragStart }) => {
                 >
                     {config.label}
                 </span>
-              )}
+            
             </div>
             <p className="mt-1 line-clamp-1 text-[10px] text-[#7B8497]">
               {task.description || "No description provided."}

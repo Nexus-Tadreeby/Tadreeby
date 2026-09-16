@@ -273,6 +273,7 @@ const PageHeader = ({
                             type="text"
                             value={searchValue}
                             onChange={onSearchChange}
+                            readOnly={!onSearchChange}
                             placeholder="Search tasks, internship activities..."
                             className="h-11 w-full rounded-full border bg-white pl-11 pr-5 text-[13px] font-medium outline-none transition placeholder:text-gray-400 focus:ring-4"
                             style={{ borderColor: COLORS.border }}

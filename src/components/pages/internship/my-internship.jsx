@@ -742,7 +742,7 @@ export default function MyInternship() {
     return (
       <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
         <Sidebar
-          navItems={studentNavItems}
+          navGroups={studentNavGroups}
           footerItems={studentFooterItems}
           user={studentUser}
           profilePath="/student/profile"
@@ -822,7 +822,7 @@ export default function MyInternship() {
     return (
       <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
         <Sidebar
-          navItems={studentNavItems}
+          navGroups={studentNavGroups}
           footerItems={studentFooterItems}
           user={studentUser}
           profilePath="/student/profile"
@@ -861,7 +861,7 @@ export default function MyInternship() {
     return (
       <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
         <Sidebar
-          navItems={studentNavItems}
+          navGroups={studentNavGroups}
           footerItems={studentFooterItems}
           user={studentUser}
           profilePath="/student/profile"

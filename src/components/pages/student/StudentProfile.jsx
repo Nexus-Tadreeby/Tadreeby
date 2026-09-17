@@ -10,7 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
-  GraduationCap,
+  ShieldCheck,
   Clock,
   Settings,
   Search,
@@ -31,7 +31,6 @@ import {
   AlertCircle,
   Save,
   Eye,
-  ShieldCheck,
   Building2,
   BookOpen,
   Award,
@@ -46,6 +45,7 @@ import { useToast } from "../../../context/ToastContext";
 import { profileAPI } from "../../../services/api";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import AIAssistant from "../../common/pagesAssets/AIAssistant";
+
 
 // ─── Import skeleton components ──────────────────────────────────────
 import {
@@ -66,6 +66,9 @@ import {
 function normalizeProfileResponse(response, previousProfile = {}) {
   const data = response?.data ?? response;
   const user = data?.user ?? {};
+  const currentInternship = data?.currentInternship !== undefined
+    ? data.currentInternship
+    : previousProfile.currentInternship;
 
   let skills = previousProfile.skills || [];
   if (data?.skills) {
@@ -108,6 +111,11 @@ function normalizeProfileResponse(response, previousProfile = {}) {
     recoveryEmail: user?.recoveryEmail ?? previousProfile.recoveryEmail,
     skills: skills,
     university: data?.university ?? previousProfile.university,
+    approvedAt: data?.approvedAt !== undefined ? data.approvedAt : previousProfile.approvedAt,
+    rejectionReason: data?.rejectionReason !== undefined ? data.rejectionReason : previousProfile.rejectionReason,
+    currentInternship,
+    company: currentInternship?.company?.name || "",
+    companyId: currentInternship?.company?.id ?? null,
   };
 }
 
@@ -1458,6 +1466,120 @@ const SkillsCard = ({
 };
 
 // ─── Completion Checklist ───────────────────────────────────────────
+function formatVerificationDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
+function verificationInitials(name) {
+  return name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function ProfileVerificationCard({ profile, onViewInternship }) {
+  const status = profile.verificationStatus?.toLowerCase();
+  const approved = status === "approved";
+  const rejected = status === "rejected";
+  const statusLabel = approved ? "Verified" : rejected ? "Rejected" : "Under review";
+  const statusStyle = approved
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : rejected ? "border-red-200 bg-red-50 text-red-700"
+      : "border-amber-200 bg-amber-50 text-amber-700";
+  const university = typeof profile.university === "string"
+    ? profile.university : profile.university?.name;
+  const approvedAt = formatVerificationDate(profile.approvedAt);
+  const internship = profile.currentInternship;
+  const company = internship?.company;
+  const companyName = company?.name || "Company not provided";
+  const enrolledAt = formatVerificationDate(company?.enrolledAt || internship?.enrolledAt);
+  const trainer = internship?.trainer;
+  const trainerName = [trainer?.firstName, trainer?.lastName].filter(Boolean).join(" ");
+  const type = internship?.type?.replace(/_/g, " ").toLowerCase();
+
+  return (
+    <section aria-label="Verification and enrollment" className="flex w-full min-w-0 flex-col gap-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-8 xl:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-600">Account status</p>
+          <h2 className="mt-0.5 text-sm font-extrabold text-gray-900">Verification</h2>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold ${statusStyle}`}>
+          <span className="h-2 w-2 rounded-full bg-current" />
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${statusStyle}`}>
+            <ShieldCheck size={24} aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1 basis-40">
+            <h3 className="text-xs font-bold text-slate-900">Verified</h3>
+            <p className="text-[10px] leading-4 text-slate-500">
+              {university || "University not provided"}
+              {approved && approvedAt && ` · Verified ${approvedAt}`}
+            </p>
+            {rejected && profile.rejectionReason && (
+              <p className="mt-1 text-[10px] leading-4 text-red-700">{profile.rejectionReason}</p>
+            )}
+          </div>
+          <span className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${statusStyle}`}>
+            {approved ? "Approved" : statusLabel}
+          </span>
+        </div>
+
+        {internship ? (
+          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 basis-40 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-600 text-xs font-bold text-white ring-2 ring-white">
+                  {company?.logo ? <img src={company.logo} alt={`${companyName} logo`} className="h-full w-full object-contain" /> : verificationInitials(companyName)}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="break-words text-xs font-bold text-slate-900">{companyName}</h3>
+                    {company?.shortCode && <span className="rounded-md bg-blue-100/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-blue-700">{company.shortCode}</span>}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-slate-500">{enrolledAt ? `Enrolled ${enrolledAt}` : "Current internship company"}</p>
+                </div>
+              </div>
+              <span className="rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">Enrolled</span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-sm">
+              <div className="min-w-0 flex-1 basis-52">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-[11px] font-bold text-slate-900">{internship.title || "Current internship"}</h4>
+                  {type && <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-semibold capitalize text-purple-700">{type}</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                  <span className="inline-flex min-w-0 items-center gap-1 text-slate-600">
+                    {trainerName && <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-[9px] font-bold text-slate-700">
+                      {trainer?.profileImage ? <img src={trainer.profileImage} alt="" className="h-full w-full object-cover" /> : verificationInitials(trainerName)}
+                    </span>}
+                    <span>Trainer: <strong>{trainerName || "Not assigned"}</strong></span>
+                  </span>
+                  {internship.duration && <span>{internship.duration}</span>}
+                </div>
+              </div>
+              <button type="button" onClick={onViewInternship} className="shrink-0 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-semibold text-blue-600 transition hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">View internship</button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <h3 className="text-xs font-bold text-slate-900">Company enrollment</h3>
+            <p className="mt-1 text-[10px] leading-4 text-slate-500">You are not enrolled yet to any company.</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
 const CompletionChecklist = ({ completion, onItemClick }) => {
   const percentage = completion.percentage || 0;
   const radius = 32;
@@ -2220,63 +2342,10 @@ const StudentProfile = () => {
                 onItemClick={handleChecklistClick}
               />
 
-              <SectionCard className="hidden overflow-hidden xl:block">
-                <div className="border-b border-gray-100 px-5 py-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#1677FF]">
-                    Account status
-                  </p>
-                  <h3 className="mt-0.5 text-sm font-extrabold text-gray-900">
-                    Verification
-                  </h3>
-                </div>
-                <div className="space-y-3 p-5">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                        profile.verificationStatus?.toLowerCase() === "approved"
-                          ? "bg-green-100 text-green-700"
-                          : profile.verificationStatus?.toLowerCase() ===
-                              "rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-[#FFF4E6] text-[#C76A0B]"
-                      }`}
-                    >
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-800">
-                        {profile.verificationStatus?.toLowerCase() ===
-                        "approved"
-                          ? "Verified"
-                          : profile.verificationStatus?.toLowerCase() ===
-                              "rejected"
-                            ? "Rejected"
-                            : "Under Review"}
-                      </p>
-                      <p className="text-[10px] text-gray-500">
-                        {profile.verificationStatus?.toLowerCase() ===
-                        "approved"
-                          ? "Account verified"
-                          : profile.verificationStatus?.toLowerCase() ===
-                              "rejected"
-                            ? "Please contact support"
-                            : "University administration"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF3FF] text-[#1677FF]">
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-800">Company</p>
-                      <p className="text-[10px] text-gray-500">
-                        {profile.company || "You are not enrolled yet"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
+              <ProfileVerificationCard
+                profile={profile}
+                onViewInternship={() => navigate("/student/my-internship")}
+              />
             </aside>
           </div>
         </div>

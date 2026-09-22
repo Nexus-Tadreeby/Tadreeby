@@ -1,5 +1,5 @@
 // Temporary frontend-only demo data.
-// Remove/replace these fallbacks when the trainer backend endpoints are ready.
+// Remove or replace these fallbacks when the trainer backend endpoints are ready.
 
 export const DUMMY_TRAINER_STUDENTS = [
   { id: "dummy-student-1", student: { user: { firstName: "Lina", lastName: "Hassan" }, major: "Software Engineering", email: "lina.hassan@example.com" } },

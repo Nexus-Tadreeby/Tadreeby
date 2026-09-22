@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -390,18 +389,11 @@ function CalendarCard() {
 export default function TrainerDashboard() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState(DUMMY_TRAINER_DASHBOARD);
-  const [applications, setApplications] = useState(DUMMY_TRAINER_APPLICATIONS);
-  const [students, setStudents] = useState(DUMMY_TRAINER_STUDENTS);
-  const [tasks, setTasks] = useState(DUMMY_TRAINER_TASKS);
-  useEffect(() => {
-    setDashboard(DUMMY_TRAINER_DASHBOARD);
-    setApplications(DUMMY_TRAINER_APPLICATIONS);
-    setStudents(DUMMY_TRAINER_STUDENTS);
-    setTasks(DUMMY_TRAINER_TASKS);
-    setLoading(false);
-  }, []);
+  const loading = false;
+  const dashboard = DUMMY_TRAINER_DASHBOARD;
+  const applications = DUMMY_TRAINER_APPLICATIONS;
+  const students = DUMMY_TRAINER_STUDENTS;
+  const tasks = DUMMY_TRAINER_TASKS;
   const fullName =
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Trainer";
   const trainerUser = {

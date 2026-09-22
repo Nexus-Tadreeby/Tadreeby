@@ -43,7 +43,10 @@ export default function TrainerInternshipDetails() {
   const { data, error, loading, retry } = useTrainerInternship();
   if (data) return <InternshipContent key={data.id} internship={data} />;
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F7F9FC]">
+    <div className="relative flex h-dvh w-full overflow-hidden font-['Inter']">
+      <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
       <Sidebar
         {...trainerSidebarProps}
         user={{
@@ -58,7 +61,7 @@ export default function TrainerInternshipDetails() {
           navigate("/login", { replace: true });
         }}
       />
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain">
+      <main className="relative z-10 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-7 sm:px-7 lg:px-8">
           <PageHeader
             loading={loading}
@@ -126,7 +129,10 @@ function InternshipContent({ internship }) {
   const downloadReport = () => downloadTextReport(internship);
 
   return (
-    <div className="trainer-internship flex h-dvh w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] text-[#434655]">
+    <div className="trainer-internship relative flex h-dvh w-full overflow-hidden font-['Inter'] text-[#434655]">
+      <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
       <Sidebar
         {...trainerSidebarProps}
         user={{
@@ -136,7 +142,7 @@ function InternshipContent({ internship }) {
         }}
         onSignOut={signOut}
       />
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain">
+      <main className="relative z-10 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7">
           <PageHeader
             profile={user}

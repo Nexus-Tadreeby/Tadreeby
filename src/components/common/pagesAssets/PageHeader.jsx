@@ -157,7 +157,7 @@
 
 
 // src/components/common/pagesAssets/PageHeader.jsx
-import React, { useState, useRef, useEffect } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Search,
@@ -170,6 +170,7 @@ import {
     LogOut
 } from "lucide-react";
 import { SkeletonRect, SkeletonCircle } from "./Skeleton";
+import { AppShellContext } from "../../../context/AppShellContext";
 
 const COLORS = {
     primary: "#0475FB",
@@ -197,7 +198,7 @@ const getInitials = (name) => {
         .toUpperCase();
 };
 
-const PageHeader = ({
+const PageHeaderContent = ({
     loading = false,
     profile = null,
     fullName = "Student",
@@ -209,6 +210,10 @@ const PageHeader = ({
     chatBadge = 0,
     notificationBadge = 0,
     onLogout,
+    profilePath = "/student/profile",
+    internshipPath,
+    settingsPath = "/settings",
+    chatPath = "/student/chats",
 }) => {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -233,17 +238,17 @@ const PageHeader = ({
         {
             label: "Profile",
             icon: User,
-            onClick: () => navigate("/student/profile")
+            onClick: () => navigate(profilePath)
         },
-        {
+        internshipPath && {
             label: "My Internship",
             icon: GraduationCap,
-            onClick: () => navigate("/student/my-internship")
+            onClick: () => navigate(internshipPath)
         },
         {
             label: "Settings",
             icon: Settings,
-            onClick: () => navigate("/settings")
+            onClick: () => navigate(settingsPath)
         },
         {
             label: "Logout",
@@ -254,7 +259,7 @@ const PageHeader = ({
             }),
             isDanger: true,
         },
-    ];
+    ].filter(Boolean);
 
     return (
         <div className="mb-6 flex w-full items-center justify-between gap-4">
@@ -297,7 +302,8 @@ const PageHeader = ({
                             type="button"
                             className="relative flex h-11 w-11 items-center justify-center rounded-full border bg-white transition hover:-translate-y-0.5 hover:shadow-md"
                             style={{ borderColor: COLORS.border }}
-                            onClick={onChatClick || (() => navigate("/student/chats"))}
+                            onClick={onChatClick || (() => chatPath && navigate(chatPath))}
+                            disabled={!chatPath}
                         >
                             <MessageCircle size={18} color={COLORS.primary} />
                             {chatBadge > 0 && (
@@ -407,6 +413,16 @@ const PageHeader = ({
       `}</style>
         </div>
     );
+};
+
+const PageHeader = (props) => {
+    const hasPersistentShell = useContext(AppShellContext);
+
+    if (hasPersistentShell && !props.persistent) {
+        return <div className="mb-6 h-11 w-full shrink-0" aria-hidden="true" />;
+    }
+
+    return <PageHeaderContent {...props} />;
 };
 
 export default PageHeader;

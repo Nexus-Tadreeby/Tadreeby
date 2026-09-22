@@ -25,6 +25,7 @@ import { useOpportunities } from "../../../hooks/useOpportunities";
 import { Button } from "../../common/Button";
 import InfoBox from "../../common/InfoBox";
 import PageHeader from "../../common/pagesAssets/PageHeader";
+import { useUrlSearch } from "../../../hooks/useUrlSearch";
 
 // ─── Import global skeleton components ─────────────────────────────
 import {
@@ -328,7 +329,7 @@ export default function Opportunities() {
   const [profileError, setProfileError] = useState("");
 
   // ─── Filter state ────────────────────────────────────────────────
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useUrlSearch();
   const [selectedCategory, setSelectedCategory] = useState("All Fields");
   const [selectedType, setSelectedType] = useState("All Types");
   const [categories, setCategories] = useState(["All Fields"]);
@@ -443,7 +444,7 @@ export default function Opportunities() {
 
   // ─── Render ────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+    <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
       {/* Decorative orbs */}
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />

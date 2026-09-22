@@ -8,6 +8,7 @@ import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import LandingPage from "./components/pages/LandingPage";
 
 import { ProtectedRoute } from "./routes/ProtectedRoute";
+import RoleLayout from "./components/layout/RoleLayout";
 //import { UnauthorizedPage } from "./components/auth/UnauthorizedPage";
 
 const SuperAdminDashboard = lazy(() => import("./components/pages/superAdmin/SuperAdminDashboard"));
@@ -57,17 +58,19 @@ function App() {
       <Route path="/terms-privacy" element={<TermsAndPrivacyPage />} />
       <Route path="/terms" element={<TermsAndPrivacyPage />} />
       <Route path="/privacy" element={<TermsAndPrivacyPage />} />
-      <Route path="/student/chats" element={<StudentChats />} />
 
       {/* SUPER_ADMIN routes */}
       <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
+        <Route element={<RoleLayout role="SUPER_ADMIN" />}>
         <Route path="/superAdmin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="/superAdmin/universities" element={<Universities />} />
         <Route path="/superAdmin/companies" element={<Companies />} />
+        </Route>
       </Route>
 
       {/* STUDENT routes */}
       <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
+        <Route element={<RoleLayout role="STUDENT" />}>
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/opportunities" element={<Internships />} />
         <Route
@@ -90,15 +93,19 @@ function App() {
         <Route path="/attendance" element={<Attendance />} />
         <Route path="/student/profile" element={<StudentProfile />} />
         <Route path="/student/tasks" element={<StudentTasks />} />
+        <Route path="/student/chats" element={<StudentChats />} />
         <Route path="/settings" element={<Settings />} />
+        </Route>
       </Route>
 
       {/* UNIVERSITY_ADMIN routes */}
       <Route element={<ProtectedRoute allowedRoles={["UNIVERSITY_ADMIN"]} />}>
+        <Route element={<RoleLayout role="UNIVERSITY_ADMIN" />}>
         <Route
           path="/universityAdmin/dashboard"
           element={<UniversityAdminDashboard />}
         />
+        </Route>
         {/* Add other university admin routes here */}
       </Route>
 
@@ -108,6 +115,7 @@ function App() {
           <ProtectedRoute allowedRoles={["COMPANY_ADMIN"]} />
         }
       >
+        <Route element={<RoleLayout role="COMPANY_ADMIN" />}>
         <Route path="/company/admin/dashboard" element={<CompanyDashboard />} />
         <Route
           path="/company/admin/opportunities/create"
@@ -122,6 +130,7 @@ function App() {
           path="/company/admin/opportunities"
           element={<Opportunities />}
         />
+        </Route>
 
         
         {/* <Route path="/companyAdmin/opportunities/create" element={<CreateOpportunity />} />
@@ -129,11 +138,13 @@ function App() {
         <Route path="/companyAdmin/opportunities/:id" element={<OpportunityDetails />} /> */}
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["COMPANY_TRAINER"]} />}>
+        <Route element={<RoleLayout role="COMPANY_TRAINER" />}>
           <Route path="/company/trainer/internship" element={<TrainerInternshipDetails />} />
           <Route
             path="/company/trainer/dashboard"
             element={<TrainerDashboard />}
           />
+        </Route>
         </Route>
 
       {/* Catch-all 404 Route */}

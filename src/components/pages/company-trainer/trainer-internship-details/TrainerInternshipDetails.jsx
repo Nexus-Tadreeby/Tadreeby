@@ -15,6 +15,14 @@ import {
 } from "lucide-react";
 import Sidebar from "../../../layout/Sidebar";
 import PageHeader from "../../../common/pagesAssets/PageHeader";
+import {
+  SkeletonBadge,
+  SkeletonButton,
+  SkeletonCard,
+  SkeletonCircle,
+  SkeletonRect,
+  SkeletonText,
+} from "../../../common/pagesAssets/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { trainerSidebarProps } from "../trainerNavigation";
 import { useTrainerInternship } from "./useTrainerInternship";
@@ -36,6 +44,99 @@ import {
   uniqueUniversities,
 } from "./trainerInternshipDetails.utils";
 import "./trainerInternshipDetails.css";
+
+function InternshipDetailsSkeleton() {
+  return (
+    <div role="status" aria-label="Loading internship details" className="space-y-6">
+      <span className="sr-only">Loading internship details</span>
+
+      <div className="flex items-center gap-2">
+        <SkeletonText className="h-3 w-20" />
+        <SkeletonText className="h-3 w-3" />
+        <SkeletonText className="h-3 w-28" />
+      </div>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <SkeletonText className="h-8 w-52" />
+            <SkeletonBadge className="h-5 w-16" />
+          </div>
+          <SkeletonText className="mt-2 h-3 w-80 max-w-full" />
+        </div>
+        <SkeletonButton className="h-[34px] w-40" />
+      </div>
+
+      <SkeletonCard className="overflow-hidden border-0">
+        <SkeletonRect className="h-56 rounded-none bg-slate-200/80" />
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex items-center gap-3">
+            <SkeletonCircle className="h-11 w-11" />
+            <div>
+              <SkeletonText className="h-5 w-48" />
+              <SkeletonText className="mt-2 h-3 w-32" />
+            </div>
+          </div>
+          <SkeletonButton className="h-9 w-36 rounded-xl" />
+        </div>
+      </SkeletonCard>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <SkeletonCard key={item} className="p-4">
+            <SkeletonText className="h-3 w-20" />
+            <SkeletonText className="mt-3 h-7 w-14" />
+            <SkeletonText className="mt-2 h-3 w-24" />
+          </SkeletonCard>
+        ))}
+      </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,632fr)_minmax(0,304fr)]">
+        <div className="space-y-6">
+          {[0, 1].map((item) => (
+            <SkeletonCard key={item} className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <SkeletonRect className="h-10 w-10 rounded-xl" />
+                  <div>
+                    <SkeletonText className="h-5 w-52 max-w-full" />
+                    <SkeletonText className="mt-2 h-3 w-64 max-w-full" />
+                  </div>
+                </div>
+                <SkeletonBadge className="h-6 w-24" />
+              </div>
+              <div className="mt-6 space-y-3">
+                <SkeletonText className="h-3 w-full" />
+                <SkeletonText className="h-3 w-11/12" />
+                <SkeletonText className="h-3 w-4/5" />
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {["w-20", "w-24", "w-16", "w-28", "w-20"].map((width, index) => (
+                  <SkeletonBadge key={index} className={`h-7 ${width}`} />
+                ))}
+              </div>
+            </SkeletonCard>
+          ))}
+        </div>
+
+        <div className="space-y-6">
+          {[0, 1, 2].map((item) => (
+            <SkeletonCard key={item} className="p-6">
+              <div className="flex items-center gap-3">
+                <SkeletonCircle className="h-11 w-11" />
+                <div className="flex-1">
+                  <SkeletonText className="h-4 w-28" />
+                  <SkeletonText className="mt-2 h-3 w-36 max-w-full" />
+                </div>
+              </div>
+              <SkeletonRect className="mt-5 h-9 rounded-xl" />
+            </SkeletonCard>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function TrainerInternshipDetails() {
   const { user, logout } = useAuth();
@@ -85,15 +186,11 @@ export default function TrainerInternshipDetails() {
               navigate("/login", { replace: true });
             }}
           />
-          <h1 className="mb-6 text-2xl font-semibold">Internship Details</h1>
           {loading ? (
-            <div role="status" className="space-y-6">
-              <p>Loading internship details&hellip;</p>
-              <div className="h-56 animate-pulse rounded-2xl bg-slate-200" />
-              <div className="h-80 animate-pulse rounded-2xl bg-white" />
-            </div>
+            <InternshipDetailsSkeleton />
           ) : (
-            <div role="alert" className="rounded-2xl bg-white p-6">
+            <div role="alert" className="mt-6 rounded-2xl bg-white p-6">
+              <h1 className="mb-3 text-2xl font-semibold">Internship Details</h1>
               <p>{error}</p>
               <button
                 className={`${actionClass} mt-4`}

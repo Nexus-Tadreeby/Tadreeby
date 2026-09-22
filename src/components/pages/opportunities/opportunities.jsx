@@ -325,7 +325,6 @@ export default function Opportunities() {
 
   // ─── Profile state ──────────────────────────────────────────────
   const [profile, setProfile] = useState(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState("");
 
   // ─── Filter state ────────────────────────────────────────────────
@@ -361,8 +360,6 @@ export default function Opportunities() {
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setProfileError(err?.message || "Could not load profile.");
-      } finally {
-        setLoadingProfile(false);
       }
     };
     fetchProfile();
@@ -438,7 +435,10 @@ export default function Opportunities() {
     avatar: profile?.avatar || user?.profileImage || "",
   };
 
-  const isLoading = loadingProfile || loadingOpportunities;
+  // Profile data enhances the sidebar but should not hold the opportunity list
+  // behind a full-page loader. Cached profile data will appear immediately on
+  // repeat visits; on a cold visit the authenticated user is used as fallback.
+  const isLoading = loadingOpportunities;
   const error = profileError || opportunitiesError;
 
   // ─── Render ────────────────────────────────────────────────────

@@ -28,7 +28,6 @@ import Sidebar from "../../layout/Sidebar";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// ─── Import skeleton components ──────────────────────────────────────
 import {
     SkeletonText,
     SkeletonCircle,
@@ -36,6 +35,7 @@ import {
     SkeletonButton,
 } from "../../common/pagesAssets/Skeleton";
 
+// ─── Import skeleton components ──────────────────────────────────────
 // ─── Tadreeby Design System (مطابق تماماً للـ Dashboard) ──────────
 const COLORS = {
     primary: "#0475FB",
@@ -245,17 +245,11 @@ const InfoPanelSkeleton = () => (
 export default function StudentChats() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const [loading, setLoading] = useState(true);
     const [chats, setChats] = useState(DUMMY_CHATS);
     const [activeChat, setActiveChat] = useState(DUMMY_CHATS[0]);
     const [messages, setMessages] = useState(DUMMY_MESSAGES);
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef(null);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -304,30 +298,6 @@ export default function StudentChats() {
         logout();
         navigate("/login");
     };
-
-    if (loading) {
-        return (
-            <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
-                <Sidebar
-        navGroups={studentNavGroups}
-        footerItems={studentFooterItems}
-        user={studentUser}
-        profilePath="/student/profile"
-        onSignOut={handleSignOut}
-        chatPath="/student/chats"
-        brandPath="/student/dashboard"
-        storageKey="sidebar-student"
-      />
-                <main className="flex-1 overflow-hidden p-4">
-                    <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>
-                        <ChatListSkeleton />
-                        <ChatAreaSkeleton />
-                        <InfoPanelSkeleton />
-                    </div>
-                </main>
-            </div>
-        );
-    }
 
     return (
         <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>

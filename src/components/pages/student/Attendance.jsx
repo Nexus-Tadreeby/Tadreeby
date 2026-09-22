@@ -634,7 +634,10 @@ const Attendance = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      let attendanceData = await attendanceAPI.getAttendance();
+      let [attendanceData, internshipsData] = await Promise.all([
+        attendanceAPI.getAttendance(),
+        internshipAPI.getMyInternships(),
+      ]);
       if (
         attendanceData &&
         typeof attendanceData === "object" &&
@@ -647,7 +650,6 @@ const Attendance = () => {
         : [];
       setSessions(attendanceList);
 
-      let internshipsData = await internshipAPI.getMyInternships();
       if (
         internshipsData &&
         typeof internshipsData === "object" &&

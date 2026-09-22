@@ -35,6 +35,7 @@ import CreateTrainer from "./components/pages/company-admin/CreateTrainer";
 import Opportunities from "./components/pages/company-admin/Opportunities";
 import Trainers from "./components/pages/company-admin/Trainers";
 import TrainerDashboard from "./components/pages/company-trainer/TrainerDashboard";
+import TrainerInternshipDetails from "./components/pages/company-trainer/trainer-internship-details/TrainerInternshipDetails";
 
 function App() {
   return (
@@ -120,6 +121,7 @@ function App() {
         <Route path="/companyAdmin/opportunities/:id" element={<OpportunityDetails />} /> */}
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["COMPANY_TRAINER"]} />}>
+          <Route path="/company/trainer/internship" element={<TrainerInternshipDetails />} />
           <Route
             path="/company/trainer/dashboard"
             element={<TrainerDashboard />}

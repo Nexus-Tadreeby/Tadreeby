@@ -497,6 +497,10 @@ export const companyAdminAPI = {
 };
 
 export const trainerAPI = {
+  getInternship: async (internshipId, signal) => {
+    const response = await apiRequest(`/company/trainer/internships/${internshipId}`, { method: 'GET', signal });
+    return response.data ?? response;
+  },
   // Overview: assigned company, active interns, pending applications, task stats
   getDashboard: async () => {
     const response = await apiRequest('/company/trainer/dashboard', { method: 'GET' });

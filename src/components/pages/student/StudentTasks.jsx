@@ -1,7 +1,7 @@
 // src/components/pages/student/StudentTasks.jsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useUrlSearch } from "../../../hooks/useUrlSearch";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -599,6 +599,7 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
 // ─── Main Component ──────────────────────────────────────────────────
 
 export default function StudentTasks() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
@@ -607,7 +608,7 @@ export default function StudentTasks() {
   const [error, setError] = useState("");
   const [search, setSearch] = useUrlSearch();
   const [filter, setFilter] = useState("ALL");
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(() => location.state?.task ?? null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fullName =

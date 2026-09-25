@@ -25,7 +25,7 @@ const Internships = lazy(() => import("./components/pages/opportunities/opportun
 const InternshipDetails = lazy(() => import("./components/pages/opportunities/OpportunityDetails"));
 import NotFoundPage from "./components/pages/NotFoundPage";
 import TermsAndPrivacyPage from "./components/pages/TermsAndPrivacyPage";
-const MyInternship = lazy(() => import("./components/pages/internship/my-internship"));
+const MyInternship = lazy(() => import("./components/pages/student/internship/my-internship"));
 const StudentChats = lazy(() => import("./components/pages/student/studentChats"));
 const Attendance = lazy(() => import("./components/pages/student/Attendance"));
 const UniversityAdminDashboard = lazy(() => import("./components/pages/university-admin/UniversityAdminDashboard"));

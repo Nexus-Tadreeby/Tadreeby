@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { actionClass } from "../../../internship/internship.utils";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -11,7 +12,6 @@ import {
   Clock3,
   Download,
   MapPin,
-  Users,
 } from "lucide-react";
 import Sidebar from "../../../layout/Sidebar";
 import PageHeader from "../../../common/pagesAssets/PageHeader";
@@ -26,12 +26,13 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { trainerSidebarProps } from "../trainerNavigation";
 import { useTrainerInternship } from "./useTrainerInternship";
+import { mapTrainerInternship } from "./mapTrainerInternship";
 import {
   Avatar,
-  actionClass,
   DetailsDialog,
   InternshipHero,
   MetricsRow,
+  MostActiveTrainees,
   Panel,
   TaskCard,
   TechnicalScopeIcon,
@@ -206,19 +207,26 @@ export default function TrainerInternshipDetails() {
   );
 }
 
-function InternshipContent({ internship }) {
+function InternshipContent({ internship: response }) {
+  // The render boundary also accepts raw API data retained by an older hook.
+  const internship = useMemo(() => mapTrainerInternship(response), [response]);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [coverFailed, setCoverFailed] = useState(false);
   const [dialog, setDialog] = useState(null);
   const showDetails = (title, items) => setDialog({ title, items });
-  const { header, stats, about, overview, students, tasks, capacity } =
+  const { header, stats, about, overview, students, tasks, capacity, logistics } =
     internship;
   const trainerName =
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
     fullName(header.trainer);
   const visibleStudents = students.slice(0, 4);
-  const universities = uniqueUniversities(overview.universitySupervisors);
+  const universities = overview.academicPartners.length
+    ? overview.academicPartners.map((partner) => ({
+      id: partner.university, name: partner.university,
+      shortCode: partner.shortCode, studentCount: partner.studentCount,
+    }))
+    : uniqueUniversities(overview.universitySupervisors);
   const signOut = () => {
     logout();
     navigate("/login", { replace: true });
@@ -359,6 +367,8 @@ function InternshipContent({ internship }) {
                 tasks={tasks}
                 capacity={capacity}
                 students={students}
+                currentTaskId={internship.currentTaskId}
+                hasCompleteTaskList={internship.hasCompleteTaskList}
                 onAction={showDetails}
               />
               <section className="curriculum-card" aria-labelledby="curriculum-heading">
@@ -405,31 +415,30 @@ function InternshipContent({ internship }) {
                 <div className="logistics-grid">
                   <div>
                     <h3>Attendance & Check-in Model</h3>
-                    <h4>On-Site Lab + QR Verification</h4>
-                    <p>
-                      Daily morning QR check-in between 08:45 &ndash; 09:15 AM. 90%
-                      attendance minimum required for university credit
-                      eligibility.
-                    </p>
+                    <h4>{logistics.attendanceModel.type || "Not specified"}</h4>
+                    {logistics.attendanceModel.checkInStart && logistics.attendanceModel.checkInEnd && (
+                      <p>Check-in between {logistics.attendanceModel.checkInStart} &ndash; {logistics.attendanceModel.checkInEnd}.</p>
+                    )}
+                    {logistics.attendanceModel.minPercent != null && (
+                      <p>{logistics.attendanceModel.minPercent}% minimum attendance required.</p>
+                    )}
                   </div>
                   <div>
                     <h3>Working Schedule & Hours</h3>
-                    <h4>{overview.totalDuration.workingDays}</h4>
+                    <h4>{logistics.workingSchedule.days || overview.totalDuration.workingDays}</h4>
                     <p>
                       {overview.totalDuration.hoursPerWeek} hours per week.
-                      09:00 AM &ndash; 03:00 PM EET daily. Friday and Saturday
-                      reserved for asynchronous reading and independent project
-                      catch-up.
+                      {logistics.workingSchedule.hours && <> {logistics.workingSchedule.hours} daily.</>}
                     </p>
+                    {logistics.workingSchedule.notes && <p>{logistics.workingSchedule.notes}</p>}
                   </div>
                   <div>
                     <h3>Designated Physical Facility</h3>
                     <h4>{overview.trainingVenue.name}</h4>
                     <p>
-                      {overview.trainingVenue.address}. Equipped with
-                      dual-monitor workstations, high-speed fiber backhaul, and
-                      gigabit LAN.
+                      {overview.trainingVenue.address}
                     </p>
+                    {overview.trainingVenue.equipment && <p>{overview.trainingVenue.equipment}</p>}
                   </div>
                   <div>
                     <h3>University Academic Partnerships</h3>
@@ -565,7 +574,7 @@ function InternshipContent({ internship }) {
                         {universities
                           .map(
                             (university) =>
-                              `${university.shortCode?.toUpperCase() || university.name} (${students.filter((student) => student.university.id === university.id).length})`,
+                              `${university.shortCode?.toUpperCase() || university.name} (${university.studentCount ?? students.filter((student) => student.university.id === university.id).length})`,
                           )
                           .join(" \u00B7 ")}
                       </dd>
@@ -682,11 +691,14 @@ function InternshipContent({ internship }) {
                   )}
                 </div>
               </section>
-              <Panel title="Most active trainees last week" icon={Users}>
-                <p className="text-[13px] leading-6 text-[#737686]">
-                  Weekly trainee activity is not available yet.
-                </p>
-              </Panel>
+              <MostActiveTrainees
+                trainees={internship.mostActiveTrainees}
+                onViewAll={() => showDetails("Most active trainees last week", internship.mostActiveTrainees.map((student) => ({
+                  title: fullName(student),
+                  description: typeof student.university === "string" ? student.university : student.university?.name,
+                  detail: student.status,
+                })))}
+              />
             </aside>
           </div>
           <p className="pb-5 pt-8 text-center text-[10px] text-[#9AA2B1]">

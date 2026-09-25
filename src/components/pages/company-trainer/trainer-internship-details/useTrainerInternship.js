@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { trainerAPI } from "../../../../services/api";
+import { mapTrainerInternship } from "./mapTrainerInternship";
 
 const initialState = { loading: true, data: null, error: "" };
 
@@ -13,11 +14,8 @@ export function useTrainerInternship(internshipId = 1) {
     trainerAPI
       .getInternship(internshipId, controller.signal)
       .then((data) => {
-        if (!data?.header || !data?.stats || !data?.overview || !data?.about) {
-          throw new Error("The internship response is incomplete.");
-        }
         if (!controller.signal.aborted) {
-          setState({ loading: false, data, error: "" });
+          setState({ loading: false, data: mapTrainerInternship(data), error: "" });
         }
       })
       .catch((error) => {

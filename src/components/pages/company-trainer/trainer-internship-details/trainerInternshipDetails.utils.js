@@ -6,11 +6,8 @@ export const dateLabel = (value) =>
     timeZone: "UTC",
   }).format(new Date(value));
 
-export const humanize = (value = "") =>
-  value.toLowerCase().replaceAll("_", " ");
-
-export const fullName = (person) =>
-  `${person?.firstName || ""} ${person?.lastName || ""}`.trim();
+import { fullName } from "../../../internship/internship.utils";
+export { humanize, fullName } from "../../../internship/internship.utils";
 
 export function uniqueUniversities(assignments) {
   return [
@@ -36,7 +33,7 @@ export function buildInternshipReport(internship) {
     `Progress: ${progress.percent}%`,
     `Training: ${dateLabel(overview.trainingPeriod.startDate)} - ${dateLabel(overview.trainingPeriod.endDate)}`,
     `Hours: ${progress.hoursCompleted}/${progress.hoursTotal}`,
-    `Enrolled: ${capacity.enrolledCount}/${capacity.maxStudents}`,
+    `Enrolled: ${capacity.enrolledCount}${capacity.maxStudents != null ? `/${capacity.maxStudents}` : ""}`,
     `Attendance: ${stats.attendance.ratePercent}%`,
     "",
     "Learning objectives",

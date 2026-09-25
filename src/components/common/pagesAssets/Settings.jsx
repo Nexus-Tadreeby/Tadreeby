@@ -1359,7 +1359,7 @@ const Settings = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] flex">
+        <div className="flex min-h-screen font-['Inter']">
             <Sidebar
                 discoveryItems={discoveryItems}
                 managementItems={managementItems}

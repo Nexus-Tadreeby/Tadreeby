@@ -1437,7 +1437,7 @@ export default function OpportunitiesDetails() {
 
     // ─── Render ──────────────────────────────────────────────────────
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+        <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
             {/* Decorative orbs */}
             <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
             <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />

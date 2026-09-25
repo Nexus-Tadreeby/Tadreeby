@@ -1,0 +1,476 @@
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "status": "ACTIVE",
+        "header": {
+            "title": "Backend Engineer Intern",
+            "cohort": "Cohort 2026-A",
+            "coverImage": "https://media.istockphoto.com/vectors/accounting-financial-analysis-tax-payment-analytics-data-capture-vector-id1399038180?k=20&m=1399038180&s=612x612&w=0&h=fhPTNk7AtOPPehbkiEcbpnEfmnDSIytZnJmJ66krQcg=",
+            "trainingType": "HYBRID",
+            "location": "Gaza Tech Hub",
+            "company": {
+                "name": "Tadreeby Tech",
+                "logo": null
+            },
+            "trainer": {
+                "firstName": "Company",
+                "lastName": "Trainer"
+            }
+        },
+        "stats": {
+            "progress": {
+                "percent": 67,
+                "currentMilestone": 4,
+                "totalMilestones": 6,
+                "weeksCompleted": 8,
+                "weeksTotal": 12,
+                "hoursCompleted": 36,
+                "hoursTotal": 360
+            },
+            "tasks": {
+                "total": 6,
+                "completed": 3,
+                "inProgress": 2
+            },
+            "attendance": {
+                "ratePercent": 100,
+                "presentRecords": 6,
+                "absentRecords": 0,
+                "totalRecords": 6
+            }
+        },
+        "about": {
+            "description": "Internship program for Backend Engineer Intern at Tadreeby Tech.",
+            "techStack": [
+                "Ruby 3.2",
+                "Rails 7.1",
+                "PostgreSQL 16",
+                "REST APIs & JWT",
+                "RSpec & TDD",
+                "Docker Compose",
+                "Redis & Sidekiq",
+                "Git & GitHub Actions"
+            ],
+            "learningObjectives": [
+                {
+                    "title": "Master MVC Architecture & ActiveRecord Schemas",
+                    "description": "Design complex normalized relational schemas, custom database migrations, associations, eager-loading optimizations, and query indexes."
+                },
+                {
+                    "title": "Secure RESTful Endpoints & Tokenized Authentication",
+                    "description": "Implement Devise-JWT authentication, granular role permissions with Pundit, API rate limiting, and defensive request validation."
+                },
+                {
+                    "title": "Test-Driven Development (TDD) with RSpec & CI Pipelines",
+                    "description": "Write deterministic unit, request, and integration test suites using FactoryBot and VCR, with automated PR regression checks via GitHub Actions."
+                },
+                {
+                    "title": "Asynchronous Queues & Background Workers",
+                    "description": "Implement high-throughput async processing via Sidekiq and Redis for transactional emails, report exports, and webhook dispatches."
+                }
+            ],
+            "competencies": [
+                "RESTful JSON API Standards & Versioning",
+                "Relational Schema Normalization & Indexing",
+                "Background Jobs & Redis Cache Stores",
+                "CI/CD Automated GitHub Action Deployments"
+            ]
+        },
+        "overview": {
+            "trainingPeriod": {
+                "startDate": "2026-07-14T09:00:00.000Z",
+                "endDate": "2026-09-30T15:00:00.000Z",
+                "weeksRemaining": 4
+            },
+            "totalDuration": {
+                "hours": 360,
+                "hoursPerWeek": 30,
+                "workingDays": "Sunday - Thursday"
+            },
+            "trainingVenue": {
+                "name": "Tadreeby Tech HQ",
+                "address": "Omar Al-Mukhtar Street, Gaza",
+                "latitude": 31.501,
+                "longitude": 34.466,
+                "equipment": "Dual-monitor workstations, high-speed fiber backbone, and gigabit LAN."
+            },
+            "academicPartners": [
+                {
+                    "university": "Islamic University of Gaza",
+                    "shortCode": "iug",
+                    "studentCount": 1
+                },
+                {
+                    "university": "Al-Azhar University",
+                    "shortCode": "azu",
+                    "studentCount": 1
+                }
+            ]
+        },
+        "currentTask": {
+            "id": 1,
+            "title": "Authentication & JWT Refresh Architecture",
+            "description": "Task: Authentication & JWT Refresh Architecture",
+            "status": "IN_PROGRESS",
+            "badge": "IN_REVIEW",
+            "deadline": "2026-08-28T23:59:00.000Z",
+            "rubricUrl": "https://docs.google.com/document/d/1TtGZ8mJFs77N_CKyq4IcClZB9G9LEQNo57s9pJJodx4/edit?tab=t.0",
+            "rubric": [
+                {
+                    "title": "Code Quality & Standards",
+                    "weight": 30
+                },
+                {
+                    "title": "Core Functionality & Logic",
+                    "weight": 40
+                },
+                {
+                    "title": "Documentation & Schema",
+                    "weight": 30
+                },
+                {
+                    "title": "Git Workflow & Testing",
+                    "weight": 10
+                }
+            ],
+            "submission": null
+        },
+        "tasks": [
+            {
+                "id": 1,
+                "title": "Authentication & JWT Refresh Architecture",
+                "description": "Task: Authentication & JWT Refresh Architecture",
+                "deadline": "2026-08-28T23:59:00.000Z",
+                "status": "IN_PROGRESS",
+                "badge": "IN_REVIEW",
+                "rubricUrl": "https://docs.google.com/document/d/1TtGZ8mJFs77N_CKyq4IcClZB9G9LEQNo57s9pJJodx4/edit?tab=t.0",
+                "rubric": [
+                    {
+                        "title": "Code Quality & Standards",
+                        "weight": 30
+                    },
+                    {
+                        "title": "Core Functionality & Logic",
+                        "weight": 40
+                    },
+                    {
+                        "title": "Documentation & Schema",
+                        "weight": 30
+                    },
+                    {
+                        "title": "Git Workflow & Testing",
+                        "weight": 10
+                    }
+                ],
+                "submissions": []
+            },
+            {
+                "id": 2,
+                "title": "Set up development environment",
+                "description": "Task: Set up development environment",
+                "deadline": "2026-09-10T14:06:47.292Z",
+                "status": "DONE",
+                "badge": "GRADED",
+                "rubricUrl": null,
+                "rubric": null,
+                "submissions": [
+                    {
+                        "id": 1,
+                        "taskId": 2,
+                        "studentId": 7,
+                        "fileUrl": "https://docs.google.com/document/d/1TtGZ8mJFs77N_CKyq4IcClZB9G9LEQNo57s9pJJodx4/edit?tab=t.0",
+                        "score": 85,
+                        "feedback": "Good work, but needs more comments.",
+                        "submittedAt": "2026-09-12T14:06:47.292Z",
+                        "aiEvaluations": [
+                            {
+                                "id": 1,
+                                "taskSubmissionId": 1,
+                                "score": 93.5,
+                                "analysis": "Approved Student consistently adheres to clean architecture principles and test-driven patterns. Recommended focus for upcoming sprint: Deepen Redis cache eviction strategies and Sidekiq error retry policies.",
+                                "recommendations": "Consider implementing rate limiting with Rack::Attack and adding more edge-case tests.",
+                                "createdAt": "2026-09-24T14:06:49.741Z"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "title": "Build RSpec test suite for user endpoints",
+                "description": "Task: Build RSpec test suite for user endpoints",
+                "deadline": "2026-09-19T14:06:47.292Z",
+                "status": "DONE",
+                "badge": "GRADED",
+                "rubricUrl": null,
+                "rubric": null,
+                "submissions": [
+                    {
+                        "id": 2,
+                        "taskId": 3,
+                        "studentId": 7,
+                        "fileUrl": "https://docs.google.com/document/d/1TtGZ8mJFs77N_CKyq4IcClZB9G9LEQNo57s9pJJodx4/edit?tab=t.0",
+                        "score": 92,
+                        "feedback": "Excellent test coverage.",
+                        "submittedAt": "2026-09-21T14:06:47.292Z",
+                        "aiEvaluations": [
+                            {
+                                "id": 2,
+                                "taskSubmissionId": 2,
+                                "score": 93.5,
+                                "analysis": "Approved Student consistently adheres to clean architecture principles and test-driven patterns. Recommended focus for upcoming sprint: Deepen Redis cache eviction strategies and Sidekiq error retry policies.",
+                                "recommendations": "Consider implementing rate limiting with Rack::Attack and adding more edge-case tests.",
+                                "createdAt": "2026-09-24T14:06:50.307Z"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "title": "Implement Redis caching layer",
+                "description": "Task: Implement Redis caching layer",
+                "deadline": "2026-09-22T14:06:47.292Z",
+                "status": "DONE",
+                "badge": "GRADED",
+                "rubricUrl": null,
+                "rubric": null,
+                "submissions": [
+                    {
+                        "id": 3,
+                        "taskId": 4,
+                        "studentId": 7,
+                        "fileUrl": "https://docs.google.com/document/d/1TtGZ8mJFs77N_CKyq4IcClZB9G9LEQNo57s9pJJodx4/edit?tab=t.0",
+                        "score": 88,
+                        "feedback": "Clean implementation, minor refactoring needed.",
+                        "submittedAt": "2026-09-24T14:06:47.292Z",
+                        "aiEvaluations": [
+                            {
+                                "id": 3,
+                                "taskSubmissionId": 3,
+                                "score": 93.5,
+                                "analysis": "Approved Student consistently adheres to clean architecture principles and test-driven patterns. Recommended focus for upcoming sprint: Deepen Redis cache eviction strategies and Sidekiq error retry policies.",
+                                "recommendations": "Consider implementing rate limiting with Rack::Attack and adding more edge-case tests.",
+                                "createdAt": "2026-09-24T14:06:51.268Z"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "title": "Create React components for dashboard",
+                "description": "Task: Create React components for dashboard",
+                "deadline": "2026-09-27T14:06:47.292Z",
+                "status": "IN_PROGRESS",
+                "badge": "ACTIVE",
+                "rubricUrl": null,
+                "rubric": null,
+                "submissions": []
+            },
+            {
+                "id": 6,
+                "title": "Implement API integration",
+                "description": "Task: Implement API integration",
+                "deadline": "2026-10-04T14:06:47.292Z",
+                "status": "TODO",
+                "badge": null,
+                "rubricUrl": null,
+                "rubric": null,
+                "submissions": []
+            }
+        ],
+        "attendance": [
+            {
+                "id": 1,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-23T21:00:00.000Z",
+                "checkIn": "2026-09-24T05:50:00.000Z",
+                "checkOut": "2026-09-24T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "On-site QR verification"
+            },
+            {
+                "id": 2,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-22T21:00:00.000Z",
+                "checkIn": "2026-09-23T06:30:00.000Z",
+                "checkOut": "2026-09-23T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "Late check-in"
+            },
+            {
+                "id": 3,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-21T21:00:00.000Z",
+                "checkIn": "2026-09-22T05:45:00.000Z",
+                "checkOut": "2026-09-22T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "On-site QR verification"
+            },
+            {
+                "id": 4,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-20T21:00:00.000Z",
+                "checkIn": "2026-09-21T06:20:00.000Z",
+                "checkOut": "2026-09-21T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "Late check-in"
+            },
+            {
+                "id": 5,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-19T21:00:00.000Z",
+                "checkIn": "2026-09-20T05:55:00.000Z",
+                "checkOut": "2026-09-20T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "On-site QR verification"
+            },
+            {
+                "id": 6,
+                "internshipId": 1,
+                "studentId": 7,
+                "date": "2026-09-18T21:00:00.000Z",
+                "checkIn": "2026-09-19T06:10:00.000Z",
+                "checkOut": "2026-09-19T12:00:00.000Z",
+                "duration": "6 hours",
+                "status": "CHECKED_IN",
+                "location": "CodeCraft Studio Lab 3",
+                "notes": "Late check-in"
+            }
+        ],
+        "evaluations": [
+            {
+                "id": 1,
+                "internshipId": 1,
+                "studentId": 7,
+                "evaluatorId": 6,
+                "type": "TRAINER",
+                "score": 92,
+                "feedback": "Approved Student demonstrates exceptional grasp of advanced associations and test suites. Keep up the high standard on the upcoming microservices decoupling.",
+                "breakdown": [
+                    {
+                        "name": "Code Quality & Clean Architecture",
+                        "score": 94
+                    },
+                    {
+                        "name": "Punctuality & Daily Standup",
+                        "score": 96
+                    },
+                    {
+                        "name": "Problem Solving & Debugging",
+                        "score": 88
+                    },
+                    {
+                        "name": "Agile Collaboration & Git Hygiene",
+                        "score": 90
+                    }
+                ],
+                "createdAt": "2026-09-24T14:06:51.575Z",
+                "evaluator": {
+                    "id": 6,
+                    "firstName": "Company",
+                    "lastName": "Trainer",
+                    "role": "COMPANY_TRAINER"
+                }
+            }
+        ],
+        "lastTaskEvaluation": {
+            "id": 1,
+            "evaluatorId": 6,
+            "score": 92,
+            "feedback": "Approved Student demonstrates exceptional grasp of advanced associations and test suites. Keep up the high standard on the upcoming microservices decoupling.",
+            "breakdown": [
+                {
+                    "name": "Code Quality & Clean Architecture",
+                    "score": 94
+                },
+                {
+                    "name": "Punctuality & Daily Standup",
+                    "score": 96
+                },
+                {
+                    "name": "Problem Solving & Debugging",
+                    "score": 88
+                },
+                {
+                    "name": "Agile Collaboration & Git Hygiene",
+                    "score": 90
+                }
+            ],
+            "evaluator": {
+                "id": 6,
+                "firstName": "Company",
+                "lastName": "Trainer",
+                "role": "COMPANY_TRAINER"
+            },
+            "createdAt": "2026-09-24T14:06:51.575Z"
+        },
+        "aiEvaluation": {
+            "id": 3,
+            "taskSubmissionId": 3,
+            "score": 93.5,
+            "analysis": "Approved Student consistently adheres to clean architecture principles and test-driven patterns. Recommended focus for upcoming sprint: Deepen Redis cache eviction strategies and Sidekiq error retry policies.",
+            "recommendations": "Consider implementing rate limiting with Rack::Attack and adding more edge-case tests.",
+            "createdAt": "2026-09-24T14:06:51.268Z"
+        },
+        "supervisors": [
+            {
+                "id": 3,
+                "firstName": "University",
+                "lastName": "Supervisor1",
+                "department": "Computer Science",
+                "university": "Islamic University of Gaza",
+                "shortCode": "iug",
+                "role": "Islamic University Coordinator"
+            },
+            {
+                "id": 4,
+                "firstName": "University",
+                "lastName": "Supervisor2",
+                "department": "Software Engineering",
+                "university": "Al-Azhar University",
+                "shortCode": "azu",
+                "role": "Al-Azhar University Coordinator"
+            }
+        ],
+        "logistics": {
+            "attendanceModel": {
+                "type": "On-Site Lab + QR Verification",
+                "checkInStart": "08:45",
+                "checkInEnd": "09:15",
+                "minPercent": 90
+            },
+            "workingSchedule": {
+                "days": "Sunday - Thursday",
+                "startTime": "09:00",
+                "endTime": "15:00",
+                "dailyHours": 6
+            },
+            "venue": {
+                "name": "Tadreeby Tech HQ",
+                "address": "Omar Al-Mukhtar Street, Gaza",
+                "latitude": 31.501,
+                "longitude": 34.466,
+                "equipment": "Dual-monitor workstations, high-speed fiber backbone, and gigabit LAN.",
+                "remoteTools": "Discord, GitHub"
+            }
+        }
+    }
+}

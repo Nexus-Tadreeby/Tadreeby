@@ -1,5 +1,5 @@
 // src/components/layout/Sidebar.jsx
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import {
   MessageCircle,
@@ -8,6 +8,7 @@ import {
   LogOut,
   ChevronLeft,
 } from "lucide-react";
+import { AppShellContext } from "../../context/AppShellContext";
 
 const DEFAULT_NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -50,13 +51,12 @@ function Sidebar({
   unreadCount = 0,
   brandPath = "/",
   storageKey = "sidebar-expanded",
+  persistent = false,
 }) {
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    const saved = window.sessionStorage.getItem(storageKey);
-    if (saved !== null) setExpanded(saved === "true");
-  }, [storageKey]);
+  const hasPersistentShell = useContext(AppShellContext);
+  const [expanded, setExpanded] = useState(
+    () => window.sessionStorage.getItem(storageKey) === "true",
+  );
 
   useEffect(() => {
     window.sessionStorage.setItem(storageKey, expanded ? "true" : "false");
@@ -89,6 +89,8 @@ function Sidebar({
       )}
     </NavLink>
   );
+
+  if (hasPersistentShell && !persistent) return null;
 
   return (
     <aside

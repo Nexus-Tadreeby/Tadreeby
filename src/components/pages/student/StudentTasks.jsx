@@ -1,6 +1,7 @@
 // src/components/pages/student/StudentTasks.jsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useUrlSearch } from "../../../hooks/useUrlSearch";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -598,15 +599,16 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
 // ─── Main Component ──────────────────────────────────────────────────
 
 export default function StudentTasks() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlSearch();
   const [filter, setFilter] = useState("ALL");
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(() => location.state?.task ?? null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fullName =
@@ -684,7 +686,7 @@ export default function StudentTasks() {
 
   // ── Render ──
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+    <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
       {/* Decorative orbs */}
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />

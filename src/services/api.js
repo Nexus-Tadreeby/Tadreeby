@@ -2,6 +2,20 @@
 // const API_BASE_URL = 'https://tadreeby-api.onrender.com';
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060';
 
+// Shared GET cache for every role. It survives route unmounts, deduplicates
+// concurrent requests (including React StrictMode mounts), and is cleared after
+// mutations or when the authenticated user changes.
+const responseCache = new Map();
+const pendingRequests = new Map();
+const DEFAULT_CACHE_TTL = 2 * 60 * 1000;
+
+const getCacheKey = (endpoint, token) => `${token || 'anonymous'}:${endpoint}`;
+
+export const clearApiCache = () => {
+  responseCache.clear();
+  pendingRequests.clear();
+};
+
 // const apiRequest = async (endpoint, options = {}) => {
 //   const token = localStorage.getItem('accessToken');
 
@@ -69,8 +83,22 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:60
 //   }
 // };
 
-const apiRequest = async (endpoint, options = {}) => {
+export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('accessToken');
+  const method = (options.method || 'GET').toUpperCase();
+  const shouldCache = method === 'GET' && !options.signal && options.cache !== false;
+  const cacheKey = getCacheKey(endpoint, token);
+  const cacheTtl = options.cacheTtl ?? DEFAULT_CACHE_TTL;
+
+  if (shouldCache) {
+    const cached = responseCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < cacheTtl) {
+      return cached.data;
+    }
+
+    const pending = pendingRequests.get(cacheKey);
+    if (pending) return pending;
+  }
 
   const headers = {
     'Accept': 'application/json',
@@ -88,6 +116,7 @@ const apiRequest = async (endpoint, options = {}) => {
     headers,
   };
 
+  const request = (async () => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log(`📡 Sending ${options.method || 'GET'} request to: ${url}`);
@@ -136,10 +165,27 @@ const apiRequest = async (endpoint, options = {}) => {
       };
     }
 
+    if (shouldCache) {
+      responseCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+    } else if (method !== 'GET') {
+      // Mutations may change data used by several screens, so invalidate shared
+      // role data and let the next screen obtain a fresh snapshot.
+      responseCache.clear();
+    }
+
     return responseData;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
+  }
+  })();
+
+  if (shouldCache) pendingRequests.set(cacheKey, request);
+
+  try {
+    return await request;
+  } finally {
+    if (shouldCache) pendingRequests.delete(cacheKey);
   }
 };
 
@@ -497,6 +543,10 @@ export const companyAdminAPI = {
 };
 
 export const trainerAPI = {
+  getInternship: async (internshipId, signal) => {
+    const response = await apiRequest(`/company/trainer/internships/${internshipId}`, { method: 'GET', signal });
+    return response.data ?? response;
+  },
   // Overview: assigned company, active interns, pending applications, task stats
   getDashboard: async () => {
     const response = await apiRequest('/company/trainer/dashboard', { method: 'GET' });
@@ -540,7 +590,6 @@ export const trainerAPI = {
   },
 };
 
-export { apiRequest };
 // // src/services/api.js
 
 // const API_BASE_URL = 'http://localhost:6060';

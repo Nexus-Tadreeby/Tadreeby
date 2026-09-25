@@ -1,5 +1,6 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useContext, useState } from "react";
+import { clearApiCache } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -10,6 +11,7 @@ export function AuthProvider({ children }) {
   });
 
   const login = (userData, accessToken, refreshToken) => {
+    clearApiCache();
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
@@ -17,6 +19,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    clearApiCache();
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");

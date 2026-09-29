@@ -324,11 +324,70 @@ const ActiveSessionBanner = ({
   isLoading,
   onBrowseOpportunities,
 }) => {
-  const hasInternship = internships && internships.length > 0;
-  const activeInternship = hasInternship
-    ? internships.find((i) => i.status === "ACTIVE") || internships[0]
-    : null;
+    const hasInternship = internships && internships.length > 0;
+    const activeInternship = hasInternship
+        ? internships.find((i) => i.status === "ACTIVE") || internships[0]
+        : null;
 
+    if (!isLoading && !hasInternship) {
+        return (
+            <div className="relative overflow-hidden rounded-[22px] p-5 sm:p-6 border border-dashed border-[#E9EDF4] bg-white/60">
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3FF]">
+                        <Info size={22} color={COLORS.primary} />
+                    </div>
+                    <div>
+                        <p className="text-[13px] font-semibold text-[#172033]">No Internship Found</p>
+                        <p className="text-[11px] text-[#7B8497]">
+                            You must enroll in an internship first to track attendance.
+                        </p>
+                        <Button
+                            variant="blue"
+                            onClick={onBrowseOpportunities}
+                            className="mt-2 my-4 mx-15 px-4 py-2 text-[11px]"
+                        >
+                            Browse Opportunities
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="rounded-[22px] border border-[#E9EDF4] bg-white p-5 shadow-sm animate-pulse">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-gray-200" />
+                    <div className="flex-1">
+                        <div className="h-4 w-48 bg-gray-200 rounded" />
+                        <div className="mt-2 h-3 w-64 bg-gray-200 rounded" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const companyName = activeInternship?.company?.name || "Your University Partner";
+    const internshipTitle = activeInternship?.opportunity?.title || `${profile?.major || "Field Training"} Intern`;
+    const universityName = profile?.university?.name || "Your University";
+
+    const startDate = activeInternship?.createdAt ? new Date(activeInternship.createdAt) : new Date();
+    const now = new Date();
+    const diffWeeks = Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000));
+    const currentWeek = Math.min(diffWeeks + 1, 12);
+    const weekDisplay = `Week ${currentWeek} of 12`;
+
+    const buttonText = isCheckedIn ? "Check Out" : "Check In";
+    const buttonAction = isCheckedIn ? onCheckOut : onCheckIn;
+
+
+  // const hasInternship = internships && internships.length > 0;
+  // const activeInternship = hasInternship
+  //   ? internships.find((i) => i.status === "ACTIVE") || internships[0]
+  //   : null;
+
+  
   if (!isLoading && !hasInternship) {
     return (
       <div className="relative overflow-hidden rounded-[22px] p-5 sm:p-6 border border-dashed border-[#E9EDF4] bg-white/60">
@@ -370,23 +429,23 @@ const ActiveSessionBanner = ({
     );
   }
 
-  const companyName =
-    activeInternship?.company?.name || "Your University Partner";
-  const internshipTitle =
-    activeInternship?.opportunity?.title ||
-    `${profile?.major || "Field Training"} Intern`;
-  const universityName = profile?.university?.name || "Your University";
+  // const companyName =
+  //   activeInternship?.company?.name || "Your University Partner";
+  // const internshipTitle =
+  //   activeInternship?.opportunity?.title ||
+  //   `${profile?.major || "Field Training"} Intern`;
+  // const universityName = profile?.university?.name || "Your University";
 
-  const startDate = activeInternship?.createdAt
-    ? new Date(activeInternship.createdAt)
-    : new Date();
-  const now = new Date();
-  const diffWeeks = Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000));
-  const currentWeek = Math.min(diffWeeks + 1, 12);
-  const weekDisplay = `Week ${currentWeek} of 12`;
+  // const startDate = activeInternship?.createdAt
+  //   ? new Date(activeInternship.createdAt)
+  //   : new Date();
+  // const now = new Date();
+  // const diffWeeks = Math.floor((now - startDate) / (7 * 24 * 60 * 60 * 1000));
+  // const currentWeek = Math.min(diffWeeks + 1, 12);
+  // const weekDisplay = `Week ${currentWeek} of 12`;
 
-  const buttonText = isCheckedIn ? "Check Out" : "Check In";
-  const buttonAction = isCheckedIn ? onCheckOut : onCheckIn;
+  // const buttonText = isCheckedIn ? "Check Out" : "Check In";
+  // const buttonAction = isCheckedIn ? onCheckOut : onCheckIn;
 
   return (
     <div

@@ -156,6 +156,21 @@
 // export default PageHeader;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // src/components/common/pagesAssets/PageHeader.jsx
 import { useContext, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -167,7 +182,8 @@ import {
     User,
     GraduationCap,
     Settings,
-    LogOut
+    LogOut,
+    ArrowUpRight, // لإضافة سهم بجانب View All
 } from "lucide-react";
 import { SkeletonRect, SkeletonCircle } from "./Skeleton";
 import { AppShellContext } from "../../../context/AppShellContext";
@@ -206,20 +222,24 @@ const PageHeaderContent = ({
     onSearchChange,
     searchValue = "",
     onNotificationClick,
-    onChatClick,
+    // onChatClick,  
     chatBadge = 0,
     notificationBadge = 0,
     onLogout,
+    chatItems = [],         
+    onViewAllChats,       
+    onChatItemClick,    
     profilePath = "/student/profile",
     internshipPath,
     settingsPath = "/settings",
-    chatPath = "/student/chats",
 }) => {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isChatDropdownOpen, setIsChatDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const chatDropdownRef = useRef(null);
 
-    const avatar = profile?.avatar || studentUser?.avatar || "";
+    const avatar = profile?.avatar || profile?.profileImage || studentUser?.avatar || studentUser?.profileImage || "";
     const name = fullName || studentUser?.name || "Student";
 
     // ─── Close dropdown when clicking outside ──────────────────────
@@ -228,12 +248,39 @@ const PageHeaderContent = ({
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
             }
+            if (chatDropdownRef.current && !chatDropdownRef.current.contains(event.target)) {
+                setIsChatDropdownOpen(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // ─── Dropdown Menu Items ────────────────────────────────────────
+    // ─── Handlers ──────────────────────────────────────────────────────
+    const handleChatIconClick = () => {
+        setIsChatDropdownOpen(!isChatDropdownOpen);
+        if (isDropdownOpen) setIsDropdownOpen(false);
+    };
+
+    const handleChatItemSelect = (chat) => {
+        setIsChatDropdownOpen(false);
+        if (onChatItemClick) {
+            onChatItemClick(chat);
+        } else {
+            navigate(`/student/chats/${chat.id}`);
+        }
+    };
+
+    const handleViewAll = () => {
+        setIsChatDropdownOpen(false);
+        if (onViewAllChats) {
+            onViewAllChats();
+        } else {
+            navigate("/student/chats");
+        }
+    };
+
+    // ─── Dropdown Menu Items (user profile) ────────────────────────
     const menuItems = [
         {
             label: "Profile",
@@ -254,7 +301,6 @@ const PageHeaderContent = ({
             label: "Logout",
             icon: LogOut,
             onClick: onLogout || (() => {
-                // Handle logout logic here or pass from parent
                 navigate("/login");
             }),
             isDanger: true,
@@ -297,22 +343,94 @@ const PageHeaderContent = ({
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                        {/* Chat button */}
-                        <button
-                            type="button"
-                            className="relative flex h-11 w-11 items-center justify-center rounded-full border bg-white transition hover:-translate-y-0.5 hover:shadow-md"
-                            style={{ borderColor: COLORS.border }}
-                            onClick={onChatClick || (() => chatPath && navigate(chatPath))}
-                            disabled={!chatPath}
-                        >
-                            <MessageCircle size={18} color={COLORS.primary} />
-                            {chatBadge > 0 && (
-                                <span
-                                    className="absolute right-[8px] top-[7px] h-2 w-2 rounded-full border-2 border-white"
-                                    style={{ backgroundColor: COLORS.red }}
-                                />
+                        {/* Chat button with dropdown */}
+                        <div className="relative" ref={chatDropdownRef}>
+                            <button
+                                type="button"
+                                className="relative flex h-11 w-11 items-center justify-center rounded-full border bg-white transition hover:-translate-y-0.5 hover:shadow-md"
+                                style={{ borderColor: COLORS.border }}
+                                onClick={handleChatIconClick}
+                            >
+                                <MessageCircle size={18} color={COLORS.primary} />
+                                {chatBadge > 0 && (
+                                    <span
+                                        className="absolute right-[8px] top-[7px] h-2 w-2 rounded-full border-2 border-white"
+                                        style={{ backgroundColor: COLORS.red }}
+                                    />
+                                )}
+                            </button>
+
+                            {/* Chat Dropdown Menu */}
+                            {isChatDropdownOpen && (
+                                <div
+                                    className="absolute right-0 mt-2 w-80 rounded-xl border bg-white shadow-lg py-1 z-50 animate-fade-in-up"
+                                    style={{ borderColor: COLORS.border }}
+                                >
+                                    <div className="px-4 py-2 border-b border-gray-100">
+                                        <span className="text-sm font-bold text-gray-800">Recent Chats</span>
+                                    </div>
+                                    <div className="max-h-72 overflow-y-auto">
+                                        {chatItems.length === 0 ? (
+                                            <div className="px-4 py-3 text-sm text-gray-500">No recent conversations</div>
+                                        ) : (
+                                            chatItems.slice(0, 5).map((chat) => (
+                                                <div
+                                                    key={chat.id}
+                                                    onClick={() => handleChatItemSelect(chat)}
+                                                    className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 transition"
+                                                >
+                                                    <div className="relative">
+                                                        {chat.avatar ? (
+                                                            <img
+                                                                src={chat.avatar}
+                                                                alt={chat.name}
+                                                                className="h-9 w-9 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
+                                                                style={{ backgroundColor: COLORS.primary }}
+                                                            >
+                                                                {chat.initials || getInitials(chat.name)}
+                                                            </div>
+                                                        )}
+                                                        {chat.status === "online" && (
+                                                            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex justify-between">
+                                                            <p className="truncate text-sm font-semibold text-gray-800">
+                                                                {chat.name}
+                                                            </p>
+                                                            <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
+                                                                {chat.time}
+                                                            </span>
+                                                        </div>
+                                                        <p className="truncate text-xs text-gray-500">
+                                                            {chat.lastMessage || "..."}
+                                                        </p>
+                                                    </div>
+                                                    {chat.unread > 0 && (
+                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FFAD4E] text-[10px] font-bold text-white">
+                                                            {chat.unread}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                    <div className="border-t border-gray-100 p-2">
+                                        <button
+                                            onClick={handleViewAll}
+                                            className="flex w-full items-center justify-center gap-1 rounded-lg bg-gray-50 py-2 text-sm font-bold text-[#0475FB] hover:bg-gray-100 transition"
+                                        >
+                                            View All Chats <ArrowUpRight size={14} />
+                                        </button>
+                                    </div>
+                                </div>
                             )}
-                        </button>
+                        </div>
 
                         {/* Notification button */}
                         <button
@@ -336,7 +454,10 @@ const PageHeaderContent = ({
                                 type="button"
                                 className="flex items-center gap-2 rounded-full border bg-white py-1.5 pl-1.5 pr-3 hover:bg-gray-50 transition"
                                 style={{ borderColor: COLORS.border }}
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                onClick={() => {
+                                    setIsDropdownOpen(!isDropdownOpen);
+                                    if (isChatDropdownOpen) setIsChatDropdownOpen(false);
+                                }}
                             >
                                 {avatar ? (
                                     <img
@@ -368,7 +489,7 @@ const PageHeaderContent = ({
                                 />
                             </button>
 
-                            {/* Dropdown Menu */}
+                            {/* User Dropdown Menu */}
                             {isDropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-48 rounded-xl border bg-white shadow-lg py-1 z-50 animate-fade-in-up" style={{ borderColor: COLORS.border }}>
                                     {menuItems.map((item, index) => {

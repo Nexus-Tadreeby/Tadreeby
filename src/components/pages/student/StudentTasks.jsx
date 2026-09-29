@@ -178,7 +178,8 @@ const EmptyState = ({ status, search }) => {
   );
 };
 
-const TaskCard = ({ task, onOpen }) => {
+// ========== TaskCard ==========
+const TaskCard = ({ task, onOpen, onDragStart }) => {
   const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.TODO;
   const deadline = getDeadlineState(task);
   const submission = task.submissions?.[0];
@@ -187,10 +188,15 @@ const TaskCard = ({ task, onOpen }) => {
   const isOverdue = deadline.type === "danger";
 
   return (
-    <button
-      type="button"
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", String(task.id));
+        e.dataTransfer.effectAllowed = "move";
+        if (onDragStart) onDragStart(task.id);
+      }}
       onClick={() => onOpen(task)}
-      className="group flex w-full flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
+      className="group flex w-full cursor-grab flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-3">
@@ -234,28 +240,19 @@ const TaskCard = ({ task, onOpen }) => {
         <div className="flex min-w-[120px] items-center gap-2">
           <CalendarDays
             size={14}
-            color={
-              deadline.type === "danger"
-                ? COLORS.red
-                : deadline.type === "warning"
-                  ? COLORS.accent
-                  : COLORS.muted
-            }
+            color={deadline.type === "danger" ? COLORS.red : deadline.type === "warning" ? COLORS.accent : COLORS.muted}
           />
           <div>
-            <p className="text-[10px] font-medium text-[#172033]">
-              {formatDeadline(task.deadline)}
-            </p>
+            <p className="text-[10px] font-medium text-[#172033]">{formatDeadline(task.deadline)}</p>
             <p
-              className={`mt-0.5 text-[9px] ${
-                deadline.type === "danger"
-                  ? "text-[#EF4444]"
-                  : deadline.type === "warning"
-                    ? "text-[#FFAD4E]"
-                    : deadline.type === "done"
-                      ? "text-[#22C55E]"
-                      : "text-[#7B8497]"
-              }`}
+              className={`mt-0.5 text-[9px] ${deadline.type === "danger"
+                ? "text-[#EF4444]"
+                : deadline.type === "warning"
+                  ? "text-[#FFAD4E]"
+                  : deadline.type === "done"
+                    ? "text-[#22C55E]"
+                    : "text-[#7B8497]"
+                }`}
             >
               {deadline.label}
             </p>
@@ -267,9 +264,7 @@ const TaskCard = ({ task, onOpen }) => {
             <>
               <CheckCircle2 size={14} color={COLORS.green} />
               <div>
-                <p className="text-[10px] font-semibold text-[#22C55E]">
-                  Submitted
-                </p>
+                <p className="text-[10px] font-semibold text-[#22C55E]">Submitted</p>
                 <p className="text-[9px] text-[#7B8497]">
                   {submission.score !== null && submission.score !== undefined
                     ? `${submission.score}/100`
@@ -281,9 +276,7 @@ const TaskCard = ({ task, onOpen }) => {
             <>
               <Clock size={14} color={COLORS.muted} />
               <div>
-                <p className="text-[10px] font-medium text-[#172033]">
-                  Not submitted
-                </p>
+                <p className="text-[10px] font-medium text-[#172033]">Not submitted</p>
                 <p className="text-[9px] text-[#7B8497]">Action required</p>
               </div>
             </>
@@ -296,20 +289,38 @@ const TaskCard = ({ task, onOpen }) => {
           className="hidden transition group-hover:translate-x-0.5 sm:block"
         />
       </div>
-    </button>
+    </div>
   );
 };
 
-const TaskGroup = ({ status, tasks, onOpen }) => {
+// ========== TaskGroup ==========
+const TaskGroup = ({ status, tasks, onOpen, onDrop, onDragStart, isDraggingOver }) => {
   const config = STATUS_CONFIG[status];
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
   return (
-    <section className="overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm">
+    <section
+      className={`overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm transition-colors ${isDraggingOver ? "border-[#0475FB] bg-[#F0F7FF]" : ""}`}
+      onDragOver={handleDragOver}
+      onDrop={(e) => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData("text/plain");
+        if (taskId) {
+          const id = Number(taskId);
+          if (!isNaN(id)) {
+            onDrop(id, status);
+          }
+        }
+      }}
+    >
       <div className="flex items-center justify-between border-b border-[#E9EDF4] bg-[#FAFBFC] px-4 py-3">
         <div className="flex items-center gap-2">
           <TaskStatusIcon status={status} size={15} />
-          <h2 className="text-[12px] font-bold text-[#172033]">
-            {config.label}
-          </h2>
+          <h2 className="text-[12px] font-bold text-[#172033]">{config.label}</h2>
           <span className="rounded-full bg-[#EEF1F5] px-2 py-0.5 text-[9px] font-medium text-[#7B8497]">
             {tasks.length}
           </span>
@@ -317,17 +328,16 @@ const TaskGroup = ({ status, tasks, onOpen }) => {
       </div>
       {tasks.length ? (
         tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onOpen={onOpen} />
+          <TaskCard key={task.id} task={task} onOpen={onOpen} onDragStart={onDragStart} />
         ))
       ) : (
-        <div className="p-6 text-center text-[11px] text-[#7B8497]">
-          No tasks in this status
-        </div>
+        <div className="p-6 text-center text-[11px] text-[#7B8497]">No tasks in this status</div>
       )}
     </section>
   );
 };
 
+// ========== TaskDetailsDrawer  ==========
 const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -354,11 +364,10 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
 
     try {
       const result = await tasksAPI.submitTask(task.id, file);
-      onSubmitted(task.id, result);
+      onSubmitted(task.id, result, "DONE");
       setFile(null);
       setSuccess(true);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      // auto-close after success? we can keep it open.
     } catch (err) {
       setError(err?.message || "Unable to submit the task. Please try again.");
     } finally {
@@ -611,8 +620,9 @@ export default function StudentTasks() {
   const [selectedTask, setSelectedTask] = useState(() => location.state?.task ?? null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fullName =
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+  const [draggedOverStatus, setDraggedOverStatus] = useState(null);
+
+  const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
   const studentUser = {
     name: fullName,
     role: "Student",
@@ -649,12 +659,37 @@ export default function StudentTasks() {
     loadTasks();
   }, []);
 
+  // ── Drag & Drop handlers ──
+  const handleDragStart = (taskId) => {
+  };
+
+  const handleDrop = async (taskId, newStatus) => {
+    const taskToUpdate = tasks.find((t) => t.id === taskId);
+    if (!taskToUpdate) return;
+
+    if (taskToUpdate.status === newStatus) return;
+
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId ? { ...task, status: newStatus } : task
+      )
+    );
+
+    try {
+
+      await tasksAPI.updateTaskStatus(taskId, newStatus);
+    } catch (err) {
+      console.error("Failed to update task status on server:", err);
+      setError("Could not update task status on server. Changes saved locally.");
+    } finally {
+      setDraggedOverStatus(null);
+    }
+  };
+
   // ── Filters ──
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      const matchesSearch = `${task.title} ${task.description || ""}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch = `${task.title} ${task.description || ""}`.toLowerCase().includes(search.toLowerCase());
       const matchesFilter = filter === "ALL" || task.status === filter;
       return matchesSearch && matchesFilter;
     });
@@ -673,34 +708,44 @@ export default function StudentTasks() {
     : 0;
 
   // ── Submission update ──
-  const handleSubmitted = (taskId, submission) => {
+  const handleSubmitted = (taskId, submission, newStatus = "DONE") => {
     setTasks((current) =>
       current.map((task) =>
-        task.id === taskId ? { ...task, submissions: [submission] } : task,
-      ),
+        task.id === taskId
+          ? {
+            ...task,
+            status: newStatus,
+            submissions: [submission],
+          }
+          : task
+      )
     );
     setSelectedTask((current) =>
-      current ? { ...current, submissions: [submission] } : null,
+      current
+        ? {
+          ...current,
+          status: newStatus,
+          submissions: [submission],
+        }
+        : null
     );
   };
 
   // ── Render ──
   return (
-    <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
       {/* Decorative orbs */}
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
       <Sidebar
+        // navItems={studentNavItems}
         navGroups={studentNavGroups}
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"
         onSignOut={handleSignOut}
-        chatPath="/student/chats"
-        brandPath="/student/dashboard"
-        storageKey="sidebar-student"
       />
 
       <main className="flex-1 overflow-y-auto relative z-10">
@@ -720,12 +765,8 @@ export default function StudentTasks() {
           {/* Title & Stats */}
           <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033]">
-                Tasks
-              </h1>
-              <p className="text-[11px] text-[#7B8497]">
-                Stay on top of your internship assignments and deadlines.
-              </p>
+              <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033]">Tasks</h1>
+              <p className="text-[11px] text-[#7B8497]">Stay on top of your internship assignments and deadlines.</p>
             </div>
             <Button
               variant="blue"
@@ -733,40 +774,24 @@ export default function StudentTasks() {
               disabled={refreshing}
               className="h-8 px-3 text-[11px]"
             >
-              <RefreshCw
-                size={14}
-                className={refreshing ? "animate-spin" : ""}
-              />
+              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
               Refresh
             </Button>
           </div>
 
           {/* Progress Overview */}
-          <section
-            className="mt-5 rounded-[18px] border bg-white p-5 shadow-sm"
-            style={{ borderColor: COLORS.border }}
-          >
+          <section className="mt-5 rounded-[18px] border bg-white p-5 shadow-sm" style={{ borderColor: COLORS.border }}>
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">
-                  Progress
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">Progress</p>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[25px] font-extrabold tracking-tight text-[#0475FB]">
-                    {completion}%
-                  </span>
-                  <span className="mb-1 text-[10px] text-[#7B8497]">
-                    tasks completed
-                  </span>
+                  <span className="text-[25px] font-extrabold tracking-tight text-[#0475FB]">{completion}%</span>
+                  <span className="mb-1 text-[10px] text-[#7B8497]">tasks completed</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <StatCard label="To Do" value={todoCount} color="muted" />
-                <StatCard
-                  label="In Progress"
-                  value={progressCount}
-                  color="primary"
-                />
+                <StatCard label="In Progress" value={progressCount} color="primary" />
                 <StatCard label="Done" value={doneCount} color="green" />
               </div>
             </div>
@@ -789,10 +814,7 @@ export default function StudentTasks() {
           {/* Toolbar */}
           <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-[360px]">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B3]"
-              />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B3]" />
               <input
                 type="search"
                 value={search}
@@ -808,19 +830,12 @@ export default function StudentTasks() {
                   key={value}
                   type="button"
                   onClick={() => setFilter(value)}
-                  className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${
-                    filter === value
-                      ? "bg-[#0475FB] text-white shadow-sm"
-                      : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
-                  }`}
+                  className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${filter === value
+                    ? "bg-[#0475FB] text-white shadow-sm"
+                    : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+                    }`}
                 >
-                  {value === "ALL"
-                    ? "All"
-                    : value === "TODO"
-                      ? "To Do"
-                      : value === "IN_PROGRESS"
-                        ? "In Progress"
-                        : "Done"}
+                  {value === "ALL" ? "All" : value === "TODO" ? "To Do" : value === "IN_PROGRESS" ? "In Progress" : "Done"}
                 </button>
               ))}
             </div>
@@ -845,6 +860,9 @@ export default function StudentTasks() {
                     status="TODO"
                     tasks={todoTasks}
                     onOpen={setSelectedTask}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    isDraggingOver={draggedOverStatus === "TODO"}
                   />
                 )}
                 {(filter === "ALL" || filter === "IN_PROGRESS") && (
@@ -852,6 +870,9 @@ export default function StudentTasks() {
                     status="IN_PROGRESS"
                     tasks={progressTasks}
                     onOpen={setSelectedTask}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    isDraggingOver={draggedOverStatus === "IN_PROGRESS"}
                   />
                 )}
                 {(filter === "ALL" || filter === "DONE") && (
@@ -859,11 +880,12 @@ export default function StudentTasks() {
                     status="DONE"
                     tasks={doneTasks}
                     onOpen={setSelectedTask}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    isDraggingOver={draggedOverStatus === "DONE"}
                   />
                 )}
-                {filteredTasks.length === 0 && (
-                  <EmptyState status={filter} search={search} />
-                )}
+                {filteredTasks.length === 0 && <EmptyState status={filter} search={search} />}
               </>
             )}
           </div>
@@ -897,3 +919,221 @@ export default function StudentTasks() {
     </div>
   );
 }
+//   setSelectedTask((current) =>
+//     current ? { ...current, submissions: [submission] } : null,
+//   );
+// };
+
+//   // ── Render ──
+//   return (
+//     <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
+//       {/* Decorative orbs */}
+//       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+//       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
+//       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
+
+//       <Sidebar
+//         navGroups={studentNavGroups}
+//         footerItems={studentFooterItems}
+//         user={studentUser}
+//         profilePath="/student/profile"
+//         onSignOut={handleSignOut}
+//         chatPath="/student/chats"
+//         brandPath="/student/dashboard"
+//         storageKey="sidebar-student"
+//       />
+
+//       <main className="flex-1 overflow-y-auto relative z-10">
+//         <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-7 lg:px-8 lg:py-7">
+//           {/* Page Header */}
+//           <PageHeader
+//             loading={loading}
+//             profile={user}
+//             fullName={fullName}
+//             studentUser={studentUser}
+//             searchValue={search}
+//             onSearchChange={(e) => setSearch(e.target.value)}
+//             chatBadge={3}
+//             notificationBadge={4}
+//           />
+
+//           {/* Title & Stats */}
+//           <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+//             <div>
+//               <h1 className="text-[22px] font-extrabold tracking-tight text-[#172033]">
+//                 Tasks
+//               </h1>
+//               <p className="text-[11px] text-[#7B8497]">
+//                 Stay on top of your internship assignments and deadlines.
+//               </p>
+//             </div>
+//             <Button
+//               variant="blue"
+//               onClick={() => loadTasks(true)}
+//               disabled={refreshing}
+//               className="h-8 px-3 text-[11px]"
+//             >
+//               <RefreshCw
+//                 size={14}
+//                 className={refreshing ? "animate-spin" : ""}
+//               />
+//               Refresh
+//             </Button>
+//           </div>
+
+//           {/* Progress Overview */}
+//           <section
+//             className="mt-5 rounded-[18px] border bg-white p-5 shadow-sm"
+//             style={{ borderColor: COLORS.border }}
+//           >
+//             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+//               <div>
+//                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8497]">
+//                   Progress
+//                 </p>
+//                 <div className="mt-2 flex items-end gap-2">
+//                   <span className="text-[25px] font-extrabold tracking-tight text-[#0475FB]">
+//                     {completion}%
+//                   </span>
+//                   <span className="mb-1 text-[10px] text-[#7B8497]">
+//                     tasks completed
+//                   </span>
+//                 </div>
+//               </div>
+//               <div className="grid grid-cols-3 gap-3">
+//                 <StatCard label="To Do" value={todoCount} color="muted" />
+//                 <StatCard
+//                   label="In Progress"
+//                   value={progressCount}
+//                   color="primary"
+//                 />
+//                 <StatCard label="Done" value={doneCount} color="green" />
+//               </div>
+//             </div>
+//             <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
+//               <div
+//                 className="h-full rounded-full bg-[#0475FB] transition-all duration-500"
+//                 style={{ width: `${completion}%` }}
+//               />
+//             </div>
+//           </section>
+
+//           {/* Error banner */}
+//           {error && (
+//             <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#F8D5D5] bg-[#FEF7F7] px-4 py-3 text-[10px] text-[#B42318]">
+//               <AlertCircle size={14} className="mt-0.5 shrink-0" />
+//               <span>{error}</span>
+//             </div>
+//           )}
+
+//           {/* Toolbar */}
+//           <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+//             <div className="relative w-full lg:max-w-[360px]">
+//               <Search
+//                 size={16}
+//                 className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B3]"
+//               />
+//               <input
+//                 type="search"
+//                 value={search}
+//                 onChange={(e) => setSearch(e.target.value)}
+//                 placeholder="Search tasks..."
+//                 aria-label="Search tasks"
+//                 className="h-9 w-full rounded-xl border border-[#E9EDF4] bg-white pl-9 pr-4 text-[11px] text-[#172033] outline-none transition placeholder:text-[#A1A9B7] focus:border-[#0475FB] focus:ring-2 focus:ring-[#0475FB]/10"
+//               />
+//             </div>
+//             <div className="flex flex-wrap gap-1.5">
+//               {["ALL", "TODO", "IN_PROGRESS", "DONE"].map((value) => (
+//                 <button
+//                   key={value}
+//                   type="button"
+//                   onClick={() => setFilter(value)}
+//                   className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${
+//                     filter === value
+//                       ? "bg-[#0475FB] text-white shadow-sm"
+//                       : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+//                   }`}
+//                 >
+//                   {value === "ALL"
+//                     ? "All"
+//                     : value === "TODO"
+//                       ? "To Do"
+//                       : value === "IN_PROGRESS"
+//                         ? "In Progress"
+//                         : "Done"}
+//                 </button>
+//               ))}
+//             </div>
+//           </div>
+
+//           {/* Task Groups */}
+//           <div className="mt-5 space-y-3">
+//             {loading ? (
+//               <div className="space-y-2">
+//                 {[1, 2, 3, 4].map((i) => (
+//                   <SkeletonCard key={i} className="p-5">
+//                     <SkeletonText className="h-4 w-1/3" />
+//                     <SkeletonText className="mt-3 h-3 w-2/3" />
+//                     <SkeletonText className="mt-4 h-3 w-1/4" />
+//                   </SkeletonCard>
+//                 ))}
+//               </div>
+//             ) : (
+//               <>
+//                 {(filter === "ALL" || filter === "TODO") && (
+//                   <TaskGroup
+//                     status="TODO"
+//                     tasks={todoTasks}
+//                     onOpen={setSelectedTask}
+//                   />
+//                 )}
+//                 {(filter === "ALL" || filter === "IN_PROGRESS") && (
+//                   <TaskGroup
+//                     status="IN_PROGRESS"
+//                     tasks={progressTasks}
+//                     onOpen={setSelectedTask}
+//                   />
+//                 )}
+//                 {(filter === "ALL" || filter === "DONE") && (
+//                   <TaskGroup
+//                     status="DONE"
+//                     tasks={doneTasks}
+//                     onOpen={setSelectedTask}
+//                   />
+//                 )}
+//                 {filteredTasks.length === 0 && (
+//                   <EmptyState status={filter} search={search} />
+//                 )}
+//               </>
+//             )}
+//           </div>
+
+//           {/* Footer */}
+//           <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-[#E9EDF4] pt-4 text-center sm:flex-row sm:text-left">
+//             <div className="flex items-center gap-4 text-[10px] font-medium text-[#7B8497]">
+//               <span>Help center</span>
+//               <span className="h-1 w-1 rounded-full bg-[#D1D5DB]" />
+//               <button
+//                 type="button"
+//                 onClick={() => navigate("/settings")}
+//                 className="hover:text-[#172033]"
+//               >
+//                 Settings
+//               </button>
+//             </div>
+//             <p className="text-[9px] font-medium text-gray-400">
+//               Tadreeby helps you stay on track throughout your field training.
+//             </p>
+//           </div>
+//         </div>
+//       </main>
+
+//       {/* Task Details Drawer */}
+//       <TaskDetailsDrawer
+//         task={selectedTask}
+//         onClose={() => setSelectedTask(null)}
+//         onSubmitted={handleSubmitted}
+//       />
+//     </div>
+//   );
+// }

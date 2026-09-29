@@ -1,10 +1,16 @@
 // src/components/pages/student/StudentProfile.jsx
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Briefcase,
-  GraduationCap,
+  BriefcaseBusiness,
+  ShieldCheck,
   Clock,
   Settings,
   Search,
@@ -25,13 +31,13 @@ import {
   AlertCircle,
   Save,
   Eye,
-  ShieldCheck,
   Building2,
   BookOpen,
   Award,
   Building,
   TrendingUp,
-  Trash2
+  Trash2,
+  ListTodo,
 } from "lucide-react";
 import Sidebar from "../../layout/Sidebar";
 import { useAuth } from "../../../context/AuthContext";
@@ -39,6 +45,7 @@ import { useToast } from "../../../context/ToastContext";
 import { profileAPI } from "../../../services/api";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import AIAssistant from "../../common/pagesAssets/AIAssistant";
+
 
 // ─── Import skeleton components ──────────────────────────────────────
 import {
@@ -59,17 +66,23 @@ import {
 function normalizeProfileResponse(response, previousProfile = {}) {
   const data = response?.data ?? response;
   const user = data?.user ?? {};
+  const currentInternship = data?.currentInternship !== undefined
+    ? data.currentInternship
+    : previousProfile.currentInternship;
 
   let skills = previousProfile.skills || [];
   if (data?.skills) {
     if (Array.isArray(data.skills)) {
       skills = data.skills;
-    } else if (typeof data.skills === 'string') {
+    } else if (typeof data.skills === "string") {
       try {
         const parsed = JSON.parse(data.skills);
         if (Array.isArray(parsed)) skills = parsed;
       } catch {
-        skills = data.skills.split(',').map(s => s.trim()).filter(Boolean);
+        skills = data.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
       }
     }
   }
@@ -83,10 +96,13 @@ function normalizeProfileResponse(response, previousProfile = {}) {
     academicYear: data?.academicYear ?? previousProfile.academicYear,
     gpa: data?.gpa ?? previousProfile.gpa,
     cvUrl: data?.cvUrl ?? previousProfile.cvUrl,
-    verificationDocument: data?.verificationDocument ?? previousProfile.verificationDocument,
-    hasVerificationDoc: !!data?.verificationDocument || previousProfile.hasVerificationDoc,
+    verificationDocument:
+      data?.verificationDocument ?? previousProfile.verificationDocument,
+    hasVerificationDoc:
+      !!data?.verificationDocument || previousProfile.hasVerificationDoc,
     hasCv: !!data?.cvUrl || previousProfile.hasCv,
-    verificationStatus: data?.approvalStatus?.toLowerCase() ?? previousProfile.verificationStatus,
+    verificationStatus:
+      data?.approvalStatus?.toLowerCase() ?? previousProfile.verificationStatus,
     firstName: user?.firstName ?? previousProfile.firstName,
     lastName: user?.lastName ?? previousProfile.lastName,
     email: user?.email ?? previousProfile.email,
@@ -95,17 +111,32 @@ function normalizeProfileResponse(response, previousProfile = {}) {
     recoveryEmail: user?.recoveryEmail ?? previousProfile.recoveryEmail,
     skills: skills,
     university: data?.university ?? previousProfile.university,
+    approvedAt: data?.approvedAt !== undefined ? data.approvedAt : previousProfile.approvedAt,
+    rejectionReason: data?.rejectionReason !== undefined ? data.rejectionReason : previousProfile.rejectionReason,
+    currentInternship,
+    company: currentInternship?.company?.name || "",
+    companyId: currentInternship?.company?.id ?? null,
   };
 }
 
 // ─── Navigation ──────────────────────────────────────────────────────
-const studentNavItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { label: "Opportunities", icon: Briefcase, path: "/student/opportunities" },
-  { label: "My Internship", icon: GraduationCap, path: "/student/my-internship" },
-  { label: "Attendance", icon: Clock, path: "/attendance" },
+const studentNavGroups = [
+  {
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
-
 const studentFooterItems = [
   { label: "Settings", icon: Settings, path: "/settings" },
 ];
@@ -124,12 +155,12 @@ const UNIVERSITIES = [
   { id: 2, name: "Birzeit University" },
   { id: 3, name: "Bethlehem University" },
   { id: 4, name: "Al-Quds University" },
-  { id: 5, name: "Palestine Polytechnic University" }
+  { id: 5, name: "Palestine Polytechnic University" },
 ];
 
 const getUniversityName = (id) => {
   if (!id) return "Not provided";
-  const uni = UNIVERSITIES.find(u => u.id === parseInt(id));
+  const uni = UNIVERSITIES.find((u) => u.id === parseInt(id));
   return uni ? uni.name : "Not provided";
 };
 
@@ -140,13 +171,20 @@ function buildInitialProfile(user) {
   let skills = DEFAULT_SKILLS;
   if (studentProfile.skills) {
     if (Array.isArray(studentProfile.skills)) {
-      skills = studentProfile.skills.length > 0 ? studentProfile.skills : DEFAULT_SKILLS;
-    } else if (typeof studentProfile.skills === 'string') {
-      skills = studentProfile.skills.split(',').map(s => s.trim()).filter(Boolean);
+      skills =
+        studentProfile.skills.length > 0
+          ? studentProfile.skills
+          : DEFAULT_SKILLS;
+    } else if (typeof studentProfile.skills === "string") {
+      skills = studentProfile.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
   }
 
-  const approvalStatus = studentProfile.approvalStatus?.toLowerCase() || "pending";
+  const approvalStatus =
+    studentProfile.approvalStatus?.toLowerCase() || "pending";
 
   return {
     firstName: safeUser.firstName || "",
@@ -157,7 +195,9 @@ function buildInitialProfile(user) {
     recoveryEmail: safeUser.recoveryEmail || "",
     studentNumber: studentProfile.studentNumber || "",
     major: studentProfile.major || "",
-    university: getUniversityName(safeUser.universityId || studentProfile.universityId),
+    university: getUniversityName(
+      safeUser.universityId || studentProfile.universityId,
+    ),
     universityId: safeUser.universityId || studentProfile.universityId,
     gpa: studentProfile.gpa || "",
     company: safeUser.companyId ? "Company name (from API)" : "",
@@ -176,7 +216,15 @@ function computeCompletion(profile) {
   if (!profile) return { checks: [], percentage: 0, nextAction: null };
 
   const checks = [
-    { key: "basics", done: !!(profile.firstName && profile.lastName && profile.major && profile.university) },
+    {
+      key: "basics",
+      done: !!(
+        profile.firstName &&
+        profile.lastName &&
+        profile.major &&
+        profile.university
+      ),
+    },
     { key: "photo", done: !!profile.avatar },
     { key: "recoveryEmail", done: !!profile.recoveryEmail },
     { key: "skills", done: (profile.skills || []).length >= 3 },
@@ -186,27 +234,30 @@ function computeCompletion(profile) {
 
   const required = checks.filter((c) => !c.optional);
   const doneCount = required.filter((c) => c.done).length;
-  const percentage = required.length > 0 ? Math.round((doneCount / required.length) * 100) : 0;
+  const percentage =
+    required.length > 0 ? Math.round((doneCount / required.length) * 100) : 0;
 
   return {
     checks: checks.map((c) => ({
       ...c,
-      label: {
-        basics: "Complete personal details",
-        photo: "Upload profile photo",
-        recoveryEmail: "Add recovery email",
-        skills: "Add at least 3 skills",
-        cv: "Upload CV (optional)",
-        verificationDoc: "Submit verification document",
-      }[c.key] || c.key,
-      section: {
-        basics: "personal",
-        photo: "personal",
-        recoveryEmail: "personal",
-        skills: "documents",
-        cv: "documents",
-        verificationDoc: "documents",
-      }[c.key] || "personal",
+      label:
+        {
+          basics: "Complete personal details",
+          photo: "Upload profile photo",
+          recoveryEmail: "Add recovery email",
+          skills: "Add at least 3 skills",
+          cv: "Upload CV (optional)",
+          verificationDoc: "Submit verification document",
+        }[c.key] || c.key,
+      section:
+        {
+          basics: "personal",
+          photo: "personal",
+          recoveryEmail: "personal",
+          skills: "documents",
+          cv: "documents",
+          verificationDoc: "documents",
+        }[c.key] || "personal",
     })),
     percentage,
     nextAction: checks.find((c) => !c.done && !c.optional) || null,
@@ -214,7 +265,13 @@ function computeCompletion(profile) {
 }
 
 const InfoIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"
       fill="currentColor"
@@ -240,14 +297,25 @@ const SectionHeading = ({ eyebrow, title, description, action }) => (
           {eyebrow}
         </p>
       )}
-      <h2 className="text-base font-extrabold tracking-tight text-gray-900">{title}</h2>
-      {description && <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p>}
+      <h2 className="text-base font-extrabold tracking-tight text-gray-900">
+        {title}
+      </h2>
+      {description && (
+        <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p>
+      )}
     </div>
     {action}
   </div>
 );
 
-const FieldDisplay = ({ label, value, icon, locked, placeholder, highlight }) => (
+const FieldDisplay = ({
+  label,
+  value,
+  icon,
+  locked,
+  placeholder,
+  highlight,
+}) => (
   <div>
     <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600">
       {label}
@@ -259,22 +327,33 @@ const FieldDisplay = ({ label, value, icon, locked, placeholder, highlight }) =>
       )}
     </label>
     <div
-      className={`mt-1.5 flex min-h-[43px] items-center rounded-xl border px-3.5 transition-all ${highlight
-        ? "border-[#FFAD4E] bg-[#FFF8EF] ring-2 ring-[#FFAD4E]/20"
-        : value
-          ? "border-gray-200 bg-gray-50/60 text-gray-900"
-          : "border-dashed border-gray-200 bg-gray-50/40 text-gray-400"
-        }`}
+      className={`mt-1.5 flex min-h-[43px] items-center rounded-xl border px-3.5 transition-all ${
+        highlight
+          ? "border-[#FFAD4E] bg-[#FFF8EF] ring-2 ring-[#FFAD4E]/20"
+          : value
+            ? "border-gray-200 bg-gray-50/60 text-gray-900"
+            : "border-dashed border-gray-200 bg-gray-50/40 text-gray-400"
+      }`}
     >
       {icon}
-      <span className={`truncate text-xs font-medium ${value ? "text-gray-800" : "italic text-gray-400"}`}>
+      <span
+        className={`truncate text-xs font-medium ${value ? "text-gray-800" : "italic text-gray-400"}`}
+      >
         {value || placeholder}
       </span>
     </div>
   </div>
 );
 
-const FieldInput = ({ label, value, onChange, type = "text", placeholder, locked, icon }) => (
+const FieldInput = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  locked,
+  icon,
+}) => (
   <div>
     <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-600">
       {label}
@@ -286,18 +365,24 @@ const FieldInput = ({ label, value, onChange, type = "text", placeholder, locked
       )}
     </label>
     <div className="relative mt-1.5">
-      {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
+      {icon && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          {icon}
+        </span>
+      )}
       <input
         type={type}
         value={value || ""}
         onChange={onChange}
         disabled={locked}
         placeholder={placeholder}
-        className={`w-full rounded-xl border py-2.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#1677FF]/15 ${icon ? "pl-9 pr-4" : "px-3.5"
-          } ${locked
+        className={`w-full rounded-xl border py-2.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#1677FF]/15 ${
+          icon ? "pl-9 pr-4" : "px-3.5"
+        } ${
+          locked
             ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500"
             : "border-gray-200 bg-white text-gray-800 placeholder-gray-400 focus:border-[#1677FF]"
-          }`}
+        }`}
       />
     </div>
   </div>
@@ -309,9 +394,20 @@ const CircleProgress = ({ percentage, size = 40 }) => {
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative inline-flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg className="transform -rotate-90 w-full h-full">
-        <circle className="text-gray-200" strokeWidth="3" stroke="currentColor" fill="transparent" r={radius} cx={size / 2} cy={size / 2} />
+        <circle
+          className="text-gray-200"
+          strokeWidth="3"
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
         <circle
           className="text-[#1677FF] transition-all duration-300 ease-out"
           strokeWidth="3"
@@ -343,18 +439,27 @@ const ProfileHeader = ({
   isAvatarUploading,
   avatarProgress,
 }) => {
-  const fullName = `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "Student";
-  const initials = `${profile.firstName?.[0] || ""}${profile.lastName?.[0] || ""}`.toUpperCase() || "S";
+  const fullName =
+    `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "Student";
+  const initials =
+    `${profile.firstName?.[0] || ""}${profile.lastName?.[0] || ""}`.toUpperCase() ||
+    "S";
 
-  const universityName = typeof profile.university === 'string'
-    ? profile.university
-    : (profile.university?.name || '');
+  const universityName =
+    typeof profile.university === "string"
+      ? profile.university
+      : profile.university?.name || "";
 
   const getStatusBadge = () => {
     const status = profile.verificationStatus?.toLowerCase() || "pending";
-    if (status === "approved") return { label: "Verified", className: "bg-green-100 text-green-700" };
-    if (status === "rejected") return { label: "Rejected", className: "bg-red-100 text-red-700" };
-    return { label: "Verification in progress", className: "bg-[#FFF4E6] text-[#C76A0B]" };
+    if (status === "approved")
+      return { label: "Verified", className: "bg-green-100 text-green-700" };
+    if (status === "rejected")
+      return { label: "Rejected", className: "bg-red-100 text-red-700" };
+    return {
+      label: "Verification in progress",
+      className: "bg-[#FFF4E6] text-[#C76A0B]",
+    };
   };
 
   const badge = getStatusBadge();
@@ -363,12 +468,12 @@ const ProfileHeader = ({
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (isMenuOpen && !e.target.closest('.relative.shrink-0')) {
+      if (isMenuOpen && !e.target.closest(".relative.shrink-0")) {
         setIsMenuOpen(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [isMenuOpen]);
 
   return (
@@ -376,10 +481,14 @@ const ProfileHeader = ({
       <div className="relative h-[140px] overflow-hidden bg-gradient-to-r from-blue-100/20 via-blue-200/20 to-orange-100/20 sm:h-[160px]">
         <div className="absolute -right-10 -top-20 h-56 w-56 rounded-full bg-white/40 blur-3xl" />
         <div className="absolute -bottom-24 left-[38%] h-56 w-56 rounded-full bg-orange-200/25 blur-3xl" />
-        <div className="absolute inset-0 opacity-[0.05]" style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, #1677FF 1px, transparent 0)",
-          backgroundSize: "22px 22px",
-        }} />
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, #1677FF 1px, transparent 0)",
+            backgroundSize: "22px 22px",
+          }}
+        />
       </div>
 
       <div className="relative px-5 pb-5 sm:px-7">
@@ -387,7 +496,11 @@ const ProfileHeader = ({
           <div className="flex min-w-0 items-end gap-4">
             <div className="relative shrink-0 group">
               {profile.avatar ? (
-                <img src={profile.avatar} alt={fullName} className="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-lg sm:h-28 sm:w-28" />
+                <img
+                  src={profile.avatar}
+                  alt={fullName}
+                  className="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-lg sm:h-28 sm:w-28"
+                />
               ) : (
                 <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-white bg-[#EAF3FF] text-2xl font-extrabold text-[#1677FF] shadow-lg sm:h-28 sm:w-28">
                   {initials}
@@ -438,23 +551,38 @@ const ProfileHeader = ({
                 </div>
               )}
 
-              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={onAvatarUpload} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={onAvatarUpload}
+              />
             </div>
 
             <div className="min-w-0 pb-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">{fullName}</h1>
-                <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-bold text-[#1677FF]">Student</span>
+                <h1 className="truncate text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
+                  {fullName}
+                </h1>
+                <span className="rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-bold text-[#1677FF]">
+                  Student
+                </span>
               </div>
               <p className="mt-1 truncate text-xs font-medium text-gray-500">
-                {profile.major || "No major"} · {universityName || "No university"}
+                {profile.major || "No major"} ·{" "}
+                {universityName || "No university"}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.className}`}>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.className}`}
+                >
                   <AlertCircle className="h-3 w-3" />
                   {badge.label}
                 </span>
-                <span className="hidden text-[11px] font-medium text-gray-400 sm:inline">{profile.email}</span>
+                <span className="hidden text-[11px] font-medium text-gray-400 sm:inline">
+                  {profile.email}
+                </span>
               </div>
             </div>
           </div>
@@ -474,36 +602,55 @@ const ProfileHeader = ({
           <div className="flex items-start gap-2 px-4 py-3">
             <Hash className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Student Number</p>
-              <p className="mt-1 truncate text-xs font-bold text-gray-800">{profile.studentNumber || "—"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                Student Number
+              </p>
+              <p className="mt-1 truncate text-xs font-bold text-gray-800">
+                {profile.studentNumber || "—"}
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-2 px-4 py-3">
             <Building2 className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">University</p>
-              <p className="mt-1 truncate text-xs font-bold text-gray-800">{universityName || "—"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                University
+              </p>
+              <p className="mt-1 truncate text-xs font-bold text-gray-800">
+                {universityName || "—"}
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-2 border-t border-gray-100 px-4 py-3 sm:border-t-0">
             <Award className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">GPA</p>
-              <p className="mt-1 truncate text-xs font-bold text-gray-800">{profile.gpa || "Not added"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                GPA
+              </p>
+              <p className="mt-1 truncate text-xs font-bold text-gray-800">
+                {profile.gpa || "Not added"}
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-2 border-t border-gray-100 px-4 py-3 sm:border-t-0">
             <TrendingUp className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Profile strength</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                Profile strength
+              </p>
               <div className="mt-1 flex items-center gap-2">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-200">
-                  <div className="h-full rounded-full bg-[#1677FF]" style={{ width: `${completion.percentage || 0}%` }} />
+                  <div
+                    className="h-full rounded-full bg-[#1677FF]"
+                    style={{ width: `${completion.percentage || 0}%` }}
+                  />
                 </div>
-                <span className="text-xs font-extrabold text-[#1677FF]">{completion.percentage || 0}%</span>
+                <span className="text-xs font-extrabold text-[#1677FF]">
+                  {completion.percentage || 0}%
+                </span>
               </div>
             </div>
           </div>
@@ -515,18 +662,26 @@ const ProfileHeader = ({
 
 // ─── Tabs ────────────────────────────────────────────────────────────
 const TabNav = ({ activeTab, onChange }) => (
-  <nav className="mt-5 flex overflow-x-auto border-b border-gray-200" aria-label="Profile sections">
+  <nav
+    className="mt-5 flex overflow-x-auto border-b border-gray-200"
+    aria-label="Profile sections"
+  >
     {PROFILE_TABS.map((tab) => (
       <button
         key={tab.id}
         type="button"
         onClick={() => onChange(tab.id)}
         aria-selected={activeTab === tab.id}
-        className={`relative whitespace-nowrap px-5 py-3 text-xs font-bold transition sm:text-sm ${activeTab === tab.id ? "text-[#1677FF]" : "text-gray-500 hover:text-gray-800"
-          }`}
+        className={`relative whitespace-nowrap px-5 py-3 text-xs font-bold transition sm:text-sm ${
+          activeTab === tab.id
+            ? "text-[#1677FF]"
+            : "text-gray-500 hover:text-gray-800"
+        }`}
       >
         {tab.label}
-        {activeTab === tab.id && <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#1677FF]" />}
+        {activeTab === tab.id && (
+          <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#1677FF]" />
+        )}
       </button>
     ))}
   </nav>
@@ -534,7 +689,11 @@ const TabNav = ({ activeTab, onChange }) => (
 
 // ─── Verification ────────────────────────────────────────────────────
 const ProgressTracker = ({ status }) => {
-  const statusMap = { pending: "review", approved: "approved", rejected: "review" };
+  const statusMap = {
+    pending: "review",
+    approved: "approved",
+    rejected: "review",
+  };
   const actualStatus = statusMap[status?.toLowerCase()] || "review";
 
   const steps = [
@@ -544,7 +703,8 @@ const ProgressTracker = ({ status }) => {
   ];
 
   const statusIndex = steps.findIndex((s) => s.key === actualStatus);
-  const fillWidth = statusIndex <= 0 ? "0%" : statusIndex === 1 ? "50%" : "100%";
+  const fillWidth =
+    statusIndex <= 0 ? "0%" : statusIndex === 1 ? "50%" : "100%";
   const isApproved = status?.toLowerCase() === "approved";
   const isRejected = status?.toLowerCase() === "rejected";
   const isPending = status?.toLowerCase() === "pending";
@@ -552,10 +712,15 @@ const ProgressTracker = ({ status }) => {
   let lineColor = "bg-gray-200";
   if (isApproved) lineColor = "bg-green-500";
   else if (isRejected) lineColor = "bg-red-500";
-  else if (isPending) lineColor = "bg-gradient-to-r from-blue-500 to-yellow-400";
+  else if (isPending)
+    lineColor = "bg-gradient-to-r from-blue-500 to-yellow-400";
 
   return (
-    <div className="relative flex w-full items-start justify-between" role="list" aria-label="Verification progress">
+    <div
+      className="relative flex w-full items-start justify-between"
+      role="list"
+      aria-label="Verification progress"
+    >
       <div className="absolute left-[7%] right-[7%] top-5 h-0.5 bg-gray-200" />
       <div
         className={`absolute left-[7%] top-5 h-0.5 transition-all duration-500 ${lineColor}`}
@@ -578,14 +743,28 @@ const ProgressTracker = ({ status }) => {
           }
         }
         return (
-          <div key={step.key} className="relative z-10 flex w-1/3 flex-col items-center" role="listitem">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-xs font-extrabold shadow-sm transition-all duration-500 ${circleColor}`}>
-              {completed ? <Check className="h-4 w-4" strokeWidth={2.5} /> : idx + 1}
+          <div
+            key={step.key}
+            className="relative z-10 flex w-1/3 flex-col items-center"
+            role="listitem"
+          >
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-xs font-extrabold shadow-sm transition-all duration-500 ${circleColor}`}
+            >
+              {completed ? (
+                <Check className="h-4 w-4" strokeWidth={2.5} />
+              ) : (
+                idx + 1
+              )}
             </div>
-            <p className={`mt-2 text-[11px] font-extrabold ${active || completed ? "text-blue-600" : "text-gray-400"}`}>
+            <p
+              className={`mt-2 text-[11px] font-extrabold ${active || completed ? "text-blue-600" : "text-gray-400"}`}
+            >
               {step.label}
             </p>
-            <p className="mt-0.5 text-[10px] font-medium text-gray-400">{step.date}</p>
+            <p className="mt-0.5 text-[10px] font-medium text-gray-400">
+              {step.date}
+            </p>
           </div>
         );
       })}
@@ -598,7 +777,11 @@ const ApplicationStatusTracker = ({ status, onDismiss }) => {
   const isApproved = status?.toLowerCase() === "approved";
   const isRejected = status?.toLowerCase() === "rejected";
 
-  const title = isApproved ? "Account Verified" : isRejected ? "Verification Document Rejected" : "Pending Verification";
+  const title = isApproved
+    ? "Account Verified"
+    : isRejected
+      ? "Verification Document Rejected"
+      : "Pending Verification";
   const description = isApproved
     ? "Your account has been approved."
     : isPending
@@ -619,13 +802,22 @@ const ApplicationStatusTracker = ({ status, onDismiss }) => {
 
       <div className="border-b border-gray-100 bg-gray-50/60 px-6 py-4">
         <div className="flex items-start gap-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isApproved ? "bg-green-100 text-green-700" : isRejected ? "bg-red-100 text-red-700" : "bg-[#FFF4E6] text-[#C76A0B]"
-            }`}>
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              isApproved
+                ? "bg-green-100 text-green-700"
+                : isRejected
+                  ? "bg-red-100 text-red-700"
+                  : "bg-[#FFF4E6] text-[#C76A0B]"
+            }`}
+          >
             {isApproved ? <CheckCircle className="h-5 w-5" /> : <InfoIcon />}
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-gray-900">{title}</h2>
-            <p className="mt-0.5 text-xs font-medium text-gray-500">{description}</p>
+            <p className="mt-0.5 text-xs font-medium text-gray-500">
+              {description}
+            </p>
           </div>
         </div>
       </div>
@@ -636,9 +828,12 @@ const ApplicationStatusTracker = ({ status, onDismiss }) => {
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#FD761A]" />
               <div>
-                <p className="text-xs font-extrabold text-gray-900">Limited access during review</p>
+                <p className="text-xs font-extrabold text-gray-900">
+                  Limited access during review
+                </p>
                 <p className="mt-1 text-[11px] font-medium leading-5 text-gray-600">
-                  You can view and complete your profile while verification is in progress. Internship applications unlock after approval.
+                  You can view and complete your profile while verification is
+                  in progress. Internship applications unlock after approval.
                 </p>
               </div>
             </div>
@@ -704,9 +899,25 @@ const PersonalInfoCard = ({
               >
                 {isSaving ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Saving...
                   </>
@@ -730,49 +941,49 @@ const PersonalInfoCard = ({
               value={currentProfile.firstName}
               locked
               icon={<User className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="Last Name"
               value={currentProfile.lastName}
               locked
               icon={<User className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="Major"
               value={currentProfile.major}
               locked
               icon={<BookOpen className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="University"
               value={currentProfile.university}
               locked
               icon={<Building2 className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="Email"
               value={currentProfile.email}
               locked
               icon={<Mail className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="Student Number"
               value={currentProfile.studentNumber}
               locked
               icon={<Hash className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
             <FieldInput
               label="Company"
               value={currentProfile.company || "Not enrolled yet"}
               locked
               icon={<Building className="h-4 w-4" />}
-              onChange={() => { }}
+              onChange={() => {}}
             />
 
             <FieldInput
@@ -816,13 +1027,17 @@ const PersonalInfoCard = ({
               label="Major"
               value={currentProfile.major}
               locked
-              icon={<BookOpen className="mr-2 h-4 w-4 shrink-0 text-gray-400" />}
+              icon={
+                <BookOpen className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+              }
             />
             <FieldDisplay
               label="University"
               value={currentProfile.university}
               locked
-              icon={<Building2 className="mr-2 h-4 w-4 shrink-0 text-gray-400" />}
+              icon={
+                <Building2 className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+              }
             />
             <FieldDisplay
               label="Email"
@@ -861,7 +1076,9 @@ const PersonalInfoCard = ({
               value={currentProfile.company || "Not enrolled yet"}
               placeholder="You are not enrolled yet"
               locked
-              icon={<Building className="mr-2 h-4 w-4 shrink-0 text-gray-400" />}
+              icon={
+                <Building className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+              }
             />
           </>
         )}
@@ -901,29 +1118,34 @@ const DocumentsCard = ({
           role="button"
           tabIndex={0}
           onClick={() => !isCvUploading && cvInputRef.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && !isCvUploading && cvInputRef.current?.click()}
-          className={`group flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${isCvUploading
-            ? "border-[#1677FF] bg-[#EAF3FF]/80"
-            : profile.hasCv
-              ? "border-[#1677FF]/20 bg-[#EAF3FF]/60"
-              : "border-dashed border-gray-200 bg-gray-50/50 hover:border-[#1677FF]/40 hover:bg-[#EAF3FF]/40"
-            }`}
+          onKeyDown={(e) =>
+            e.key === "Enter" && !isCvUploading && cvInputRef.current?.click()
+          }
+          className={`group flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
+            isCvUploading
+              ? "border-[#1677FF] bg-[#EAF3FF]/80"
+              : profile.hasCv
+                ? "border-[#1677FF]/20 bg-[#EAF3FF]/60"
+                : "border-dashed border-gray-200 bg-gray-50/50 hover:border-[#1677FF]/40 hover:bg-[#EAF3FF]/40"
+          }`}
         >
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCvUploading
-                ? "bg-[#1677FF] text-white"
-                : profile.hasCv
-                  ? "bg-[#1677FF]/10"
-                  : "bg-gray-100"
-                }`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                isCvUploading
+                  ? "bg-[#1677FF] text-white"
+                  : profile.hasCv
+                    ? "bg-[#1677FF]/10"
+                    : "bg-gray-100"
+              }`}
             >
               {isCvUploading ? (
                 <CircleProgress percentage={cvProgress} size={36} />
               ) : (
                 <FileText
-                  className={`h-5 w-5 ${profile.hasCv ? "text-[#1677FF]" : "text-gray-400"
-                    }`}
+                  className={`h-5 w-5 ${
+                    profile.hasCv ? "text-[#1677FF]" : "text-gray-400"
+                  }`}
                 />
               )}
             </div>
@@ -989,7 +1211,10 @@ const DocumentsCard = ({
         {showCvDeleteConfirm && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backgroundColor: "rgba(17, 24, 39, 0.45)", backdropFilter: "blur(4px)" }}
+            style={{
+              backgroundColor: "rgba(17, 24, 39, 0.45)",
+              backdropFilter: "blur(4px)",
+            }}
             onClick={() => setShowCvDeleteConfirm(false)}
           >
             <div
@@ -1006,7 +1231,8 @@ const DocumentsCard = ({
                 Delete your CV?
               </h3>
               <p className="mt-1.5 text-center text-[12px] leading-5 text-gray-500">
-                Are you sure you want to remove your uploaded CV? <br />You can always upload a new one later.
+                Are you sure you want to remove your uploaded CV? <br />
+                You can always upload a new one later.
               </p>
 
               {/* Actions */}
@@ -1034,20 +1260,24 @@ const DocumentsCard = ({
           </div>
         )}
 
-
         <div
-          className={`rounded-xl border p-4 ${isRejected ? "border-red-200 bg-red-50/50" : "border-gray-100 bg-gray-50"
-            }`}
+          className={`rounded-xl border p-4 ${
+            isRejected
+              ? "border-red-200 bg-red-50/50"
+              : "border-gray-100 bg-gray-50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isRejected ? "bg-red-100" : "bg-[#FFF4E6]"
-                  }`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  isRejected ? "bg-red-100" : "bg-[#FFF4E6]"
+                }`}
               >
                 <FileText
-                  className={`h-5 w-5 ${isRejected ? "text-red-600" : "text-[#C76A0B]"
-                    }`}
+                  className={`h-5 w-5 ${
+                    isRejected ? "text-red-600" : "text-[#C76A0B]"
+                  }`}
                 />
               </div>
               <div className="min-w-0">
@@ -1067,19 +1297,23 @@ const DocumentsCard = ({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {profile.hasVerificationDoc && !isVerificationDocumentUploading && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onViewDocument(profile.verificationDocument, "verification document")
-                  }
-                  className="rounded p-1.5 text-[#C76A0B] transition hover:bg-white/80"
-                  aria-label="View verification document"
-                  title="View verification document"
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-              )}
+              {profile.hasVerificationDoc &&
+                !isVerificationDocumentUploading && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onViewDocument(
+                        profile.verificationDocument,
+                        "verification document",
+                      )
+                    }
+                    className="rounded p-1.5 text-[#C76A0B] transition hover:bg-white/80"
+                    aria-label="View verification document"
+                    title="View verification document"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                )}
               {onRemoveVerificationDocument && profile.hasVerificationDoc && (
                 <button
                   type="button"
@@ -1092,12 +1326,13 @@ const DocumentsCard = ({
                 </button>
               )}
               <span
-                className={`rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${profile.verificationStatus?.toLowerCase() === "approved"
-                  ? "bg-green-100 text-green-700"
-                  : isRejected
-                    ? "bg-red-100 text-red-700"
-                    : "border border-[#FFAD4E]/30 bg-[#FFF4E6] text-[#C76A0B]"
-                  }`}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${
+                  profile.verificationStatus?.toLowerCase() === "approved"
+                    ? "bg-green-100 text-green-700"
+                    : isRejected
+                      ? "bg-red-100 text-red-700"
+                      : "border border-[#FFAD4E]/30 bg-[#FFF4E6] text-[#C76A0B]"
+                }`}
               >
                 {profile.verificationStatus?.toLowerCase() === "approved"
                   ? "Approved"
@@ -1117,7 +1352,9 @@ const DocumentsCard = ({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#086BEA] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Upload className="h-3.5 w-3.5" />
-                {isVerificationDocumentUploading ? "Uploading..." : "Upload new document"}
+                {isVerificationDocumentUploading
+                  ? "Uploading..."
+                  : "Upload new document"}
               </button>
               <input
                 ref={verificationDocumentInputRef}
@@ -1135,7 +1372,13 @@ const DocumentsCard = ({
 };
 
 // ─── Skills ──────────────────────────────────────────────────────────
-const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSkill }) => {
+const SkillsCard = ({
+  skills,
+  newSkill,
+  onNewSkillChange,
+  onAddSkill,
+  onRemoveSkill,
+}) => {
   const skillCount = (skills || []).length;
   const isRequiredMet = skillCount >= 3;
 
@@ -1147,14 +1390,18 @@ const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSk
           <span className="flex items-center gap-1.5">
             Skills
             <span className="text-red-500 text-sm font-bold">*</span>
-            <span className={`ml-2 text-[10px] font-medium ${isRequiredMet ? 'text-emerald-600' : 'text-red-500'}`}>
-              {isRequiredMet ? '✓ Required met' : `${skillCount}/3 required`}
+            <span
+              className={`ml-2 text-[10px] font-medium ${isRequiredMet ? "text-emerald-600" : "text-red-500"}`}
+            >
+              {isRequiredMet ? "✓ Required met" : `${skillCount}/3 required`}
             </span>
           </span>
         }
         description="Add at least 3 skills to help employers match you with relevant internships."
         action={
-          <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${isRequiredMet ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${isRequiredMet ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+          >
             {skillCount} added
           </span>
         }
@@ -1178,7 +1425,9 @@ const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSk
             </span>
           ))}
           {skillCount === 0 && (
-            <p className="text-xs italic text-gray-400">No skills added yet. Add at least 3 to improve matching.</p>
+            <p className="text-xs italic text-gray-400">
+              No skills added yet. Add at least 3 to improve matching.
+            </p>
           )}
         </div>
 
@@ -1187,7 +1436,9 @@ const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSk
             type="text"
             value={newSkill}
             onChange={(e) => onNewSkillChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), onAddSkill())}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), onAddSkill())
+            }
             placeholder="e.g. TypeScript, Figma, Python..."
             className="min-w-0 flex-1 rounded-xl border border-gray-200 px-3.5 py-2.5 text-xs font-medium placeholder-gray-400 focus:border-[#1677FF] focus:outline-none focus:ring-2 focus:ring-[#1677FF]/10"
           />
@@ -1205,7 +1456,8 @@ const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSk
         {!isRequiredMet && skillCount > 0 && (
           <p className="mt-3 text-xs text-orange-600 flex items-center gap-1.5">
             <AlertCircle className="h-3.5 w-3.5" />
-            You need {3 - skillCount} more skill{3 - skillCount > 1 ? 's' : ''} to meet the minimum requirement.
+            You need {3 - skillCount} more skill{3 - skillCount > 1 ? "s" : ""}{" "}
+            to meet the minimum requirement.
           </p>
         )}
       </div>
@@ -1214,6 +1466,120 @@ const SkillsCard = ({ skills, newSkill, onNewSkillChange, onAddSkill, onRemoveSk
 };
 
 // ─── Completion Checklist ───────────────────────────────────────────
+function formatVerificationDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
+function verificationInitials(name) {
+  return name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function ProfileVerificationCard({ profile, onViewInternship }) {
+  const status = profile.verificationStatus?.toLowerCase();
+  const approved = status === "approved";
+  const rejected = status === "rejected";
+  const statusLabel = approved ? "Verified" : rejected ? "Rejected" : "Under review";
+  const statusStyle = approved
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : rejected ? "border-red-200 bg-red-50 text-red-700"
+      : "border-amber-200 bg-amber-50 text-amber-700";
+  const university = typeof profile.university === "string"
+    ? profile.university : profile.university?.name;
+  const approvedAt = formatVerificationDate(profile.approvedAt);
+  const internship = profile.currentInternship;
+  const company = internship?.company;
+  const companyName = company?.name || "Company not provided";
+  const enrolledAt = formatVerificationDate(company?.enrolledAt || internship?.enrolledAt);
+  const trainer = internship?.trainer;
+  const trainerName = [trainer?.firstName, trainer?.lastName].filter(Boolean).join(" ");
+  const type = internship?.type?.replace(/_/g, " ").toLowerCase();
+
+  return (
+    <section aria-label="Verification and enrollment" className="flex w-full min-w-0 flex-col gap-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-8 xl:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-600">Account status</p>
+          <h2 className="mt-0.5 text-sm font-extrabold text-gray-900">Verification</h2>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold ${statusStyle}`}>
+          <span className="h-2 w-2 rounded-full bg-current" />
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${statusStyle}`}>
+            <ShieldCheck size={24} aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1 basis-40">
+            <h3 className="text-xs font-bold text-slate-900">Verified</h3>
+            <p className="text-[10px] leading-4 text-slate-500">
+              {university || "University not provided"}
+              {approved && approvedAt && ` · Verified ${approvedAt}`}
+            </p>
+            {rejected && profile.rejectionReason && (
+              <p className="mt-1 text-[10px] leading-4 text-red-700">{profile.rejectionReason}</p>
+            )}
+          </div>
+          <span className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${statusStyle}`}>
+            {approved ? "Approved" : statusLabel}
+          </span>
+        </div>
+
+        {internship ? (
+          <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 basis-40 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-600 text-xs font-bold text-white ring-2 ring-white">
+                  {company?.logo ? <img src={company.logo} alt={`${companyName} logo`} className="h-full w-full object-contain" /> : verificationInitials(companyName)}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="break-words text-xs font-bold text-slate-900">{companyName}</h3>
+                    {company?.shortCode && <span className="rounded-md bg-blue-100/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-blue-700">{company.shortCode}</span>}
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-slate-500">{enrolledAt ? `Enrolled ${enrolledAt}` : "Current internship company"}</p>
+                </div>
+              </div>
+              <span className="rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">Enrolled</span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-sm">
+              <div className="min-w-0 flex-1 basis-52">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="text-[11px] font-bold text-slate-900">{internship.title || "Current internship"}</h4>
+                  {type && <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-semibold capitalize text-purple-700">{type}</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                  <span className="inline-flex min-w-0 items-center gap-1 text-slate-600">
+                    {trainerName && <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-[9px] font-bold text-slate-700">
+                      {trainer?.profileImage ? <img src={trainer.profileImage} alt="" className="h-full w-full object-cover" /> : verificationInitials(trainerName)}
+                    </span>}
+                    <span>Trainer: <strong>{trainerName || "Not assigned"}</strong></span>
+                  </span>
+                  {internship.duration && <span>{internship.duration}</span>}
+                </div>
+              </div>
+              <button type="button" onClick={onViewInternship} className="shrink-0 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-semibold text-blue-600 transition hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">View internship</button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <h3 className="text-xs font-bold text-slate-900">Company enrollment</h3>
+            <p className="mt-1 text-[10px] leading-4 text-slate-500">You are not enrolled yet to any company.</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
 const CompletionChecklist = ({ completion, onItemClick }) => {
   const percentage = completion.percentage || 0;
   const radius = 32;
@@ -1274,19 +1640,30 @@ const CompletionChecklist = ({ completion, onItemClick }) => {
               type="button"
               onClick={() => !item.done && onItemClick(item)}
               disabled={item.done}
-              className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${item.done ? "cursor-default" : "cursor-pointer hover:bg-[#EAF3FF]"
-                }`}
+              className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${
+                item.done
+                  ? "cursor-default"
+                  : "cursor-pointer hover:bg-[#EAF3FF]"
+              }`}
             >
               {item.done ? (
                 <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
               ) : (
                 <XCircle className="h-4 w-4 shrink-0 text-gray-300" />
               )}
-              <span className={`text-[11px] font-semibold ${item.done ? "text-emerald-700" : "text-gray-600"}`}>
+              <span
+                className={`text-[11px] font-semibold ${item.done ? "text-emerald-700" : "text-gray-600"}`}
+              >
                 {item.label}
-                {item.optional && <span className="ml-1 font-normal text-gray-400">(optional)</span>}
+                {item.optional && (
+                  <span className="ml-1 font-normal text-gray-400">
+                    (optional)
+                  </span>
+                )}
               </span>
-              {!item.done && <ChevronRight className="ml-auto h-3.5 w-3.5 text-gray-400" />}
+              {!item.done && (
+                <ChevronRight className="ml-auto h-3.5 w-3.5 text-gray-400" />
+              )}
             </button>
           </li>
         ))}
@@ -1319,21 +1696,31 @@ const ProfilePreviewCard = ({ profile }) => (
       <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF3FF] text-sm font-extrabold text-[#1677FF]">
-            {profile.firstName?.[0] || ""}{profile.lastName?.[0] || ""}
+            {profile.firstName?.[0] || ""}
+            {profile.lastName?.[0] || ""}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-extrabold text-gray-900">{profile.firstName} {profile.lastName}</p>
-            <p className="truncate text-[11px] font-medium text-gray-500">{profile.major}</p>
+            <p className="truncate text-sm font-extrabold text-gray-900">
+              {profile.firstName} {profile.lastName}
+            </p>
+            <p className="truncate text-[11px] font-medium text-gray-500">
+              {profile.major}
+            </p>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(profile.skills || []).slice(0, 4).map((s) => (
-            <span key={s} className="rounded-md border border-[#1677FF]/10 bg-white px-2 py-1 text-[10px] font-bold text-[#1677FF]">
+            <span
+              key={s}
+              className="rounded-md border border-[#1677FF]/10 bg-white px-2 py-1 text-[10px] font-bold text-[#1677FF]"
+            >
               {s}
             </span>
           ))}
           {(profile.skills || []).length > 4 && (
-            <span className="px-1 py-1 text-[10px] font-medium text-gray-400">+{(profile.skills || []).length - 4} more</span>
+            <span className="px-1 py-1 text-[10px] font-medium text-gray-400">
+              +{(profile.skills || []).length - 4} more
+            </span>
           )}
         </div>
       </div>
@@ -1344,10 +1731,10 @@ const ProfilePreviewCard = ({ profile }) => (
 // ─── Main Component ──────────────────────────────────────────────────
 const StudentProfile = () => {
   const getToastType = (status) => {
-    if (status === 401) return 'auth';
-    if (status === 400) return 'validation';
-    if (status >= 500) return 'error';
-    return 'error';
+    if (status === 401) return "auth";
+    if (status === 400) return "validation";
+    if (status >= 500) return "error";
+    return "error";
   };
   const location = useLocation();
   const navigate = useNavigate();
@@ -1366,7 +1753,8 @@ const StudentProfile = () => {
   const [cvProgress, setCvProgress] = useState(0);
   const [isCvUploading, setIsCvUploading] = useState(false);
   const [isCvRemoving, setIsCvRemoving] = useState(false);
-  const [isVerificationDocumentUploading, setIsVerificationDocumentUploading] = useState(false);
+  const [isVerificationDocumentUploading, setIsVerificationDocumentUploading] =
+    useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1379,11 +1767,13 @@ const StudentProfile = () => {
 
   const studentUser = useMemo(
     () => ({
-      name: `${profile.firstName || ""} ${profile.lastName || ""}`.trim() || "Student",
+      name:
+        `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+        "Student",
       role: "Student",
       avatar: profile.avatar,
     }),
-    [profile]
+    [profile],
   );
 
   const handleSignOut = () => {
@@ -1398,15 +1788,18 @@ const StudentProfile = () => {
       try {
         const response = await profileAPI.getProfile();
         const normalized = normalizeProfileResponse(response, profile);
-        if (normalized.university && typeof normalized.university === 'object') {
-          normalized.university = normalized.university.name || '';
+        if (
+          normalized.university &&
+          typeof normalized.university === "object"
+        ) {
+          normalized.university = normalized.university.name || "";
         }
         setProfile(normalized);
       } catch (error) {
         console.error("Failed to load profile:", error);
         showToast(
           error?.message || "Failed to load profile.",
-          getToastType(error?.status || 500)
+          getToastType(error?.status || 500),
         );
       } finally {
         setIsLoadingProfile(false);
@@ -1421,7 +1814,7 @@ const StudentProfile = () => {
       showToast(
         location.state.message || "Your account is pending verification.",
         "success",
-        6000
+        6000,
       );
     }
   }, [location.state, showToast]);
@@ -1464,8 +1857,8 @@ const StudentProfile = () => {
       setAvatarProgress(100);
 
       const normalized = normalizeProfileResponse(response, profile);
-      if (normalized.university && typeof normalized.university === 'object') {
-        normalized.university = normalized.university.name || '';
+      if (normalized.university && typeof normalized.university === "object") {
+        normalized.university = normalized.university.name || "";
       }
       const updatedProfile = { ...normalized, avatar: base64 };
       setProfile(updatedProfile);
@@ -1478,7 +1871,7 @@ const StudentProfile = () => {
     } finally {
       setIsAvatarUploading(false);
       setAvatarProgress(0);
-      if (avatarInputRef.current) avatarInputRef.current.value = '';
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -1494,8 +1887,8 @@ const StudentProfile = () => {
       setAvatarProgress(100);
 
       const normalized = normalizeProfileResponse(response, profile);
-      if (normalized.university && typeof normalized.university === 'object') {
-        normalized.university = normalized.university.name || '';
+      if (normalized.university && typeof normalized.university === "object") {
+        normalized.university = normalized.university.name || "";
       }
       setProfile({ ...normalized, avatar: null });
       setDraft((prev) => (prev ? { ...prev, avatar: null } : prev));
@@ -1538,8 +1931,8 @@ const StudentProfile = () => {
       const response = await profileAPI.uploadCV(file, setCvProgress);
 
       const normalized = normalizeProfileResponse(response, profile);
-      if (normalized.university && typeof normalized.university === 'object') {
-        normalized.university = normalized.university.name || '';
+      if (normalized.university && typeof normalized.university === "object") {
+        normalized.university = normalized.university.name || "";
       }
       setProfile(normalized);
       setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
@@ -1551,7 +1944,7 @@ const StudentProfile = () => {
       setIsCvUploading(false);
       setCvProgress(0);
       const input = e.target;
-      if (input) input.value = '';
+      if (input) input.value = "";
     }
   };
 
@@ -1589,7 +1982,10 @@ const StudentProfile = () => {
 
     const validTypes = ["image/jpeg", "image/png", "application/pdf"];
     if (!validTypes.includes(file.type)) {
-      showToast("Please upload a JPG, PNG, or PDF verification document.", "error");
+      showToast(
+        "Please upload a JPG, PNG, or PDF verification document.",
+        "error",
+      );
       e.target.value = "";
       return;
     }
@@ -1604,10 +2000,16 @@ const StudentProfile = () => {
       }
       setProfile(normalized);
       setDraft((prev) => (prev ? { ...prev, ...normalized } : prev));
-      showToast("Verification document submitted. Your account is now pending review.", "success");
+      showToast(
+        "Verification document submitted. Your account is now pending review.",
+        "success",
+      );
     } catch (error) {
       console.error("Verification document re-upload error:", error);
-      showToast(error?.message || "Failed to submit verification document.", "error");
+      showToast(
+        error?.message || "Failed to submit verification document.",
+        "error",
+      );
     } finally {
       setIsVerificationDocumentUploading(false);
       e.target.value = "";
@@ -1637,7 +2039,10 @@ const StudentProfile = () => {
     } catch (error) {
       viewer.close();
       console.error(`Failed to open ${label}:`, error);
-      showToast(`Unable to open this ${label}. Please try again later.`, "error");
+      showToast(
+        `Unable to open this ${label}. Please try again later.`,
+        "error",
+      );
     }
   };
 
@@ -1657,21 +2062,21 @@ const StudentProfile = () => {
     if (!draft) return;
 
     const changes = {};
-    const editableFields = ['recoveryEmail', 'phone', 'gpa'];
-    editableFields.forEach(f => {
+    const editableFields = ["recoveryEmail", "phone", "gpa"];
+    editableFields.forEach((f) => {
       if (draft[f] !== profile[f]) {
         changes[f] = draft[f];
       }
     });
 
-    if (Object.prototype.hasOwnProperty.call(changes, 'gpa')) {
+    if (Object.prototype.hasOwnProperty.call(changes, "gpa")) {
       const raw = changes.gpa;
-      if (raw === null || raw === '') {
+      if (raw === null || raw === "") {
         changes.gpa = null;
       } else {
         const num = Number(raw);
         if (Number.isNaN(num)) {
-          showToast('GPA must be a number.', 'error');
+          showToast("GPA must be a number.", "error");
           return;
         }
         changes.gpa = num;
@@ -1690,8 +2095,8 @@ const StudentProfile = () => {
     try {
       const response = await profileAPI.updateProfile(changes);
       const normalized = normalizeProfileResponse(response, profile);
-      if (normalized.university && typeof normalized.university === 'object') {
-        normalized.university = normalized.university.name || '';
+      if (normalized.university && typeof normalized.university === "object") {
+        normalized.university = normalized.university.name || "";
       }
       setProfile(normalized);
       setDraft(null);
@@ -1716,7 +2121,10 @@ const StudentProfile = () => {
 
     try {
       await profileAPI.addSkill(trimmed);
-      setProfile((prev) => ({ ...prev, skills: [...(prev.skills || []), trimmed] }));
+      setProfile((prev) => ({
+        ...prev,
+        skills: [...(prev.skills || []), trimmed],
+      }));
       setNewSkill("");
       showToast("Skill added.", "success");
     } catch (error) {
@@ -1764,18 +2172,21 @@ const StudentProfile = () => {
   // ─── Loading state (Skeleton) ──────────────────────────────────────
   if (isLoadingProfile) {
     return (
-      <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+      <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
         <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
         <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
         <Sidebar
-          navItems={studentNavItems}
-          footerItems={studentFooterItems}
-          user={studentUser}
-          profilePath="/student/profile"
-          onSignOut={handleSignOut}
-        />
+        navGroups={studentNavGroups}
+        footerItems={studentFooterItems}
+        user={studentUser}
+        profilePath="/student/profile"
+        onSignOut={handleSignOut}
+        chatPath="/student/chats"
+        brandPath="/student/dashboard"
+        storageKey="sidebar-student"
+      />
 
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="mx-auto w-full max-w-[1240px] px-5 py-5 sm:px-8 sm:py-7">
@@ -1819,7 +2230,9 @@ const StudentProfile = () => {
       <div className="flex h-screen items-center justify-center bg-[#F5F7FA]">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#1677FF] border-t-transparent" />
-          <p className="mt-4 text-sm text-gray-500 font-['Inter']">Loading profile...</p>
+          <p className="mt-4 text-sm text-gray-500 font-['Inter']">
+            Loading profile...
+          </p>
         </div>
       </div>
     );
@@ -1827,17 +2240,20 @@ const StudentProfile = () => {
 
   // ─── Render main profile ──────────────────────────────────────────
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+    <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
       <Sidebar
-        navItems={studentNavItems}
+        navGroups={studentNavGroups}
         footerItems={studentFooterItems}
         user={studentUser}
         profilePath="/student/profile"
         onSignOut={handleSignOut}
+        chatPath="/student/chats"
+        brandPath="/student/dashboard"
+        storageKey="sidebar-student"
       />
 
       <main className="flex-1 overflow-y-auto relative z-10">
@@ -1869,7 +2285,9 @@ const StudentProfile = () => {
               {(activeTab === "overview" || activeTab === "personal") && (
                 <>
                   {activeTab === "overview" && (
-                    <ApplicationStatusTracker status={profile.verificationStatus} />
+                    <ApplicationStatusTracker
+                      status={profile.verificationStatus}
+                    />
                   )}
                   <PersonalInfoCard
                     profile={currentProfile}
@@ -1895,8 +2313,12 @@ const StudentProfile = () => {
                       cvProgress={cvProgress}
                       onRemoveCv={handleRemoveCv}
                       isCvRemoving={isCvRemoving}
-                      onVerificationDocumentUpload={handleVerificationDocumentUpload}
-                      isVerificationDocumentUploading={isVerificationDocumentUploading}
+                      onVerificationDocumentUpload={
+                        handleVerificationDocumentUpload
+                      }
+                      isVerificationDocumentUploading={
+                        isVerificationDocumentUploading
+                      }
                       onViewDocument={handleViewDocument}
                     />
                   </div>
@@ -1912,55 +2334,21 @@ const StudentProfile = () => {
                 </div>
               )}
 
-              {activeTab === "overview" && <ProfilePreviewCard profile={profile} />}
+              {activeTab === "overview" && (
+                <ProfilePreviewCard profile={profile} />
+              )}
             </div>
 
             <aside className="space-y-5">
-              <CompletionChecklist completion={completion} onItemClick={handleChecklistClick} />
+              <CompletionChecklist
+                completion={completion}
+                onItemClick={handleChecklistClick}
+              />
 
-              <SectionCard className="hidden overflow-hidden xl:block">
-                <div className="border-b border-gray-100 px-5 py-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#1677FF]">Account status</p>
-                  <h3 className="mt-0.5 text-sm font-extrabold text-gray-900">Verification</h3>
-                </div>
-                <div className="space-y-3 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${profile.verificationStatus?.toLowerCase() === "approved"
-                      ? "bg-green-100 text-green-700"
-                      : profile.verificationStatus?.toLowerCase() === "rejected"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-[#FFF4E6] text-[#C76A0B]"
-                      }`}>
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-800">
-                        {profile.verificationStatus?.toLowerCase() === "approved"
-                          ? "Verified"
-                          : profile.verificationStatus?.toLowerCase() === "rejected"
-                            ? "Rejected"
-                            : "Under Review"}
-                      </p>
-                      <p className="text-[10px] text-gray-500">
-                        {profile.verificationStatus?.toLowerCase() === "approved"
-                          ? "Account verified"
-                          : profile.verificationStatus?.toLowerCase() === "rejected"
-                            ? "Please contact support"
-                            : "University administration"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF3FF] text-[#1677FF]">
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-800">Company</p>
-                      <p className="text-[10px] text-gray-500">{profile.company || "You are not enrolled yet"}</p>
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
+              <ProfileVerificationCard
+                profile={profile}
+                onViewInternship={() => navigate("/student/my-internship")}
+              />
             </aside>
           </div>
         </div>

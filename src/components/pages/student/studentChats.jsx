@@ -1,32 +1,33 @@
 // src/components/pages/student/StudentChats.jsx
 import React, { useState, useEffect, useRef } from "react";
 import {
-    Search,
-    MoreHorizontal,
-    Phone,
-    Paperclip,
-    Image as ImageIcon,
-    Smile,
-    Send,
-    Check,
-    CheckCheck,
-    ChevronRight,
-    Filter,
-    Bell,
-    ChevronDown,
-    LayoutDashboard,
-    GraduationCap,
-    Settings,
-    Clock as ClockIcon,
-    Briefcase as BriefcaseIcon,
-    MessageCircle,
-} from "lucide-react";
+      Search,
+      MoreHorizontal,
+      Phone,
+      Paperclip,
+      Image as ImageIcon,
+      Smile,
+      Send,
+      Check,
+      CheckCheck,
+      ChevronRight,
+      Filter,
+      Bell,
+      ChevronDown,
+      LayoutDashboard,
+      GraduationCap,
+      Settings,
+      Clock,
+      BriefcaseIcon,
+      BriefcaseBusiness,
+      MessageCircle,
+      ListTodo,
+  } from "lucide-react";
 
 import Sidebar from "../../layout/Sidebar";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// ─── Import skeleton components ──────────────────────────────────────
 import {
     SkeletonText,
     SkeletonCircle,
@@ -34,6 +35,7 @@ import {
     SkeletonButton,
 } from "../../common/pagesAssets/Skeleton";
 
+// ─── Import skeleton components ──────────────────────────────────────
 // ─── Tadreeby Design System (مطابق تماماً للـ Dashboard) ──────────
 const COLORS = {
     primary: "#0475FB",
@@ -51,16 +53,26 @@ const COLORS = {
     background: "#F5F7FB",
 };
 
-// ─── Navigation (مطابق للـ Dashboard) ──────────────────────────────
-const studentNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-    { label: "Opportunities", icon: BriefcaseIcon, path: "/student/opportunities" },
-    { label: "My Internship", icon: GraduationCap, path: "/student/my-internship" },
-    { label: "Attendance", icon: ClockIcon, path: "/attendance" },
+// ─── Navigation ──────────────────────────────────────────────────────
+const studentNavGroups = [
+  {
+    label: "Discovery",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
+      { label: "Opportunities", icon: Search, path: "/student/opportunities" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "My Internship", icon: BriefcaseBusiness, path: "/student/my-internship" },
+      { label: "Attendance", icon: Clock, path: "/attendance" },
+      { label: "Tasks", icon: ListTodo, path: "/student/tasks" },
+    ],
+  },
 ];
-
 const studentFooterItems = [
-    { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 // ─── Helper ─────────────────────────────────────────────────────────
@@ -233,17 +245,11 @@ const InfoPanelSkeleton = () => (
 export default function StudentChats() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const [loading, setLoading] = useState(true);
     const [chats, setChats] = useState(DUMMY_CHATS);
     const [activeChat, setActiveChat] = useState(DUMMY_CHATS[0]);
     const [messages, setMessages] = useState(DUMMY_MESSAGES);
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef(null);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -293,37 +299,18 @@ export default function StudentChats() {
         navigate("/login");
     };
 
-    if (loading) {
-        return (
-            <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
-                <Sidebar
-                    navItems={studentNavItems}
+    return (
+        <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
+            <Sidebar
+                    navGroups={studentNavGroups}
                     footerItems={studentFooterItems}
                     user={studentUser}
                     profilePath="/student/profile"
                     onSignOut={handleSignOut}
+                    chatPath="/student/chats"
+                    brandPath="/student/dashboard"
+                    storageKey="sidebar-student"
                 />
-                <main className="flex-1 overflow-hidden p-4">
-                    <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>
-                        <ChatListSkeleton />
-                        <ChatAreaSkeleton />
-                        <InfoPanelSkeleton />
-                    </div>
-                </main>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: COLORS.background }}>
-            <Sidebar
-                navItems={studentNavItems}
-                footerItems={studentFooterItems}
-                user={studentUser}
-                profilePath="/student/profile"
-                onSignOut={handleSignOut}
-            />
-
             <main className="flex-1 overflow-hidden p-4">
                 <div className="flex h-full w-full overflow-hidden rounded-[24px] border bg-white shadow-sm" style={{ borderColor: COLORS.border }}>
 

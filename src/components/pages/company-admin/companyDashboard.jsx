@@ -28,8 +28,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-// import Sidebar from "../../layout/Sidebar";
-import CompanySidebar from "../../layout/CompanySidebar";
+import Sidebar from "../../layout/Sidebar";
 import PageHeader from "../../common/pagesAssets/PageHeader";
 import { useAuth } from "../../../context/AuthContext";
 import { Button } from "../../common/Button";
@@ -286,17 +285,19 @@ export default function CompanyDashboard() {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-b from-[#F2F7FF] via-[#F8FAFC] to-[#FFF8F4] font-['Inter'] relative">
+    <div className="relative flex h-screen w-full overflow-hidden font-['Inter']">
       <div className="pointer-events-none absolute top-1/4 -left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-1/4 -right-20 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
       <div className="pointer-events-none absolute top-10 right-1/3 h-64 w-64 rounded-full bg-indigo-400/10 blur-3xl" />
 
-      <CompanySidebar
-        navItems={companyNavItems}
-        footerItems={companyFooterItems}
-        user={companyUser}
-        profilePath="/company/admin/profile"
-        onSignOut={handleSignOut}
+      <Sidebar
+      navItems={companyNavItems}
+      footerItems={companyFooterItems}
+      user={companyUser}
+      profilePath="/company/admin/profile"
+      onSignOut={handleSignOut}
+      brandPath="/company/admin/dashboard"
+      storageKey="sidebar-company-admin"
       />
 
       <main className="flex-1 overflow-y-auto relative z-10">

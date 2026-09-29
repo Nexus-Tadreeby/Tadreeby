@@ -102,7 +102,39 @@ const STATUS_CONFIG = {
 
 // ─── Demo Data (fallback) ───────────────────────────────────────────
 const DEMO_TASKS = [
-    // ... (same as before)
+    {
+        id: 1,
+        title: "Implement API integration",
+        description: "Integrate REST API endpoints for the dashboard.",
+        status: "TODO",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [],
+    },
+    {
+        id: 2,
+        title: "Create React components for dashboard",
+        description: "Build reusable components for the student dashboard.",
+        status: "IN_PROGRESS",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [],
+    },
+    {
+        id: 3,
+        title: "Set up development environment",
+        description: "Install and configure tools and dependencies.",
+        status: "DONE",
+        deadline: "2026-09-10",
+        internship: { title: "Field Training", company: { name: "Training Company" } },
+        submissions: [
+            {
+                submittedAt: "2026-09-01T10:00:00Z",
+                score: 85,
+                feedback: "Well done!",
+            },
+        ],
+    },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────
@@ -149,7 +181,8 @@ const EmptyState = ({ status, search }) => {
     );
 };
 
-const TaskCard = ({ task, onOpen }) => {
+// ========== TaskCard ==========
+const TaskCard = ({ task, onOpen, onDragStart }) => {
     const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.TODO;
     const deadline = getDeadlineState(task);
     const submission = task.submissions?.[0];
@@ -158,10 +191,15 @@ const TaskCard = ({ task, onOpen }) => {
     const isOverdue = deadline.type === "danger";
 
     return (
-        <button
-            type="button"
+        <div
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", String(task.id));
+                e.dataTransfer.effectAllowed = "move";
+                if (onDragStart) onDragStart(task.id);
+            }}
             onClick={() => onOpen(task)}
-            className="group flex w-full flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
+            className="group flex w-full cursor-grab flex-col gap-3 border-b border-[#E9EDF4] bg-white px-5 py-4 text-left transition hover:bg-[#FBFCFE] active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0475FB] sm:flex-row sm:items-center"
         >
             <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-3">
@@ -211,12 +249,12 @@ const TaskCard = ({ task, onOpen }) => {
                         <p className="text-[10px] font-medium text-[#172033]">{formatDeadline(task.deadline)}</p>
                         <p
                             className={`mt-0.5 text-[9px] ${deadline.type === "danger"
-                                    ? "text-[#EF4444]"
-                                    : deadline.type === "warning"
-                                        ? "text-[#FFAD4E]"
-                                        : deadline.type === "done"
-                                            ? "text-[#22C55E]"
-                                            : "text-[#7B8497]"
+                                ? "text-[#EF4444]"
+                                : deadline.type === "warning"
+                                    ? "text-[#FFAD4E]"
+                                    : deadline.type === "done"
+                                        ? "text-[#22C55E]"
+                                        : "text-[#7B8497]"
                                 }`}
                         >
                             {deadline.label}
@@ -254,14 +292,34 @@ const TaskCard = ({ task, onOpen }) => {
                     className="hidden transition group-hover:translate-x-0.5 sm:block"
                 />
             </div>
-        </button>
+        </div>
     );
 };
 
-const TaskGroup = ({ status, tasks, onOpen }) => {
+// ========== TaskGroup ==========
+const TaskGroup = ({ status, tasks, onOpen, onDrop, onDragStart, isDraggingOver }) => {
     const config = STATUS_CONFIG[status];
+
+    const handleDragOver = (e) => {
+        e.preventDefault(); 
+        e.dataTransfer.dropEffect = "move";
+    };
+
     return (
-        <section className="overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm">
+        <section
+            className={`overflow-hidden rounded-xl border border-[#E9EDF4] bg-white shadow-sm transition-colors ${isDraggingOver ? "border-[#0475FB] bg-[#F0F7FF]" : ""}`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => {
+                e.preventDefault();
+                const taskId = e.dataTransfer.getData("text/plain");
+                if (taskId) {
+                    const id = Number(taskId);
+                    if (!isNaN(id)) {
+                        onDrop(id, status);
+                    }
+                }
+            }}
+        >
             <div className="flex items-center justify-between border-b border-[#E9EDF4] bg-[#FAFBFC] px-4 py-3">
                 <div className="flex items-center gap-2">
                     <TaskStatusIcon status={status} size={15} />
@@ -272,7 +330,9 @@ const TaskGroup = ({ status, tasks, onOpen }) => {
                 </div>
             </div>
             {tasks.length ? (
-                tasks.map((task) => <TaskCard key={task.id} task={task} onOpen={onOpen} />)
+                tasks.map((task) => (
+                    <TaskCard key={task.id} task={task} onOpen={onOpen} onDragStart={onDragStart} />
+                ))
             ) : (
                 <div className="p-6 text-center text-[11px] text-[#7B8497]">No tasks in this status</div>
             )}
@@ -280,6 +340,7 @@ const TaskGroup = ({ status, tasks, onOpen }) => {
     );
 };
 
+// ========== TaskDetailsDrawer  ==========
 const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -306,11 +367,10 @@ const TaskDetailsDrawer = ({ task, onClose, onSubmitted }) => {
 
         try {
             const result = await tasksAPI.submitTask(task.id, file);
-            onSubmitted(task.id, result);
+            onSubmitted(task.id, result, "DONE"); 
             setFile(null);
             setSuccess(true);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            // auto-close after success? we can keep it open.
         } catch (err) {
             setError(err?.message || "Unable to submit the task. Please try again.");
         } finally {
@@ -531,6 +591,8 @@ export default function StudentTasks() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
 
+    const [draggedOverStatus, setDraggedOverStatus] = useState(null);
+
     const fullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
     const studentUser = {
         name: fullName,
@@ -566,6 +628,33 @@ export default function StudentTasks() {
         loadTasks();
     }, []);
 
+    // ── Drag & Drop handlers ──
+    const handleDragStart = (taskId) => {
+    };
+
+    const handleDrop = async (taskId, newStatus) => {
+        const taskToUpdate = tasks.find((t) => t.id === taskId);
+        if (!taskToUpdate) return;
+
+        if (taskToUpdate.status === newStatus) return;
+
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task.id === taskId ? { ...task, status: newStatus } : task
+            )
+        );
+
+        try {
+      
+            await tasksAPI.updateTaskStatus(taskId, newStatus);
+        } catch (err) {
+            console.error("Failed to update task status on server:", err);
+            setError("Could not update task status on server. Changes saved locally.");
+        } finally {
+            setDraggedOverStatus(null);
+        }
+    };
+
     // ── Filters ──
     const filteredTasks = useMemo(() => {
         return tasks.filter((task) => {
@@ -586,14 +675,26 @@ export default function StudentTasks() {
     const completion = totalTasks ? Math.round((doneCount / totalTasks) * 100) : 0;
 
     // ── Submission update ──
-    const handleSubmitted = (taskId, submission) => {
+    const handleSubmitted = (taskId, submission, newStatus = "DONE") => {
         setTasks((current) =>
             current.map((task) =>
-                task.id === taskId ? { ...task, submissions: [submission] } : task
+                task.id === taskId
+                    ? {
+                        ...task,
+                        status: newStatus,
+                        submissions: [submission],
+                    }
+                    : task
             )
         );
         setSelectedTask((current) =>
-            current ? { ...current, submissions: [submission] } : null
+            current
+                ? {
+                    ...current,
+                    status: newStatus,
+                    submissions: [submission],
+                }
+                : null
         );
     };
 
@@ -696,8 +797,8 @@ export default function StudentTasks() {
                                     type="button"
                                     onClick={() => setFilter(value)}
                                     className={`rounded-full px-3.5 py-1.5 text-[10px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#0475FB] ${filter === value
-                                            ? "bg-[#0475FB] text-white shadow-sm"
-                                            : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
+                                        ? "bg-[#0475FB] text-white shadow-sm"
+                                        : "border border-[#E9EDF4] bg-white text-[#7B8497] hover:border-[#C9D8EA] hover:bg-[#F8FAFC] hover:text-[#172033]"
                                         }`}
                                 >
                                     {value === "ALL" ? "All" : value === "TODO" ? "To Do" : value === "IN_PROGRESS" ? "In Progress" : "Done"}
@@ -721,13 +822,34 @@ export default function StudentTasks() {
                         ) : (
                             <>
                                 {(filter === "ALL" || filter === "TODO") && (
-                                    <TaskGroup status="TODO" tasks={todoTasks} onOpen={setSelectedTask} />
+                                    <TaskGroup
+                                        status="TODO"
+                                        tasks={todoTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "TODO"}
+                                    />
                                 )}
                                 {(filter === "ALL" || filter === "IN_PROGRESS") && (
-                                    <TaskGroup status="IN_PROGRESS" tasks={progressTasks} onOpen={setSelectedTask} />
+                                    <TaskGroup
+                                        status="IN_PROGRESS"
+                                        tasks={progressTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "IN_PROGRESS"}
+                                    />
                                 )}
                                 {(filter === "ALL" || filter === "DONE") && (
-                                    <TaskGroup status="DONE" tasks={doneTasks} onOpen={setSelectedTask} />
+                                    <TaskGroup
+                                        status="DONE"
+                                        tasks={doneTasks}
+                                        onOpen={setSelectedTask}
+                                        onDrop={handleDrop}
+                                        onDragStart={handleDragStart}
+                                        isDraggingOver={draggedOverStatus === "DONE"}
+                                    />
                                 )}
                                 {filteredTasks.length === 0 && <EmptyState status={filter} search={search} />}
                             </>
